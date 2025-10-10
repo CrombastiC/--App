@@ -23,14 +23,14 @@ const GENDER_OPTIONS = [
 export default function HomeScreen() {
   const profiles = useProfileStore((state) => state.profiles);
   const addProfile = useProfileStore((state) => state.addProfile);
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [role, setRole] = useState('');
-  const [gender, setGender] = useState<typeof GENDER_OPTIONS[number]['value']>('male');
-  const [notes, setNotes] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [name, setName] = useState('');//表单名字
+  const [age, setAge] = useState('');//表单年龄
+  const [role, setRole] = useState('');//表单职位
+  const [gender, setGender] = useState<typeof GENDER_OPTIONS[number]['value']>('male');//表单选择性别
+  const [notes, setNotes] = useState('');//表单备注
+  const [showForm, setShowForm] = useState(false);//是否显示表单
+  const [hasSubmitted, setHasSubmitted] = useState(false);//是否提交过表单
+  const [snackbarVisible, setSnackbarVisible] = useState(false);//提示条
 
   const hasErrors = useMemo(() => ({
     name: name.trim().length === 0,
@@ -101,62 +101,62 @@ export default function HomeScreen() {
             </Surface>
           ) : (
             <Surface style={styles.surface} elevation={2}>
-            <Text variant="titleMedium">基本信息</Text>
-            <TextInput
-              label="姓名"
-              value={name}
-              onChangeText={setName}
-              mode="outlined"
+              <Text variant="titleMedium">基本信息</Text>
+              <TextInput
+                label="姓名"
+                value={name}
+                onChangeText={setName}
+                mode="outlined"
                 error={shouldValidate && hasErrors.name}
-              placeholder="请输入姓名"
-            />
+                placeholder="请输入姓名"
+              />
               <HelperText type={shouldValidate && hasErrors.name ? 'error' : 'info'} visible>
                 {shouldValidate && hasErrors.name ? '姓名不能为空' : '用于在统计列表中标识人员'}
-            </HelperText>
+              </HelperText>
 
-            <TextInput
-              label="年龄"
-              value={age}
-              onChangeText={setAge}
-              mode="outlined"
-              keyboardType="number-pad"
+              <TextInput
+                label="年龄"
+                value={age}
+                onChangeText={setAge}
+                mode="outlined"
+                keyboardType="number-pad"
                 error={shouldValidate && Boolean(hasErrors.age)}
-              placeholder="例如 28"
-            />
+                placeholder="请输入您的年龄"
+              />
               <HelperText type={shouldValidate && hasErrors.age ? 'error' : 'info'} visible>
                 {shouldValidate && hasErrors.age ? '年龄需为数字' : '支持不填，该字段为可选'}
-            </HelperText>
+              </HelperText>
 
-            <TextInput
-              label="职位"
-              value={role}
-              onChangeText={setRole}
-              mode="outlined"
+              <TextInput
+                label="职位"
+                value={role}
+                onChangeText={setRole}
+                mode="outlined"
                 error={shouldValidate && hasErrors.role}
-              placeholder="例如 产品经理"
-            />
+                placeholder="请输入您的职位"
+              />
               {shouldValidate && hasErrors.role && <HelperText type="error">职位不能为空</HelperText>}
 
-            <Text variant="titleSmall">性别</Text>
-            <SegmentedButtons
-              value={gender}
+              <Text variant="titleSmall">性别</Text>
+              <SegmentedButtons
+                value={gender}
                 onValueChange={(value) => setGender(value as typeof gender)}
-              buttons={GENDER_OPTIONS.map(({ value, label }) => ({ value, label }))}
-            />
+                buttons={GENDER_OPTIONS.map(({ value, label }) => ({ value, label }))}
+              />
 
-            <TextInput
-              label="备注"
-              value={notes}
-              onChangeText={setNotes}
-              mode="outlined"
-              multiline
-              numberOfLines={3}
-              placeholder="补充说明（可选）"
-            />
+              <TextInput
+                label="备注"
+                value={notes}
+                onChangeText={setNotes}
+                mode="outlined"
+                multiline
+                numberOfLines={3}
+                placeholder="补充说明（可选）"
+              />
 
-            <Button mode="contained" onPress={handleSubmit} style={styles.submitButton}>
-              提交信息
-            </Button>
+              <Button mode="contained" onPress={handleSubmit} style={styles.submitButton}>
+                提交信息
+              </Button>
             </Surface>
           )}
 
@@ -164,7 +164,7 @@ export default function HomeScreen() {
             <Text variant="titleSmall">当前统计</Text>
             <Text variant="headlineSmall">共 {profiles.length} 人</Text>
             {profiles.length === 0 && (
-              <Text variant="bodyMedium">提交后可在“探索”标签页查看列表。</Text>
+              <Text variant="bodyMedium">提交后可在“列表”标签页查看列表。</Text>
             )}
           </Surface>
         </ScrollView>
