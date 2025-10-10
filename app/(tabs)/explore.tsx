@@ -59,11 +59,15 @@ export default function ExploreScreen() {
             <Surface style={styles.card} elevation={1}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardTitleRow}>
-                  <Avatar.Text
-                    size={40}
-                    label={item.name.slice(0, 1).toUpperCase()}
-                    style={styles.avatar}
-                  />
+                  {item.avatarUri ? (
+                    <Avatar.Image size={48} source={{ uri: item.avatarUri }} style={styles.avatarImage} />
+                  ) : (
+                    <Avatar.Text
+                      size={48}
+                      label={item.name.slice(0, 1).toUpperCase()}
+                      style={styles.avatarPlaceholder}
+                    />
+                  )}
                   <View style={styles.titleContent}>
                     <Text variant="titleMedium">{item.name}</Text>
                     <Text variant="bodySmall" style={styles.subtitle}>
@@ -145,7 +149,10 @@ const styles = StyleSheet.create({
     gap: 12,
     flex: 1,
   },
-  avatar: {
+  avatarImage: {
+    backgroundColor: '#eceff1',
+  },
+  avatarPlaceholder: {
     backgroundColor: '#4f5b62',
   },
   titleContent: {

@@ -1,7 +1,9 @@
+import * as ImagePicker from 'expo-image-picker';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import {
   Appbar,
+  Avatar,
   Button,
   HelperText,
   SegmentedButtons,
@@ -28,6 +30,7 @@ export default function HomeScreen() {
   const [role, setRole] = useState('');//表单职位
   const [gender, setGender] = useState<typeof GENDER_OPTIONS[number]['value']>('male');//表单选择性别
   const [notes, setNotes] = useState('');//表单备注
+  const [avatarUri, setAvatarUri] = useState<string | undefined>(undefined);//头像地址
   const [showForm, setShowForm] = useState(false);//是否显示表单
   const [hasSubmitted, setHasSubmitted] = useState(false);//是否提交过表单
   const [snackbarVisible, setSnackbarVisible] = useState(false);//提示条
@@ -46,7 +49,27 @@ export default function HomeScreen() {
     setRole('');
     setGender('male');
     setNotes('');
+    setAvatarUri(undefined);
     setHasSubmitted(false);
+  };
+
+  const handlePickAvatar = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== 'granted') {
+      Alert.alert('无法访问相册', '请在系统设置中授权访问照片以上传头像。');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      setAvatarUri(result.assets[0].uri);
+    }
   };
 
   const handleSubmit = () => {
@@ -61,6 +84,7 @@ export default function HomeScreen() {
       role: role.trim(),
       gender,
       notes: notes.trim() || undefined,
+      avatarUri,
     });
 
     setSnackbarVisible(true);
@@ -70,7 +94,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <Appbar.Header mode="small">
-        <Appbar.Content title="个人信息录入" subtitle="填写并提交查看统计" />
+        <Appbar.Content title="个人信息录入" />
         <Appbar.Action
           icon="refresh"
           onPress={() => resetForm()}
@@ -102,6 +126,22 @@ export default function HomeScreen() {
           ) : (
             <Surface style={styles.surface} elevation={2}>
               <Text variant="titleMedium">基本信息</Text>
+              <View style={styles.avatarRow}>
+                {avatarUri ? (
+                  <Avatar.Image size={72} source={{ uri: avatarUri }} />
+                ) : (
+                  <Avatar.Icon size={72} icon="account" />
+                )}
+                <View style={styles.avatarActions}>
+                  <Button mode="outlined" onPress={handlePickAvatar}>
+                    {avatarUri ? '重新选择' : '上传头像'}
+                  </Button>
+                  {avatarUri ? (
+                    <Button onPress={() => setAvatarUri(undefined)}>移除头像</Button>
+                  ) : null}
+                </View>
+              </View>
+
               <TextInput
                 label="姓名"
                 value={name}
@@ -204,6 +244,16 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     gap: 16,
+  },
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  avatarActions: {
+    flexDirection: 'row',
+    gap: 12,
+    flexWrap: 'wrap',
   },
   submitButton: {
     marginTop: 8,

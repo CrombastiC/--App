@@ -7,6 +7,7 @@ export type ProfileRecord = {
   role: string;
   gender: 'male' | 'female' | 'other';
   notes?: string;
+  avatarUri?: string;
   createdAt: number;
 };
 
