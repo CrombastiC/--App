@@ -22,7 +22,7 @@ export default function RootLayout() {
 
   // 应用启动时加载持久化数据
   useEffect(() => {
-    loadProfiles();
+    loadProfiles().catch(console.error);
   }, [loadProfiles]);
 
   return (

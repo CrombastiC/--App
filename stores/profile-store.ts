@@ -17,33 +17,33 @@ type ProfileState = {
   addProfile: (profile: Omit<ProfileRecord, 'id' | 'createdAt'>) => void;
   reset: () => void;
   // 添加持久化相关方法
-  loadProfiles: () => void;
-  saveProfiles: (profiles: ProfileRecord[]) => void;
+  loadProfiles: () => Promise<void>;
+  saveProfiles: (profiles: ProfileRecord[]) => Promise<void>;
 };
 
 // 从存储中加载数据的函数
-const loadProfilesFromStorage = (): ProfileRecord[] => {
-  const savedProfiles = StorageUtils.getObject<ProfileRecord[]>(STORAGE_KEYS.PROFILES);
+const loadProfilesFromStorage = async (): Promise<ProfileRecord[]> => {
+  const savedProfiles = await StorageUtils.getObject<ProfileRecord[]>(STORAGE_KEYS.PROFILES);
   return savedProfiles || [];
 };
 
 // 保存数据到存储的函数
-const saveProfilesToStorage = (profiles: ProfileRecord[]): void => {
-  StorageUtils.setObject(STORAGE_KEYS.PROFILES, profiles);
+const saveProfilesToStorage = async (profiles: ProfileRecord[]): Promise<void> => {
+  await StorageUtils.setObject(STORAGE_KEYS.PROFILES, profiles);
 };
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
   profiles: [],
   
   // 初始化时加载数据
-  loadProfiles: () => {
-    const savedProfiles = loadProfilesFromStorage();
+  loadProfiles: async () => {
+    const savedProfiles = await loadProfilesFromStorage();
     set({ profiles: savedProfiles });
   },
   
   // 保存数据到存储
-  saveProfiles: (profiles) => {
-    saveProfilesToStorage(profiles);
+  saveProfiles: async (profiles) => {
+    await saveProfilesToStorage(profiles);
   },
   
   addProfile: (profile) => {

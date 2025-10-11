@@ -1,80 +1,126 @@
-import { MMKV } from 'react-native-mmkv';
-
-// 创建 MMKV 实例
-export const storage = new MMKV({
-  id: 'rn-components-storage',
-  encryptionKey: 'your-encryption-key-here', // 可选：用于数据加密
-});
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 存储工具类
 export class StorageUtils {
   // 存储字符串
-  static setString(key: string, value: string): void {
-    storage.set(key, value);
+  static async setString(key: string, value: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (error) {
+      console.error(`Failed to set string for key ${key}:`, error);
+    }
   }
 
   // 获取字符串
-  static getString(key: string): string | undefined {
-    return storage.getString(key);
+  static async getString(key: string): Promise<string | null> {
+    try {
+      return await AsyncStorage.getItem(key);
+    } catch (error) {
+      console.error(`Failed to get string for key ${key}:`, error);
+      return null;
+    }
   }
 
   // 存储对象（自动序列化为 JSON）
-  static setObject<T>(key: string, value: T): void {
-    storage.set(key, JSON.stringify(value));
+  static async setObject<T>(key: string, value: T): Promise<void> {
+    try {
+      await AsyncStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.error(`Failed to set object for key ${key}:`, error);
+    }
   }
 
   // 获取对象（自动反序列化）
-  static getObject<T>(key: string): T | undefined {
-    const value = storage.getString(key);
-    if (value) {
-      try {
+  static async getObject<T>(key: string): Promise<T | null> {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value) {
         return JSON.parse(value) as T;
-      } catch (error) {
-        console.error(`Failed to parse JSON for key ${key}:`, error);
-        return undefined;
       }
+      return null;
+    } catch (error) {
+      console.error(`Failed to get object for key ${key}:`, error);
+      return null;
     }
-    return undefined;
   }
 
   // 存储数字
-  static setNumber(key: string, value: number): void {
-    storage.set(key, value);
+  static async setNumber(key: string, value: number): Promise<void> {
+    try {
+      await AsyncStorage.setItem(key, value.toString());
+    } catch (error) {
+      console.error(`Failed to set number for key ${key}:`, error);
+    }
   }
 
   // 获取数字
-  static getNumber(key: string): number | undefined {
-    return storage.getNumber(key);
+  static async getNumber(key: string): Promise<number | null> {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value ? Number(value) : null;
+    } catch (error) {
+      console.error(`Failed to get number for key ${key}:`, error);
+      return null;
+    }
   }
 
   // 存储布尔值
-  static setBoolean(key: string, value: boolean): void {
-    storage.set(key, value);
+  static async setBoolean(key: string, value: boolean): Promise<void> {
+    try {
+      await AsyncStorage.setItem(key, value.toString());
+    } catch (error) {
+      console.error(`Failed to set boolean for key ${key}:`, error);
+    }
   }
 
   // 获取布尔值
-  static getBoolean(key: string): boolean | undefined {
-    return storage.getBoolean(key);
+  static async getBoolean(key: string): Promise<boolean | null> {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value ? value === 'true' : null;
+    } catch (error) {
+      console.error(`Failed to get boolean for key ${key}:`, error);
+      return null;
+    }
   }
 
   // 删除键
-  static delete(key: string): void {
-    storage.delete(key);
+  static async delete(key: string): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Failed to delete key ${key}:`, error);
+    }
   }
 
   // 检查键是否存在
-  static contains(key: string): boolean {
-    return storage.contains(key);
+  static async contains(key: string): Promise<boolean> {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value !== null;
+    } catch (error) {
+      console.error(`Failed to check key ${key}:`, error);
+      return false;
+    }
   }
 
   // 获取所有键
-  static getAllKeys(): string[] {
-    return storage.getAllKeys();
+  static async getAllKeys(): Promise<readonly string[]> {
+    try {
+      return await AsyncStorage.getAllKeys();
+    } catch (error) {
+      console.error('Failed to get all keys:', error);
+      return [];
+    }
   }
 
   // 清空所有数据
-  static clearAll(): void {
-    storage.clearAll();
+  static async clearAll(): Promise<void> {
+    try {
+      await AsyncStorage.clear();
+    } catch (error) {
+      console.error('Failed to clear all data:', error);
+    }
   }
 }
 
