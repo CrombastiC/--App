@@ -31,8 +31,10 @@ export default function SplashScreen() {
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          // 倒计时结束，跳转到主应用
-          router.replace('/(tabs)');
+          // 倒计时结束，使用 setTimeout 延迟跳转避免渲染期间状态更新
+          setTimeout(() => {
+            router.replace('/(tabs)');
+          }, 0);
           return 0;
         }
         return prev - 1;
@@ -48,7 +50,10 @@ export default function SplashScreen() {
    * 直接跳转到主应用
    */
   const handleSkip = () => {
-    router.replace('/(tabs)');
+    // 使用 setTimeout 延迟跳转避免渲染期间状态更新
+    setTimeout(() => {
+      router.replace('/(tabs)');
+    }, 0);
   };
 
   return (
