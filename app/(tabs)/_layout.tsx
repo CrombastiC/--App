@@ -7,9 +7,9 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Icon } from 'react-native-paper';
 
 /**
  * 标签页布局组件
@@ -45,7 +45,7 @@ export default function TabLayout() {
         options={{
           title: '首页', // 标签页显示的中文标题
           // 自定义标签图标：房屋图标，大小28，颜色随主题变化
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Icon source="home" size={28} color={color} />,
         }}
       />
       
@@ -55,7 +55,7 @@ export default function TabLayout() {
         options={{
           title: '点餐', // 标签页显示的中文标题
           // 自定义标签图标：餐具图标，大小28，颜色随主题变化
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="fork.knife" color={color} />,
+          tabBarIcon: ({ color }) => <Icon source="silverware-fork-knife" size={28} color={color} />,
         }}
       />
       
@@ -65,7 +65,7 @@ export default function TabLayout() {
         options={{
           title: '订单', // 标签页显示的中文标题
           // 自定义标签图标：列表图标，大小28，颜色随主题变化
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet" color={color} />,
+          tabBarIcon: ({ color }) => <Icon source="clipboard-text-outline" size={28} color={color} />,
         }}
       />
       
@@ -75,7 +75,15 @@ export default function TabLayout() {
         options={{
           title: '我的', // 标签页显示的中文标题
           // 自定义标签图标：人物图标，大小28，颜色随主题变化
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Icon source="account" size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="icon"
+        options={{
+          title: '图标组', // 标签页显示的中文标题
+          // 自定义标签图标：人物图标，大小28，颜色随主题变化
+          tabBarIcon: ({ color }) => <Icon source="account" size={28} color={color} />,
         }}
       />
     </Tabs>
