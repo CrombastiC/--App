@@ -1,108 +1,79 @@
 /**
  * 开屏页面组件
- * 显示欢迎语、倒计时和跳过按钮
+ * 显示餐厅名称、图标和加载动画
  */
 
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Animated, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 /**
  * 开屏页面组件
  * 功能特性：
- * 1. 显示欢迎语
- * 2. 右上角倒计时显示
- * 3. 手动跳过按钮
+ * 1. 显示餐厅图标
+ * 2. 显示餐厅名称
+ * 3. 闪烁的省略号加载动画
  * 4. 自动跳转到主应用
  * 
  * @returns JSX.Element 开屏页面的渲染结果
  */
 export default function SplashScreen() {
-  // 倒计时状态，初始值为3秒
-  const [countdown, setCountdown] = useState(3);
+  const [dotOpacity] = useState(new Animated.Value(0));
 
   /**
-   * 倒计时效果
-   * 每秒递减，到0时自动跳转到主应用
+   * 省略号闪烁动画效果
    */
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          // 倒计时结束，使用 setTimeout 延迟跳转避免渲染期间状态更新
-          setTimeout(() => {
-            router.replace('/(tabs)');
-          }, 0);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // 创建无限循环的闪烁动画
+    const blinkAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(dotOpacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dotOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
 
-    // 组件卸载时清理定时器
-    return () => clearInterval(timer);
-  }, []);
+    blinkAnimation.start();
 
-  /**
-   * 手动跳过开屏页面
-   * 直接跳转到主应用
-   */
-  const handleSkip = () => {
-    // 使用 setTimeout 延迟跳转避免渲染期间状态更新
-    setTimeout(() => {
+    // 3秒后自动跳转到主应用
+    const timer = setTimeout(() => {
       router.replace('/(tabs)');
-    }, 0);
-  };
+    }, 3000);
+
+    // 组件卸载时清理动画和定时器
+    return () => {
+      blinkAnimation.stop();
+      clearTimeout(timer);
+    };
+  }, [dotOpacity]);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 右上角倒计时和跳过按钮 */}
-      <View style={styles.header}>
-        <View style={styles.countdownContainer}>
-          <Text variant="bodyMedium" style={styles.countdownText}>
-            {countdown}s
-          </Text>
-          <Button
-            mode="text"
-            onPress={handleSkip}
-            style={styles.skipButton}
-            labelStyle={styles.skipButtonText}
-          >
-            跳过
-          </Button>
-        </View>
-      </View>
-
       {/* 主要内容区域 */}
       <View style={styles.content}>
-        {/* 欢迎语 */}
-        <View style={styles.welcomeContainer}>
-          <Text variant="displaySmall" style={styles.welcomeTitle}>
-            欢迎使用
-          </Text>
-          <Text variant="headlineMedium" style={styles.appName}>
-            RN Components
-          </Text>
-          <Text variant="bodyLarge" style={styles.welcomeSubtitle}>
-            探索 React Native 组件的无限可能
-          </Text>
+        {/* 餐厅图标 */}
+        <View style={styles.iconContainer}>
+          <Text style={styles.icon}>🍽️</Text>
         </View>
 
-        {/* 装饰性元素 */}
-        <View style={styles.decorativeContainer}>
-          <View style={styles.decorativeCircle1} />
-          <View style={styles.decorativeCircle2} />
-          <View style={styles.decorativeCircle3} />
-        </View>
-      </View>
-
-      {/* 底部提示 */}
-      <View style={styles.footer}>
-        <Text variant="bodySmall" style={styles.footerText}>
-          正在为您准备最佳体验...
+        {/* 餐厅名称 */}
+        <Text variant="displayMedium" style={styles.restaurantName}>
+          美食餐厅
         </Text>
+
+        {/* 闪烁的省略号 */}
+        <Animated.View style={[styles.dotsContainer, { opacity: dotOpacity }]}>
+          <Text style={styles.dots}>...</Text>
+        </Animated.View>
       </View>
     </SafeAreaView>
   );
@@ -116,35 +87,7 @@ const styles = StyleSheet.create({
   /** 主容器样式 */
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  /** 头部区域样式 */
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  /** 倒计时容器样式 */
-  countdownContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  /** 倒计时文本样式 */
-  countdownText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
-  },
-  /** 跳过按钮样式 */
-  skipButton: {
-    minWidth: 0,
-  },
-  /** 跳过按钮文本样式 */
-  skipButtonText: {
-    fontSize: 14,
-    color: '#007AFF',
+    backgroundColor: '#fff',
   },
   /** 内容区域样式 */
   content: {
@@ -153,77 +96,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 32,
   },
-  /** 欢迎语容器样式 */
-  welcomeContainer: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  /** 欢迎标题样式 */
-  welcomeTitle: {
-    fontSize: 32,
-    fontWeight: '300',
-    color: '#333',
-    marginBottom: 8,
-  },
-  /** 应用名称样式 */
-  appName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#007AFF',
-    marginBottom: 16,
-  },
-  /** 欢迎副标题样式 */
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  /** 装饰性元素容器样式 */
-  decorativeContainer: {
-    position: 'relative',
-    width: 200,
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  /** 装饰性圆圈1样式 */
-  decorativeCircle1: {
-    position: 'absolute',
+  /** 图标容器样式 */
+  iconContainer: {
+    marginBottom: 32,
     width: 120,
     height: 120,
-    borderRadius: 60,
-    backgroundColor: '#E3F2FD',
-    opacity: 0.6,
-  },
-  /** 装饰性圆圈2样式 */
-  decorativeCircle2: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#BBDEFB',
-    opacity: 0.8,
-  },
-  /** 装饰性圆圈3样式 */
-  decorativeCircle3: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#2196F3',
-    opacity: 1,
-  },
-  /** 底部区域样式 */
-  footer: {
-    paddingHorizontal: 32,
-    paddingBottom: 32,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 60,
+    backgroundColor: '#FFF3E0',
   },
-  /** 底部文本样式 */
-  footerText: {
-    fontSize: 12,
-    color: '#999',
+  /** 餐厅图标样式 */
+  icon: {
+    fontSize: 72,
+  },
+  /** 餐厅名称样式 */
+  restaurantName: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#FF6B35',
+    marginBottom: 24,
     textAlign: 'center',
+  },
+  /** 省略号容器样式 */
+  dotsContainer: {
+    marginTop: 16,
+  },
+  /** 省略号样式 */
+  dots: {
+    fontSize: 48,
+    color: '#FF6B35',
+    letterSpacing: 4,
   },
 });

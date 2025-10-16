@@ -1,6 +1,6 @@
 /**
  * 标签页布局组件
- * 定义应用底部的标签页导航结构，包含首页和列表两个标签
+ * 定义应用底部的标签页导航结构，包含首页、点餐、订单和我的四个标签
  */
 
 import { Tabs } from 'expo-router';
@@ -49,13 +49,33 @@ export default function TabLayout() {
         }}
       />
       
-      {/* 列表标签页 - 路由名称对应 explore.tsx 文件 */}
+      {/* 点餐标签页 - 路由名称对应 order.tsx 文件 */}
       <Tabs.Screen
-        name="explore"
+        name="order"
         options={{
-          title: '列表', // 标签页显示的中文标题
-          // 自定义标签图标：纸飞机图标，大小28，颜色随主题变化
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: '点餐', // 标签页显示的中文标题
+          // 自定义标签图标：餐具图标，大小28，颜色随主题变化
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="fork.knife" color={color} />,
+        }}
+      />
+      
+      {/* 订单标签页 - 路由名称对应 orders.tsx 文件 */}
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: '订单', // 标签页显示的中文标题
+          // 自定义标签图标：列表图标，大小28，颜色随主题变化
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet" color={color} />,
+        }}
+      />
+      
+      {/* 我的标签页 - 路由名称对应 profile.tsx 文件 */}
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: '我的', // 标签页显示的中文标题
+          // 自定义标签图标：人物图标，大小28，颜色随主题变化
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
         }}
       />
     </Tabs>

@@ -1,19 +1,19 @@
-﻿/**
- * 首页
+/**
+ * 我的页面
  */
 
 import { StyleSheet, View } from 'react-native';
 import { Appbar, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function HomeScreen() {
+export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <Appbar.Header mode="small">
-        <Appbar.Content title="首页" />
+        <Appbar.Content title="我的" />
       </Appbar.Header>
       <View style={styles.container}>
-        <Text variant="titleLarge">首页</Text>
+        <Text variant="titleLarge">我的页面</Text>
       </View>
     </SafeAreaView>
   );
