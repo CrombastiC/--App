@@ -30,21 +30,29 @@ export default function HomeScreen() {
               <IconButton
                 icon="qrcode-scan"
                 size={24}
-                iconColor="#FF6B35"
+                iconColor="#FF7214"
                 onPress={() => router.push('/memberCode')}
               />
             </Card.Content>
           </Card>
           <View style={styles.eatTypeContainer}>
-            <Card style={styles.eatTypeCard} mode="elevated">
+            <Card 
+              style={styles.eatTypeCard} 
+              mode="elevated"
+              onPress={() => router.push('/addressSelect?type=dine-in')}
+            >
               <Card.Content style={styles.eatTypeContent}>
-                <Icon source="food" size={35} color="#FF6B35" />
+                <Icon source="food" size={35} color="#FF7214" />
                 <Text style={styles.eatTypeText}>堂食</Text>
               </Card.Content>
             </Card>
-            <Card style={styles.eatTypeCard} mode="elevated">
+            <Card 
+              style={styles.eatTypeCard} 
+              mode="elevated"
+              onPress={() => router.push('/addressSelect?type=takeout')}
+            >
               <Card.Content style={styles.eatTypeContent}>
-                <Icon source="bike" size={35} color="#FF6B35" />
+                <Icon source="bike" size={35} color="#FF7214" />
                 <Text style={styles.eatTypeText}>外卖</Text>
               </Card.Content>
             </Card>
@@ -53,7 +61,7 @@ export default function HomeScreen() {
           <View style={styles.serviceContainer}>
             <Card style={[styles.serviceCard, styles.queueCard]} mode="elevated">
               <Card.Content style={styles.serviceContent}>
-                <Icon source="ticket" size={40} color="#FF6B35" />
+                <Icon source="ticket" size={40} color="#FF7214" />
                 <Text style={styles.serviceText}>排队取号</Text>
               </Card.Content>
             </Card>

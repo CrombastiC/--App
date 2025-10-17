@@ -128,4 +128,5 @@ export class StorageUtils {
 export const STORAGE_KEYS = {
   PROFILES: 'profiles',
   USER_SETTINGS: 'user_settings',
+  SELECTED_CITY: 'selected_city',
 } as const;

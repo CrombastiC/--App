@@ -74,6 +74,33 @@ export default function RootLayout() {
               headerTitleAlign: 'center',
             }}
           />
+          {/* 门店选择页面 */}
+          <Stack.Screen
+            name="addressSelect"
+            options={{
+              // 显示头部导航栏
+              headerShown: true,
+              // 标题将在页面内部根据路由参数动态设置
+              title: '选择门店',
+              // 使用卡片式过渡动画
+              presentation: 'card',
+              // 标题居中显示
+              headerTitleAlign: 'center',
+            }}
+          />
+          {/* 城市选择页面 */}
+          <Stack.Screen
+            name="citySelect"
+            options={{
+              // 显示头部导航栏
+              headerShown: true,
+              title: '选择城市',
+              // 使用卡片式过渡动画
+              presentation: 'card',
+              // 标题居中显示
+              headerTitleAlign: 'center',
+            }}
+          />
         </Stack>
         {/* 状态栏组件，自动适配系统主题 */}
         <StatusBar style="auto" />
