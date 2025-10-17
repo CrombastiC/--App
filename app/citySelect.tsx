@@ -92,6 +92,8 @@ export default function CitySelectScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentCity, setCurrentCity] = useState('定位中...');
   const [locationError, setLocationError] = useState(false);
+  const [isFromCache, setIsFromCache] = useState(false); // 标记是否来自缓存
+  const [isLocating, setIsLocating] = useState(false); // 标记是否正在定位
   const sectionListRef = useRef<SectionList>(null);
 
   // 使用 useMemo 缓存转换后的城市数据
@@ -153,8 +155,7 @@ export default function CitySelectScreen() {
 
   // 获取当前位置
   useEffect(() => {
-    console.log('Starting location request...');
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    console.log('🚀 [定位] 开始定位流程...');
     let cancelled = false;
     
     (async () => {
@@ -162,70 +163,82 @@ export default function CitySelectScreen() {
         // 先尝试从存储中加载已保存的城市
         const savedCity = await StorageUtils.getString(STORAGE_KEYS.SELECTED_CITY);
         if (savedCity && !cancelled) {
+          console.log('💾 [缓存] 从本地存储加载城市:', savedCity);
           setCurrentCity(savedCity);
+          setIsFromCache(true);
+          setIsLocating(false);
           return; // 如果有保存的城市，就不进行定位
         }
 
-        // 设置 10 秒超时
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => {
-            reject(new Error('定位超时'));
-          }, 10000);
-        });
+        console.log('📍 [定位] 无缓存，开始真实定位...');
+        setIsLocating(true);
+        setIsFromCache(false);
 
         // 请求位置权限
-        console.log('Requesting permissions...');
+        console.log('🔐 [权限] 请求定位权限...');
         const { status } = await Location.requestForegroundPermissionsAsync();
-        console.log('Permission status:', status);
+        console.log('🔐 [权限] 权限状态:', status);
         
         if (status !== 'granted') {
           if (!cancelled) {
+            console.log('❌ [权限] 定位权限被拒绝');
             setCurrentCity('定位权限未授予');
             setLocationError(true);
+            setIsLocating(false);
           }
-          if (timeoutId) clearTimeout(timeoutId);
           return;
         }
 
-        // 获取当前位置（使用 Promise.race 实现超时）
-        console.log('Getting location...');
+        // 获取当前位置（设置 30 秒超时）
+        console.log('📡 [GPS] 正在获取位置坐标...');
+        const locationTimeout = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('获取位置超时')), 30000);
+        });
+        
         const location = await Promise.race([
           Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
           }),
-          timeoutPromise
+          locationTimeout
         ]);
         
         if (cancelled) return;
-        console.log('Location:', location.coords);
+        console.log('📍 [GPS] 获取到坐标:', {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          accuracy: location.coords.accuracy
+        });
 
-        // 反向地理编码（将经纬度转换为地址）
-        console.log('Reverse geocoding...');
+        // 反向地理编码（设置 15 秒超时）
+        console.log('🗺️ [地理编码] 正在转换坐标为地址...');
+        const geocodeTimeout = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('地理编码超时')), 15000);
+        });
+        
         const [address] = await Promise.race([
           Location.reverseGeocodeAsync({
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
           }),
-          timeoutPromise
+          geocodeTimeout
         ]);
         
         if (cancelled) return;
-        console.log('Address:', address);
-
-        // 清除超时
-        if (timeoutId) clearTimeout(timeoutId);
+        console.log('🏙️ [地理编码] 获取到地址信息:', address);
 
         // 提取城市名称
         const cityName = address.city || address.region || address.subregion || '未知城市';
-        console.log('City name:', cityName);
+        console.log('✅ [成功] 真实定位获取到城市:', cityName);
         setCurrentCity(cityName);
+        setIsFromCache(false);
+        setIsLocating(false);
         
       } catch (error) {
-        console.error('定位失败:', error);
-        if (timeoutId) clearTimeout(timeoutId);
+        console.error('❌ [失败] 定位失败:', error);
         if (!cancelled) {
           setCurrentCity('定位失败');
           setLocationError(true);
+          setIsLocating(false);
         }
       }
     })();
@@ -233,7 +246,6 @@ export default function CitySelectScreen() {
     // 清理函数
     return () => {
       cancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
 
@@ -251,12 +263,80 @@ export default function CitySelectScreen() {
     try {
       // 保存选中的城市到存储
       await StorageUtils.setString(STORAGE_KEYS.SELECTED_CITY, cityName);
+      console.log('💾 [保存] 城市已保存到本地:', cityName);
       // 返回上一页
       router.back();
     } catch (error) {
-      console.error('保存城市失败:', error);
+      console.error('❌ [保存] 保存城市失败:', error);
       // 即使保存失败，也返回上一页
       router.back();
+    }
+  };
+
+  // 清除缓存（用于测试）
+  const handleClearCache = async () => {
+    try {
+      await StorageUtils.delete(STORAGE_KEYS.SELECTED_CITY);
+      console.log('🗑️ [清除] 缓存已清除，将重新定位...');
+      setCurrentCity('定位中...');
+      setIsFromCache(false);
+      setLocationError(false);
+      setIsLocating(true);
+      
+      // 重新触发定位逻辑
+      (async () => {
+        try {
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('定位超时')), 10000);
+          });
+
+          console.log('🔐 [权限] 请求定位权限...');
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          console.log('🔐 [权限] 权限状态:', status);
+          
+          if (status !== 'granted') {
+            console.log('❌ [权限] 定位权限被拒绝');
+            setCurrentCity('定位权限未授予');
+            setLocationError(true);
+            setIsLocating(false);
+            return;
+          }
+
+          console.log('📡 [GPS] 正在获取位置坐标...');
+          const location = await Promise.race([
+            Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+            timeoutPromise
+          ]);
+          
+          console.log('📍 [GPS] 获取到坐标:', {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+
+          console.log('🗺️ [地理编码] 正在转换坐标为地址...');
+          const [address] = await Promise.race([
+            Location.reverseGeocodeAsync({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            }),
+            timeoutPromise
+          ]);
+          
+          console.log('🏙️ [地理编码] 获取到地址信息:', address);
+          const cityName = address.city || address.region || address.subregion || '未知城市';
+          console.log('✅ [成功] 真实定位获取到城市:', cityName);
+          setCurrentCity(cityName);
+          setIsFromCache(false);
+          setIsLocating(false);
+        } catch (error) {
+          console.error('❌ [失败] 定位失败:', error);
+          setCurrentCity('定位失败');
+          setLocationError(true);
+          setIsLocating(false);
+        }
+      })();
+    } catch (error) {
+      console.error('❌ [清除] 清除缓存失败:', error);
     }
   };
 
@@ -280,25 +360,46 @@ export default function CitySelectScreen() {
       </View>
 
       {/* 当前城市 */}
-      <TouchableOpacity 
-        style={styles.currentCity}
-        onPress={() => handleSelectCity(currentCity)}
-        disabled={locationError}
-      >
-        <Icon source="map-marker-outline" size={20} color="#FF7214" />
-        <Text style={styles.currentCityText}>当前定位城市: </Text>
-        <Text style={[
-          styles.currentCityName,
-          locationError && styles.currentCityError
-        ]}>
-          {currentCity}
-        </Text>
-        {!locationError && (
-          <View style={styles.checkIconContainer}>
-            <Icon source="check-circle" size={16} color="#4CAF50" />
+      <View>
+        <TouchableOpacity 
+          style={styles.currentCity}
+          onPress={() => handleSelectCity(currentCity)}
+          disabled={locationError}
+        >
+          <Icon source="map-marker-outline" size={20} color="#FF7214" />
+          <View style={styles.cityInfoContainer}>
+            <Text style={styles.currentCityText}>当前定位城市: </Text>
+            <Text style={[
+              styles.currentCityName,
+              locationError && styles.currentCityError
+            ]}>
+              {currentCity}
+            </Text>
+            {/* {isFromCache && !locationError && (
+              <Text style={styles.cacheTag}>[已保存]</Text>
+            )}
+            {isLocating && (
+              <Text style={styles.locatingTag}>[定位中...]</Text>
+            )} */}
           </View>
-        )}
-      </TouchableOpacity>
+          {!locationError && !isFromCache && !isLocating && (
+            <View style={styles.checkIconContainer}>
+              <Icon source="check-circle" size={16} color="#4CAF50" />
+            </View>
+          )}
+        </TouchableOpacity>
+        
+        {/* 调试按钮：清除缓存 */}
+        {/* {isFromCache && (
+          <TouchableOpacity 
+            style={styles.debugButton}
+            onPress={handleClearCache}
+          >
+            <Icon source="delete-outline" size={16} color="#FF5722" />
+            <Text style={styles.debugButtonText}>清除缓存并重新定位</Text>
+          </TouchableOpacity>
+        )} */}
+      </View>
       <Divider />
 
       {/* 城市列表 */}
@@ -384,6 +485,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 8,
   },
+  cityInfoContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
   currentCityText: {
     fontSize: 14,
     color: '#666',
@@ -397,8 +505,33 @@ const styles = StyleSheet.create({
     color: '#999',
     fontWeight: 'normal',
   },
+  cacheTag: {
+    fontSize: 12,
+    color: '#2196F3',
+    fontWeight: '500',
+  },
+  locatingTag: {
+    fontSize: 12,
+    color: '#FF9800',
+    fontWeight: '500',
+  },
   checkIconContainer: {
     marginLeft: 8,
+  },
+  debugButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 6,
+    backgroundColor: '#FFF3E0',
+    borderTopWidth: 1,
+    borderTopColor: '#FFE0B2',
+  },
+  debugButtonText: {
+    fontSize: 13,
+    color: '#FF5722',
+    fontWeight: '500',
   },
   cityItem: {
     paddingHorizontal: 16,
