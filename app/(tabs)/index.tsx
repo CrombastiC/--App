@@ -68,7 +68,7 @@ export default function HomeScreen() {
             <Card style={[styles.serviceCard, styles.rechargeCard]} mode="elevated">
               <Card.Content style={styles.serviceContent}>
                 <Icon source="credit-card" size={40} color="#4ECDC4" />
-                <Text style={styles.serviceText}>会员充值</Text>
+                <Text onPress={()=>router.push('/(member)/top-up')} style={styles.serviceText}>会员充值</Text>
               </Card.Content>
             </Card>
             <Card style={[styles.serviceCard, styles.mallCard]} mode="elevated">

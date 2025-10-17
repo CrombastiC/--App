@@ -74,6 +74,19 @@ export default function RootLayout() {
               headerTitleAlign: 'center',
             }}
           />
+          {/* 会员充值页面 */}
+          <Stack.Screen
+            name="(member)/top-up"
+            options={{
+              // 显示头部导航栏
+              headerShown: true,
+              title: '余额',
+              // 使用卡片式过渡动画
+              presentation: 'card',
+              // 标题居中显示
+              headerTitleAlign: 'center',
+            }}
+          />
           {/* 位置相关页面 - 门店选择 */}
           <Stack.Screen
             name="(location)/addressSelect"

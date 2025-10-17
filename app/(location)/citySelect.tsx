@@ -96,6 +96,9 @@ export default function CitySelectScreen() {
   const [isLocating, setIsLocating] = useState(false); // 标记是否正在定位
   const sectionListRef = useRef<SectionList>(null);
 
+  const SECTION_HEADER_HEIGHT = 32;
+  const CITY_ITEM_HEIGHT = 48;
+
   // 使用 useMemo 缓存转换后的城市数据
   const cityData = useMemo(() => {
     const data = convertCityData();
@@ -119,14 +122,14 @@ export default function CitySelectScreen() {
           return true;
         }
         
-        // 匹配拼音
-        const cityPinyin = pinyin(city.name, { toneType: 'none' }).toLowerCase();
+        // 匹配拼音（去除空格）
+        const cityPinyin = pinyin(city.name, { toneType: 'none' }).toLowerCase().replace(/\s+/g, '');
         if (cityPinyin.includes(query)) {
           return true;
         }
         
         // 匹配拼音首字母
-        const firstLetters = pinyin(city.name, { pattern: 'first', toneType: 'none' }).toLowerCase();
+        const firstLetters = pinyin(city.name, { pattern: 'first', toneType: 'none' }).toLowerCase().replace(/\s+/g, '');
         if (firstLetters.includes(query)) {
           return true;
         }
@@ -150,8 +153,19 @@ export default function CitySelectScreen() {
     if (searchQuery.trim()) {
       return [];
     }
-    return cityData.map(section => section.title);
-  }, [cityData, searchQuery]);
+    // 使用 filteredCityData 而不是 cityData，确保索引与实际渲染的数据一致
+    return filteredCityData.map(section => section.title);
+  }, [filteredCityData, searchQuery]);
+
+  // 计算每个分组头部在列表中的偏移量
+  const sectionOffsets = useMemo(() => {
+    let offset = 0;
+    return filteredCityData.map(section => {
+      const currentOffset = offset;
+      offset += SECTION_HEADER_HEIGHT + section.data.length * CITY_ITEM_HEIGHT;
+      return currentOffset;
+    });
+  }, [filteredCityData, SECTION_HEADER_HEIGHT, CITY_ITEM_HEIGHT]);
 
   // 获取当前位置
   useEffect(() => {
@@ -251,11 +265,13 @@ export default function CitySelectScreen() {
 
   // 点击字母索引跳转到对应区域
   const scrollToSection = (sectionIndex: number) => {
-    sectionListRef.current?.scrollToLocation({
-      sectionIndex,
-      itemIndex: 0,
-      animated: true,
-    });
+    const offset = sectionOffsets[sectionIndex];
+    const responder = (sectionListRef.current as unknown as { getScrollResponder?: () => { scrollTo: (params: { y: number; animated: boolean }) => void } })
+      ?.getScrollResponder?.();
+
+    if (responder && offset !== undefined) {
+      responder.scrollTo({ y: offset, animated: true });
+    }
   };
 
   // 选择城市
@@ -406,7 +422,11 @@ export default function CitySelectScreen() {
       <SectionList
         ref={sectionListRef}
         sections={filteredCityData}
-        keyExtractor={(item, index) => item.name + index}
+        keyExtractor={(item, index) => item.code + item.name + index}
+        initialNumToRender={30}
+        maxToRenderPerBatch={30}
+        windowSize={15}
+        removeClippedSubviews={false}
         renderItem={({ item }) => (
           <TouchableOpacity 
             style={styles.cityItem}
@@ -535,7 +555,8 @@ const styles = StyleSheet.create({
   },
   cityItem: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    height: 48,
+    justifyContent: 'center',
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
@@ -558,7 +579,8 @@ const styles = StyleSheet.create({
   sectionHeader: {
     backgroundColor: '#f5f5f5',
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    height: 32,
+    justifyContent: 'center',
   },
   sectionTitle: {
     fontSize: 14,
