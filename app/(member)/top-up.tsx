@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Divider, Text } from 'react-native-paper';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Divider, Icon, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // 充值选项数据
@@ -13,7 +13,8 @@ const topUpOptions = [
 
 export default function TopUpScreen() {
   const [activeTab, setActiveTab] = useState<'topup' | 'history'>('topup');
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(1);
+  const [hasAgreed, setHasAgreed] = useState(false);
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -43,52 +44,98 @@ export default function TopUpScreen() {
       <Divider />
 
       {/* 内容区域 */}
-      <ScrollView style={styles.content}>
+      <View style={styles.content}>
         {activeTab === 'topup' ? (
           <View style={styles.contentContainer}>
-            {/* 账户余额卡片 */}
-            <View style={styles.balanceCard}>
-              <Text style={styles.balanceAmount}>¥1200.0</Text>
-              <Text style={styles.balanceLabel}>账户余额</Text>
-            </View>
-            
-            {/* 充值金额标题 */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>请选择充值金额</Text>
-            </View>
+            {/* 充值内容 */}
+            <View style={styles.topContent}>
+              {/* 账户余额卡片 */}
+              <View style={styles.balanceCard}>
+                <Text style={styles.balanceAmount}>¥1200.0</Text>
+                <Text style={styles.balanceLabel}>账户余额</Text>
+              </View>
+              
+              {/* 充值金额标题 */}
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>请选择充值金额</Text>
+              </View>
 
-            {/* 充值选项网格 */}
-            <View style={styles.optionsGrid}>
-              {topUpOptions.map((option) => (
-                <TouchableOpacity
-                  key={option.id}
-                  style={[
-                    styles.optionCard,
-                    selectedAmount === option.id && styles.optionCardSelected,
-                  ]}
-                  onPress={() => setSelectedAmount(option.id)}
-                >
-                  <View style={styles.optionContent}>
-                    <View>
-                      <Text style={[
-                        styles.optionAmount,
-                        selectedAmount === option.id && styles.optionAmountSelected,
+              {/* 充值选项网格 */}
+              <View style={styles.optionsGrid}>
+                {topUpOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[
+                      styles.optionCard,
+                      selectedAmount === option.id && styles.optionCardSelected,
+                    ]}
+                    onPress={() => setSelectedAmount(option.id)}
+                  >
+                    <View style={styles.optionContent}>
+                      <View>
+                        <Text style={[
+                          styles.optionAmount,
+                          selectedAmount === option.id && styles.optionAmountSelected,
+                        ]}>
+                          充值{option.amount}元
+                        </Text>
+                        <Text style={styles.optionBonus}>送{option.bonus}元</Text>
+                      </View>
+                      <View style={[
+                        styles.radioCircle,
+                        selectedAmount === option.id && styles.radioCircleSelected,
                       ]}>
-                        充值{option.amount}元
-                      </Text>
-                      <Text style={styles.optionBonus}>送{option.bonus}元</Text>
+                        {selectedAmount === option.id && (
+                          <View style={styles.radioDot} />
+                        )}
+                      </View>
                     </View>
-                    <View style={[
-                      styles.radioCircle,
-                      selectedAmount === option.id && styles.radioCircleSelected,
-                    ]}>
-                      {selectedAmount === option.id && (
-                        <View style={styles.radioDot} />
-                      )}
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {/* 充值须知 */}
+              <View style={styles.noticeCard}>
+                <View style={styles.noticeHeader}>
+                  <Icon source="alert-circle-outline" size={18} color="#FF7214" />
+                  <Text style={styles.noticeTitle}>充值须知</Text>
+                </View>
+                <View style={styles.noticeContent}>
+                  <Text style={styles.noticeItem}>1. 您本次充值的预付卡余额有效期为3年，请在有效期内消费。</Text>
+                  <Text style={styles.noticeItem}>2. 本卡不记名、不挂失、不兑换，仅限本人使用。</Text>
+                  <Text style={styles.noticeItem}>3. 充值后概不退款，如有疑问，可联系商家。</Text>
+                </View>
+              </View>
+            </View>
+            {/* 底部固定区域 */}
+            <View style={styles.bottomSection}>
+              <TouchableOpacity
+                style={styles.agreementRow}
+                onPress={() => setHasAgreed((prev) => !prev)}
+                activeOpacity={0.8}
+              >
+                <View
+                  style={[
+                    styles.agreementIndicator,
+                    hasAgreed && styles.agreementIndicatorActive,
+                  ]}
+                >
+                  {hasAgreed && <View style={styles.agreementIndicatorDot} />}
+                </View>
+                <Text style={styles.agreementText}>
+                  我已阅读并同意
+                  <Text style={styles.agreementLink}>充值协议</Text>
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.confirmButton,
+                  !hasAgreed && styles.confirmButtonDisabled,
+                ]}
+                activeOpacity={0.8}
+                disabled={!hasAgreed}
+              >
+                <Text style={styles.confirmButtonText}>确认充值</Text>
+              </TouchableOpacity>
             </View>
           </View>
         ) : (
@@ -96,7 +143,7 @@ export default function TopUpScreen() {
             <Text style={styles.contentText}>充值记录</Text>
           </View>
         )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -142,10 +189,14 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
     backgroundColor: '#F5F7F7',
+  },
+  topContent: {
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 4,
   },
   contentText: {
     fontSize: 16,
@@ -155,8 +206,8 @@ const styles = StyleSheet.create({
     width: '90%',
     backgroundColor: '#fff',
     borderRadius: 12,
-    paddingVertical: 32,
-    paddingHorizontal: 24,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -169,21 +220,21 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   balanceAmount: {
-    fontSize: 40,
+    fontSize: 28,
     fontWeight: '300',
     color: '#333',
     letterSpacing: 1,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   balanceLabel: {
     fontSize: 14,
-    color: '#999',
-    fontWeight: '400',
+    marginTop: 12,
+    marginBottom: 10,
   },
   sectionHeader: {
     width: '90%',
-    marginTop: 24,
-    marginBottom: 16,
+    marginTop: 16,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 16,
@@ -195,7 +246,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 8,
   },
   optionCard: {
     width: '48%',
@@ -203,8 +254,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: '#E5E5E5',
-    padding: 16,
-    minHeight: 80,
+    padding: 10,
+    minHeight: 64,
   },
   optionCardSelected: {
     borderColor: '#FF7214',
@@ -245,5 +296,89 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: '#FF7214',
+  },
+  noticeCard: {
+    width: '90%',
+    alignSelf: 'center',
+    backgroundColor: '#FFF8F1',
+    borderColor: '#FFD7BD',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 12,
+    marginBottom: 20,
+  },
+  noticeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  noticeTitle: {
+    marginLeft: 6,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+  },
+  noticeContent: {},
+  noticeItem: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  bottomSection: {
+    width: '100%',
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  agreementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  agreementIndicator: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: '#FDBF94',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  agreementIndicatorActive: {
+    borderColor: '#FF7214',
+  },
+  agreementIndicatorDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF7214',
+  },
+  agreementText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  agreementLink: {
+    color: '#FF7214',
+  },
+  confirmButton: {
+    backgroundColor: '#FF7214',
+    borderRadius: 22,
+  paddingVertical: 10,
+    alignItems: 'center',
+    width: '100%',
+  },
+  confirmButtonDisabled: {
+    backgroundColor: '#FFCDA6',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 1,
   },
 });
