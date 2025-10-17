@@ -46,9 +46,8 @@ export default function TopUpScreen() {
       {/* 内容区域 */}
       <View style={styles.content}>
         {activeTab === 'topup' ? (
-          <View style={styles.contentContainer}>
-            {/* 充值内容 */}
-            <View style={styles.topContent}>
+          <>
+            <View style={styles.contentContainer}>
               {/* 账户余额卡片 */}
               <View style={styles.balanceCard}>
                 <Text style={styles.balanceAmount}>¥1200.0</Text>
@@ -137,7 +136,7 @@ export default function TopUpScreen() {
                 <Text style={styles.confirmButtonText}>确认充值</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </>
         ) : (
           <View style={styles.contentContainer}>
             <Text style={styles.contentText}>充值记录</Text>
