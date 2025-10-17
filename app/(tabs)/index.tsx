@@ -36,8 +36,8 @@ export default function HomeScreen() {
             </Card.Content>
           </Card>
           <View style={styles.eatTypeContainer}>
-            <Card 
-              style={styles.eatTypeCard} 
+            <Card
+              style={styles.eatTypeCard}
               mode="elevated"
               onPress={() => router.push('/(location)/addressSelect?type=dine-in')}
             >
@@ -46,8 +46,8 @@ export default function HomeScreen() {
                 <Text style={styles.eatTypeText}>堂食</Text>
               </Card.Content>
             </Card>
-            <Card 
-              style={styles.eatTypeCard} 
+            <Card
+              style={styles.eatTypeCard}
               mode="elevated"
               onPress={() => router.push('/(location)/addressSelect?type=takeout')}
             >
@@ -65,10 +65,10 @@ export default function HomeScreen() {
                 <Text style={styles.serviceText}>排队取号</Text>
               </Card.Content>
             </Card>
-            <Card style={[styles.serviceCard, styles.rechargeCard]} mode="elevated">
+            <Card style={[styles.serviceCard, styles.rechargeCard]} mode="elevated" onPress={() => router.push('/(member)/top-up')}>
               <Card.Content style={styles.serviceContent}>
                 <Icon source="credit-card" size={40} color="#4ECDC4" />
-                <Text onPress={()=>router.push('/(member)/top-up')} style={styles.serviceText}>会员充值</Text>
+                <Text style={styles.serviceText}>会员充值</Text>
               </Card.Content>
             </Card>
             <Card style={[styles.serviceCard, styles.mallCard]} mode="elevated">

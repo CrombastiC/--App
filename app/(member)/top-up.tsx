@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TopUpRecord, topUpStorage } from '@/utils/topUpStorage';
+import { router, useFocusEffect, useNavigation } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Divider, Icon, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,9 +14,75 @@ const topUpOptions = [
 ];
 
 export default function TopUpScreen() {
+  const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<'topup' | 'history'>('topup');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(1);
   const [hasAgreed, setHasAgreed] = useState(false);
+  const [records, setRecords] = useState<TopUpRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [balance, setBalance] = useState<number>(0);
+
+  // 根据 activeTab 更新路由标题
+  useEffect(() => {
+    navigation.setOptions({
+      title: activeTab === 'topup' ? '余额' : '充值记录',
+    });
+  }, [activeTab, navigation]);
+
+  // 页面获得焦点时重新加载余额（从成功页返回时触发）
+  useFocusEffect(
+    useCallback(() => {
+      loadBalance();
+    }, [])
+  );
+
+  // 当切换回充值tab时，重新加载余额
+  useEffect(() => {
+    if (activeTab === 'topup') {
+      loadBalance();
+    }
+  }, [activeTab]);
+
+  // 加载充值记录
+  useEffect(() => {
+    if (activeTab === 'history') {
+      loadRecords();
+    }
+  }, [activeTab]);
+
+  const loadBalance = async () => {
+    const currentBalance = await topUpStorage.getBalance();
+    setBalance(currentBalance);
+  };
+
+  const loadRecords = async () => {
+    setIsLoading(true);
+    const data = await topUpStorage.getRecords();
+    setRecords(data);
+    setIsLoading(false);
+  };
+
+  // 处理充值
+  const handleTopUp = async () => {
+    if (!selectedAmount || !hasAgreed) return;
+
+    const selectedOption = topUpOptions.find(opt => opt.id === selectedAmount);
+    if (!selectedOption) return;
+
+    // 保存充值记录
+    await topUpStorage.addRecord({
+      amount: selectedOption.amount,
+      bonus: selectedOption.bonus,
+      totalAmount: selectedOption.amount + selectedOption.bonus,
+      status: 'success',
+    });
+
+    // 跳转到成功页面
+    router.push({
+      pathname: '/(member)/topUpSuccess',
+      params: { amount: selectedOption.amount.toString() },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -50,7 +118,7 @@ export default function TopUpScreen() {
             <View style={styles.contentContainer}>
               {/* 账户余额卡片 */}
               <View style={styles.balanceCard}>
-                <Text style={styles.balanceAmount}>¥1200.0</Text>
+                <Text style={styles.balanceAmount}>¥{balance.toFixed(1)}</Text>
                 <Text style={styles.balanceLabel}>账户余额</Text>
               </View>
               
@@ -132,14 +200,57 @@ export default function TopUpScreen() {
                 ]}
                 activeOpacity={0.8}
                 disabled={!hasAgreed}
+                onPress={handleTopUp}
               >
                 <Text style={styles.confirmButtonText}>确认充值</Text>
               </TouchableOpacity>
             </View>
           </>
         ) : (
-          <View style={styles.contentContainer}>
-            <Text style={styles.contentText}>充值记录</Text>
+          <View style={styles.historyContainer}>
+            {isLoading ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>加载中...</Text>
+              </View>
+            ) : records.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Icon source="receipt-text-outline" size={64} color="#CCCCCC" />
+                <Text style={styles.emptyText}>暂无充值记录</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={records}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.recordItem}>
+                    <View style={styles.recordLeft}>
+                      <Text style={styles.recordTitle}>
+                        充值{item.amount}元 赠送{item.bonus}元
+                      </Text>
+                      <Text style={styles.recordSubtitle}>
+                        余额{item.amount}元
+                      </Text>
+                    </View>
+                    <View style={styles.recordRight}>
+                      <Text style={styles.recordStatus}>
+                        {item.status === 'success' ? '充值成功' : '充值失败'}
+                      </Text>
+                      <Text style={styles.recordTime}>
+                        {new Date(item.timestamp).toLocaleString('zh-CN', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+                ItemSeparatorComponent={() => <Divider />}
+                contentContainerStyle={styles.listContent}
+              />
+            )}
           </View>
         )}
       </View>
@@ -217,6 +328,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    marginTop: 16,
   },
   balanceAmount: {
     fontSize: 28,
@@ -379,5 +491,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 1,
+  },
+  historyContainer: {
+    flex: 1,
+    backgroundColor: '#F5F7F7',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 16,
+  },
+  listContent: {
+    paddingVertical: 8,
+  },
+  recordItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  recordLeft: {
+    flex: 1,
+  },
+  recordTitle: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 6,
+  },
+  recordSubtitle: {
+    fontSize: 13,
+    color: '#FF7214',
+  },
+  recordRight: {
+    alignItems: 'flex-end',
+    marginLeft: 16,
+  },
+  recordStatus: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 6,
+  },
+  recordTime: {
+    fontSize: 12,
+    color: '#999',
   },
 });
