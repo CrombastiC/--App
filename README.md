@@ -109,8 +109,12 @@ To learn more about developing your project with Expo, look at the following res
 │   │   ├── order.tsx     # 点餐
 │   │   ├── orders.tsx    # 订单
 │   │   └── profile.tsx   # 我的
-│   ├── citySelect.tsx    # 城市选择（定位功能）
-│   └── addressSelect.tsx # 门店选择
+│   ├── (location)/        # 位置相关页面
+│   │   ├── citySelect.tsx    # 城市选择（定位功能）
+│   │   └── addressSelect.tsx # 门店选择
+│   ├── (member)/          # 会员相关页面
+│   │   └── memberCode.tsx    # 会员码
+│   └── splash.tsx         # 启动页
 ├── components/            # 可复用组件
 ├── stores/               # 状态管理 (Zustand)
 ├── utils/                # 工具函数

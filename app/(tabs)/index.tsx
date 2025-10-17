@@ -31,7 +31,7 @@ export default function HomeScreen() {
                 icon="qrcode-scan"
                 size={24}
                 iconColor="#FF7214"
-                onPress={() => router.push('/memberCode')}
+                onPress={() => router.push('/(member)/memberCode')}
               />
             </Card.Content>
           </Card>
@@ -39,7 +39,7 @@ export default function HomeScreen() {
             <Card 
               style={styles.eatTypeCard} 
               mode="elevated"
-              onPress={() => router.push('/addressSelect?type=dine-in')}
+              onPress={() => router.push('/(location)/addressSelect?type=dine-in')}
             >
               <Card.Content style={styles.eatTypeContent}>
                 <Icon source="food" size={35} color="#FF7214" />
@@ -49,7 +49,7 @@ export default function HomeScreen() {
             <Card 
               style={styles.eatTypeCard} 
               mode="elevated"
-              onPress={() => router.push('/addressSelect?type=takeout')}
+              onPress={() => router.push('/(location)/addressSelect?type=takeout')}
             >
               <Card.Content style={styles.eatTypeContent}>
                 <Icon source="bike" size={35} color="#FF7214" />

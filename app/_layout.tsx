@@ -61,9 +61,9 @@ export default function RootLayout() {
           <Stack.Screen name="splash" options={{ headerShown: false }} />
           {/* 标签页布局路由，隐藏默认头部 */}
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          {/* 会员码页面 */}
+          {/* 会员相关页面 */}
           <Stack.Screen
-            name="memberCode"
+            name="(member)/memberCode"
             options={{
               // 显示头部导航栏
               headerShown: true,
@@ -74,9 +74,9 @@ export default function RootLayout() {
               headerTitleAlign: 'center',
             }}
           />
-          {/* 门店选择页面 */}
+          {/* 位置相关页面 - 门店选择 */}
           <Stack.Screen
-            name="addressSelect"
+            name="(location)/addressSelect"
             options={{
               // 显示头部导航栏
               headerShown: true,
@@ -88,9 +88,9 @@ export default function RootLayout() {
               headerTitleAlign: 'center',
             }}
           />
-          {/* 城市选择页面 */}
+          {/* 位置相关页面 - 城市选择 */}
           <Stack.Screen
-            name="citySelect"
+            name="(location)/citySelect"
             options={{
               // 显示头部导航栏
               headerShown: true,

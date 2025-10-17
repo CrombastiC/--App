@@ -113,7 +113,7 @@ export default function AddressSelectScreen() {
         {/* 地址标题及搜索框 */}
         <View style={styles.headerContainer}>
           {/* 城市选择按钮 */}
-          <TouchableOpacity style={styles.citySelector} onPress={()=>router.push('/citySelect')}>
+          <TouchableOpacity style={styles.citySelector} onPress={()=>router.push('/(location)/citySelect')}>
             <Icon source="map-marker-outline" size={20} color="#666" />
             <Text style={styles.cityText}>{currentCity}</Text>
             <Icon source="chevron-right" size={20} color="#999" />
