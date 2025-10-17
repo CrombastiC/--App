@@ -2,8 +2,9 @@
  * 首页
  */
 
+import { router } from 'expo-router';
 import { ImageBackground, StyleSheet, View } from 'react-native';
-import { Card, Icon, Text } from 'react-native-paper';
+import { Card, Icon, IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
@@ -26,7 +27,12 @@ export default function HomeScreen() {
             <Card.Content style={styles.cardContent}>
               <Icon source="account" size={24} color="#666" />
               <Text style={styles.cardText}>授权登录</Text>
-              <Icon source="qrcode-scan" size={24} color="#FF6B35" />
+              <IconButton
+                icon="qrcode-scan"
+                size={24}
+                iconColor="#FF6B35"
+                onPress={() => router.push('/memberCode')}
+              />
             </Card.Content>
           </Card>
           <View style={styles.eatTypeContainer}>
@@ -147,6 +153,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 8,
   },
   eatTypeText: {
     fontWeight: 'bold',

@@ -32,13 +32,13 @@ export const unstable_settings = {
 export default function RootLayout() {
   // 获取当前颜色主题（深色/浅色模式）
   const colorScheme = useColorScheme();
-  
+
   // 根据颜色主题选择对应的导航主题
   const navigationTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
-  
+
   // 根据颜色主题选择对应的 Material Design 3 主题
   const paperTheme = colorScheme === 'dark' ? MD3DarkTheme : MD3LightTheme;
-  
+
   // 从状态管理 store 中获取加载用户配置的方法
   const loadProfiles = useProfileStore((state) => state.loadProfiles);
 
@@ -49,7 +49,7 @@ export default function RootLayout() {
   useEffect(() => {
     loadProfiles().catch(console.error);
   }, [loadProfiles]);
-  
+
   return (
     // Material Design 3 主题提供器，为整个应用提供 Material Design 组件样式
     <PaperProvider theme={paperTheme}>
@@ -61,6 +61,19 @@ export default function RootLayout() {
           <Stack.Screen name="splash" options={{ headerShown: false }} />
           {/* 标签页布局路由，隐藏默认头部 */}
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          {/* 会员码页面 */}
+          <Stack.Screen
+            name="memberCode"
+            options={{
+              // 显示头部导航栏
+              headerShown: true,
+              title: '会员码',
+              // 使用卡片式过渡动画
+              presentation: 'card',
+              // 标题居中显示
+              headerTitleAlign: 'center',
+            }}
+          />
         </Stack>
         {/* 状态栏组件，自动适配系统主题 */}
         <StatusBar style="auto" />
