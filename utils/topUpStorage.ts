@@ -11,6 +11,7 @@ export interface TopUpRecord {
 
 const TOP_UP_RECORDS_KEY = 'topUpRecords';
 const ACCOUNT_BALANCE_KEY = 'accountBalance';
+const USER_POINTS_KEY = 'userPoints';
 
 export const topUpStorage = {
   // 获取所有充值记录
@@ -91,6 +92,47 @@ export const topUpStorage = {
       await this.setBalance(newBalance);
     } catch (error) {
       console.error('减少余额失败:', error);
+    }
+  },
+
+  // 获取积分
+  async getPoints(): Promise<number> {
+    try {
+      const points = await StorageUtils.getNumber(USER_POINTS_KEY);
+      return points || 0;
+    } catch (error) {
+      console.error('获取积分失败:', error);
+      return 0;
+    }
+  },
+
+  // 设置积分
+  async setPoints(points: number): Promise<void> {
+    try {
+      await StorageUtils.setNumber(USER_POINTS_KEY, points);
+    } catch (error) {
+      console.error('设置积分失败:', error);
+    }
+  },
+
+  // 增加积分
+  async addPoints(amount: number): Promise<void> {
+    try {
+      const currentPoints = await this.getPoints();
+      await this.setPoints(currentPoints + amount);
+    } catch (error) {
+      console.error('增加积分失败:', error);
+    }
+  },
+
+  // 减少积分
+  async subtractPoints(amount: number): Promise<void> {
+    try {
+      const currentPoints = await this.getPoints();
+      const newPoints = Math.max(0, currentPoints - amount);
+      await this.setPoints(newPoints);
+    } catch (error) {
+      console.error('减少积分失败:', error);
     }
   },
 };

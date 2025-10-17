@@ -2,12 +2,41 @@
  * 首页
  */
 
-import { router } from 'expo-router';
-import { ImageBackground, StyleSheet, View } from 'react-native';
+import { StorageUtils } from '@/utils/storage';
+import { topUpStorage } from '@/utils/topUpStorage';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { Image, ImageBackground, StyleSheet, View } from 'react-native';
 import { Card, Icon, IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const AVATAR_KEY = 'userAvatar';
+const USERNAME_KEY = 'userName';
+
 export default function HomeScreen() {
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [userName, setUserName] = useState('用户名');
+  const [balance, setBalance] = useState<number>(0);
+  const [points, setPoints] = useState<number>(0);
+
+  const loadData = async () => {
+    const savedAvatar = await StorageUtils.getString(AVATAR_KEY);
+    const savedName = await StorageUtils.getString(USERNAME_KEY);
+    const savedBalance = await topUpStorage.getBalance();
+    const savedPoints = await topUpStorage.getPoints();
+    
+    if (savedAvatar) setAvatar(savedAvatar);
+    if (savedName) setUserName(savedName);
+    setBalance(savedBalance);
+    setPoints(savedPoints);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -23,10 +52,34 @@ export default function HomeScreen() {
         {/* 下半部分 - 纯白色背景 */}
         <View style={styles.bottomSection}>
           {/* 圆角卡片 - 向上偏移 */}
-          <Card style={styles.card} mode="elevated">
+          <Card style={styles.card} mode="elevated" onPress={() => router.push('/(tabs)/profile')}>
             <Card.Content style={styles.cardContent}>
-              <Icon source="account" size={24} color="#666" />
-              <Text style={styles.cardText}>授权登录</Text>
+              {/* 头像 */}
+              {avatar ? (
+                <Image source={{ uri: avatar }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Icon source="account" size={24} color="#999" />
+                </View>
+              )}
+              
+              {/* 用户信息 */}
+              <View style={styles.userInfo}>
+                <View style={styles.nameRow}>
+                  <Text style={styles.userName}>{userName}</Text>
+                  <View style={styles.memberBadge}>
+                    <Text style={styles.memberBadgeText}>普通会员</Text>
+                  </View>
+                </View>
+                <View style={styles.balanceRow}>
+                  <Text style={styles.balanceLabel}>余额</Text>
+                  <Text style={styles.balanceValue}>¥{balance.toFixed(0)}</Text>
+                  <Text style={styles.pointsLabel}>积分</Text>
+                  <Text style={styles.pointsValue}>{points}</Text>
+                </View>
+              </View>
+              
+              {/* 扫码按钮 */}
               <IconButton
                 icon="qrcode-scan"
                 size={24}
@@ -129,7 +182,71 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    height: 60,
+    height: 70,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  avatarPlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F0F0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginRight: 8,
+  },
+  memberBadge: {
+    backgroundColor: '#FF7214',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  memberBadgeText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  balanceLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginRight: 6,
+  },
+  balanceValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FF7214',
+    marginRight: 16,
+  },
+  pointsLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginRight: 6,
+  },
+  pointsValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4ECDC4',
   },
   cardText: {
     flex: 1,
