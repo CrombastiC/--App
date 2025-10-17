@@ -1,154 +1,141 @@
-# 餐厅 App# Welcome to your Expo app 👋
+# 餐厅 App
 
+基于 React Native 和 Expo 构建的餐厅点餐应用。
 
+## 🚀 快速开始
 
-基于 React Native 和 Expo 构建的餐厅点餐应用。This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
-
-
-## 🚀 快速开始## Get started
-
-
-
-```bash1. Install dependencies
-
+```bash
 # 安装依赖
+npm install
 
-npm install   ```bash
-
-   npm install
-
-# 启动开发服务器   ```
-
+# 启动开发服务器
 npx expo start
 
-2. Start the app
-
 # 扫码或选择平台打开
-
-# - 使用 Expo Go (iOS/Android)   ```bash
-
-# - 按 'a' 打开 Android 模拟器   npx expo start
-
-# - 按 'i' 打开 iOS 模拟器   ```
-
+# - 使用 Expo Go (iOS/Android)
+# - 按 'a' 打开 Android 模拟器
+# - 按 'i' 打开 iOS 模拟器
 ```
-
-In the output, you'll find options to open the app in a
 
 ## ✨ 主要功能
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+### 📍 智能定位与城市选择
+- **自动定位** - 应用启动时自动获取当前城市
+- **城市搜索** - 支持中文、拼音、首字母三种搜索方式
+- **字母索引** - 快速跳转到对应城市列表
+- **智能缓存** - 记住上次选择的城市，避免重复定位
+- **定位状态标识** - 清晰展示数据来源（缓存/定位中/已定位）
 
-- 🍽️ **堂食/外卖点餐** - 支持不同就餐方式- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+### 🏪 门店选择
+- **按城市筛选** - 根据定位或选择的城市显示门店
+- **门店详情** - 地址、距离等信息展示
 
-- 📍 **智能定位** - 自动定位当前城市- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+### 🍽️ 点餐功能
+- **堂食点餐** - 扫码点餐流程
+- **外卖点餐** - 支持配送服务
+- **订单管理** - 查看历史订单
 
-- 🔍 **城市搜索** - 支持中文、拼音、首字母搜索- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 👤 会员中心
+- **会员卡管理** - 查看会员码、余额
+- **在线充值** - 支持多档位充值，实时到账
+- **充值记录** - 查看充值历史
+- **个人信息** - 管理个人资料
 
-- 🏪 **门店查找** - 根据城市显示附近门店
-
-- 👤 **会员管理** - 个人信息和订单管理You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-- 💾 **智能缓存** - 记住上次选择的城市
-
-## Get a fresh project
-
-## 📱 定位功能使用
-
-When you're ready, run:
-
-### 如何区分真实定位和缓存
-
-```bash
-
-在城市选择页面，"当前定位城市"旁会显示：npm run reset-project
+## 📂 项目结构
 
 ```
+app/
+├── (tabs)/              # 底部导航标签页
+│   ├── index.tsx        # 首页（点餐入口）
+│   ├── order.tsx        # 当前订单
+│   ├── orders.tsx       # 历史订单
+│   └── profile.tsx      # 个人中心
+├── (location)/          # 定位模块
+│   ├── citySelect.tsx   # 城市选择页
+│   └── addressSelect.tsx # 地址选择页
+├── (member)/            # 会员模块
+│   ├── memberCode.tsx   # 会员码
+│   └── top-up.tsx       # 在线充值
+├── splash.tsx           # 启动页
+└── _layout.tsx          # 路由配置
 
+stores/
+└── profile-store.ts     # Zustand 全局状态管理
+
+utils/
+└── storage.ts           # AsyncStorage 封装
+
+constants/
+└── theme.ts             # 主题配置
+
+json/
+└── MaterialCommunityIcons.json  # 图标库
+```
+
+## � 技术栈
+
+- **框架**: React Native + Expo Router
+- **UI 组件**: React Native Paper
+- **状态管理**: Zustand
+- **本地存储**: AsyncStorage
+- **导航**: Expo Router (file-based routing)
+- **图标**: MaterialCommunityIcons
+- **开发语言**: TypeScript
+
+## 🔧 核心功能实现
+
+### 1. 定位功能使用
+
+#### 定位状态标识
+在城市选择页面，"当前定位城市"旁会显示：
 - **[已保存]** (蓝色) - 来自上次选择的缓存
-
-- **[定位中...]** (橙色) - 正在进行 GPS 定位This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
+- **[定位中...]** (橙色) - 正在进行 GPS 定位
 - **✓ 绿色对勾** - 刚完成的真实定位
 
-## Learn more
-
-### 查看定位日志
-
-To learn more about developing your project with Expo, look at the following resources:
-
+#### 查看定位日志
 打开开发者工具控制台，查看详细日志：
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-
-```- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
+```
 💾 [缓存] 从本地存储加载城市: 北京市  ← 缓存数据
-
-📍 [定位] 无缓存，开始真实定位...      ← 真实定位## Join the community
-
+📍 [定位] 无缓存，开始真实定位...      ← 真实定位
 ✅ [成功] 真实定位获取到城市: 北京市   ← 定位成功
+```
 
-```Join our community of developers creating universal apps.
-
-
-
-### 清除缓存测试- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-
+#### 清除缓存测试
 当显示 `[已保存]` 时，点击下方的 **"清除缓存并重新定位"** 按钮即可立即重新定位。
 
-## 🗂️ 项目结构
+### 2. 城市搜索功能
 
-```
-├── app/                    # 页面路由
-│   ├── (tabs)/            # 底部导航
-│   │   ├── index.tsx     # 首页
-│   │   ├── order.tsx     # 点餐
-│   │   ├── orders.tsx    # 订单
-│   │   └── profile.tsx   # 我的
-│   ├── (location)/        # 位置相关页面
-│   │   ├── citySelect.tsx    # 城市选择（定位功能）
-│   │   └── addressSelect.tsx # 门店选择
-│   ├── (member)/          # 会员相关页面
-│   │   └── memberCode.tsx    # 会员码
-│   └── splash.tsx         # 启动页
-├── components/            # 可复用组件
-├── stores/               # 状态管理 (Zustand)
-├── utils/                # 工具函数
-└── constants/            # 常量配置
-```
+支持三种搜索方式：
+- **中文搜索**: 直接输入"北京"
+- **全拼搜索**: 输入"beijing"
+- **首字母搜索**: 输入"bj"
 
-## 📦 技术栈
+### 3. 会员充值功能
 
-- **React Native** + **Expo** - 跨平台开发
-- **Expo Router** - 文件路由
-- **React Native Paper** - Material Design UI
-- **expo-location** - 定位服务
-- **Zustand** - 状态管理
-- **TypeScript** - 类型安全
-- **pinyin-pro** - 拼音搜索
+#### 充值流程
+1. 进入"个人中心" → 点击"在线充值"
+2. 默认选中 500元 充值档位
+3. 可选择其他充值金额（500/1000/2000/3000元）
+4. 阅读充值须知
+5. 勾选"我已阅读并同意充值协议"
+6. 点击"确认充值"按钮
 
-## 🔧 权限配置
-
-定位权限已在 `app.json` 中配置：
-
-- ✅ iOS: NSLocationWhenInUseUsageDescription
-- ✅ Android: ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+#### 充值界面特点
+- 🎯 默认选中500元档位
+- 🎨 选中卡片高亮橙色边框
+- 📋 充值须知明显展示
+- ✅ 协议勾选后按钮才可用
+- 📌 底部按钮固定显示
 
 ## 📝 开发说明
 
 ### 测试定位功能
-
 1. 使用真机测试（推荐）- 定位效果最好
 2. 模拟器需要手动设置位置
 3. 首次使用会请求定位权限
 4. 如需重新定位，点击"清除缓存"按钮
 
 ### 控制台日志说明
-
 - 🚀 定位流程开始
 - 💾 从缓存加载
 - 📍 真实定位
@@ -157,6 +144,30 @@ To learn more about developing your project with Expo, look at the following res
 - 🗺️ 地理编码
 - ✅ 成功
 - ❌ 失败
+
+## 🔧 权限配置
+
+定位权限已在 `app.json` 中配置：
+- ✅ iOS: NSLocationWhenInUseUsageDescription
+- ✅ Android: ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+
+## 🎯 待开发功能
+
+- [ ] 支付接口集成
+- [ ] 订单详情页面
+- [ ] 菜品浏览和下单
+- [ ] 优惠券功能
+- [ ] 评价系统
+- [ ] 推送通知
+
+## � License
+
+MIT
+
+---
+
+开发者：WEB-Nest  
+最后更新：2025年10月17日
 
 ## 📝 License
 
