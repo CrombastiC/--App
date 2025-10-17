@@ -18,7 +18,7 @@ export default function HomeScreen() {
             resizeMode="contain"
           />
         </View>
-        
+
         {/* 下半部分 - 纯白色背景 */}
         <View style={styles.bottomSection}>
           {/* 圆角卡片 - 向上偏移 */}
@@ -29,6 +29,20 @@ export default function HomeScreen() {
               <Icon source="qrcode-scan" size={24} color="#FF6B35" />
             </Card.Content>
           </Card>
+          <View style={styles.eatTypeContainer}>
+            <Card style={styles.eatTypeCard} mode="elevated">
+              <Card.Content style={styles.eatTypeContent}>
+                <Icon source="food" size={35} color="#FF6B35" />
+                <Text style={styles.eatTypeText}>堂食</Text>
+              </Card.Content>
+            </Card>
+            <Card style={styles.eatTypeCard} mode="elevated">
+              <Card.Content style={styles.eatTypeContent}>
+                <Icon source="bike" size={35} color="#FF6B35" />
+                <Text style={styles.eatTypeText}>外卖</Text>
+              </Card.Content>
+            </Card>
+          </View>
         </View>
       </View>
     </SafeAreaView>
@@ -88,4 +102,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  eatTypeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12, // 中间间距为12
+  },
+  eatTypeCard: {
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    elevation: 4, // Android 阴影
+    shadowColor: '#000', // iOS 阴影
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    marginTop: 16,
+    flex: 1, // 使用flex:1让两个卡片平分空间
+    height: 100,
+  },
+  eatTypeContent: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  eatTypeText: {
+    fontWeight: 'bold',
+  }
 });
