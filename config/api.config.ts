@@ -7,7 +7,7 @@
 export const ENV = {
   // 开发环境
   development: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://192.168.1.136:5000',
     timeout: 10000,
   },
   // 生产环境
@@ -17,7 +17,7 @@ export const ENV = {
   },
   // 测试环境
   staging: {
-    baseURL: 'https://staging-api.yourdomain.com',
+    baseURL: 'http://192.168.1.136:5000',
     timeout: 10000,
   },
 };

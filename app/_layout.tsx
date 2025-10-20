@@ -61,6 +61,8 @@ export default function RootLayout() {
           <Stack.Screen name="splash" options={{ headerShown: false }} />
           {/* 标签页布局路由，隐藏默认头部 */}
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          {/* 认证相关页面（登录、注册、重置密码），隐藏默认头部 */}
+          <Stack.Screen name="auth" options={{ headerShown: false }} />
           {/* 会员相关页面 */}
           <Stack.Screen
             name="(member)/memberCode"

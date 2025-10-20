@@ -2,6 +2,7 @@
  * 首页
  */
 
+import { tokenManager } from '@/services';
 import { StorageUtils } from '@/utils/storage';
 import { topUpStorage } from '@/utils/topUpStorage';
 import { router, useFocusEffect } from 'expo-router';
@@ -18,17 +19,24 @@ export default function HomeScreen() {
   const [userName, setUserName] = useState('用户名');
   const [balance, setBalance] = useState<number>(0);
   const [points, setPoints] = useState<number>(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const loadData = async () => {
-    const savedAvatar = await StorageUtils.getString(AVATAR_KEY);
-    const savedName = await StorageUtils.getString(USERNAME_KEY);
-    const savedBalance = await topUpStorage.getBalance();
-    const savedPoints = await topUpStorage.getPoints();
-    
-    if (savedAvatar) setAvatar(savedAvatar);
-    if (savedName) setUserName(savedName);
-    setBalance(savedBalance);
-    setPoints(savedPoints);
+    // 检查是否已登录
+    const loggedIn = await tokenManager.isLoggedIn();
+    setIsLoggedIn(loggedIn);
+
+    if (loggedIn) {
+      const savedAvatar = await StorageUtils.getString(AVATAR_KEY);
+      const savedName = await StorageUtils.getString(USERNAME_KEY);
+      const savedBalance = await topUpStorage.getBalance();
+      const savedPoints = await topUpStorage.getPoints();
+      
+      if (savedAvatar) setAvatar(savedAvatar);
+      if (savedName) setUserName(savedName);
+      setBalance(savedBalance);
+      setPoints(savedPoints);
+    }
   };
 
   useFocusEffect(
@@ -52,42 +60,57 @@ export default function HomeScreen() {
         {/* 下半部分 - 纯白色背景 */}
         <View style={styles.bottomSection}>
           {/* 圆角卡片 - 向上偏移 */}
-          <Card style={styles.card} mode="elevated" onPress={() => router.push('/(tabs)/profile')}>
-            <Card.Content style={styles.cardContent}>
-              {/* 头像 */}
-              {avatar ? (
-                <Image source={{ uri: avatar }} style={styles.avatar} />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Icon source="account" size={24} color="#999" />
-                </View>
-              )}
-              
-              {/* 用户信息 */}
-              <View style={styles.userInfo}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.userName}>{userName}</Text>
-                  <View style={styles.memberBadge}>
-                    <Text style={styles.memberBadgeText}>普通会员</Text>
+          {isLoggedIn ? (
+            <Card style={styles.card} mode="elevated" onPress={() => router.push('/(tabs)/profile')}>
+              <Card.Content style={styles.cardContent}>
+                {/* 头像 */}
+                {avatar ? (
+                  <Image source={{ uri: avatar }} style={styles.avatar} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Icon source="account" size={24} color="#999" />
+                  </View>
+                )}
+                
+                {/* 用户信息 */}
+                <View style={styles.userInfo}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.userName}>{userName}</Text>
+                    <View style={styles.memberBadge}>
+                      <Text style={styles.memberBadgeText}>普通会员</Text>
+                    </View>
+                  </View>
+                  <View style={styles.balanceRow}>
+                    <Text style={styles.balanceLabel}>余额</Text>
+                    <Text style={styles.balanceValue}>¥{balance.toFixed(0)}</Text>
+                    <Text style={styles.pointsLabel}>积分</Text>
+                    <Text style={styles.pointsValue}>{points}</Text>
                   </View>
                 </View>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceLabel}>余额</Text>
-                  <Text style={styles.balanceValue}>¥{balance.toFixed(0)}</Text>
-                  <Text style={styles.pointsLabel}>积分</Text>
-                  <Text style={styles.pointsValue}>{points}</Text>
+                
+                {/* 扫码按钮 */}
+                <IconButton
+                  icon="qrcode-scan"
+                  size={24}
+                  iconColor="#FF7214"
+                  onPress={() => router.push('/(member)/memberCode')}
+                />
+              </Card.Content>
+            </Card>
+          ) : (
+            <Card style={styles.card} mode="elevated" onPress={() => router.push('/auth/login' as any)}>
+              <Card.Content style={styles.loginCardContent}>
+                <View style={styles.loginIconContainer}>
+                  <Icon source="account-circle" size={48} color="#FF7214" />
                 </View>
-              </View>
-              
-              {/* 扫码按钮 */}
-              <IconButton
-                icon="qrcode-scan"
-                size={24}
-                iconColor="#FF7214"
-                onPress={() => router.push('/(member)/memberCode')}
-              />
-            </Card.Content>
-          </Card>
+                <View style={styles.loginTextContainer}>
+                  <Text style={styles.loginTitle}>授权登录</Text>
+                  <Text style={styles.loginSubtitle}>点击登录享受更多服务</Text>
+                </View>
+                <Icon source="qrcode-scan" size={28} color="#FF7214" />
+              </Card.Content>
+            </Card>
+          )}
           <View style={styles.eatTypeContainer}>
             <Card
               style={styles.eatTypeCard}
@@ -251,6 +274,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#4ECDC4',
+  },
+  loginCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  loginIconContainer: {
+    marginRight: 16,
+  },
+  loginTextContainer: {
+    flex: 1,
+  },
+  loginTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  loginSubtitle: {
+    fontSize: 12,
+    color: '#999',
   },
   cardText: {
     flex: 1,
