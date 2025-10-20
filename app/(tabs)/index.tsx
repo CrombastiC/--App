@@ -112,7 +112,11 @@ export default function HomeScreen() {
           </View>
           {/* 取号，充值，商城 */}
           <View style={styles.serviceContainer}>
-            <Card style={[styles.serviceCard, styles.queueCard]} mode="elevated">
+            <Card 
+              style={[styles.serviceCard, styles.queueCard]} 
+              mode="elevated"
+              onPress={() => router.push('/(location)/addressSelect?type=queue')}
+            >
               <Card.Content style={styles.serviceContent}>
                 <Icon source="ticket" size={40} color="#FF7214" />
                 <Text style={styles.serviceText}>排队取号</Text>

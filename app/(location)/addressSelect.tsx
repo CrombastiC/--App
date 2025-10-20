@@ -15,6 +15,8 @@ interface Store {
   status: string;
   hours: string;
   phone: string;
+  queueCount?: number; // 排队人数
+  canTakeout?: boolean; // 是否可外卖
 }
 
 // 模拟门店数据
@@ -23,10 +25,12 @@ const storeList: Store[] = [
     id: '1',
     name: '黛西餐厅（中海大厦店）',
     address: '上海市静安区江场三路134号',
-    distance: '0.4km',
+    distance: '1.2km',
     status: '营业中',
     hours: '10:00-22:00',
     phone: '18339658260',
+    queueCount: 36,
+    canTakeout: true,
   },
   {
     id: '2',
@@ -36,6 +40,8 @@ const storeList: Store[] = [
     status: '营业中',
     hours: '10:00-22:00',
     phone: '18878006788',
+    queueCount: 28,
+    canTakeout: true,
   },
   {
     id: '3',
@@ -45,6 +51,8 @@ const storeList: Store[] = [
     status: '营业中',
     hours: '10:00-22:00',
     phone: '18878006788',
+    queueCount: 15,
+    canTakeout: false,
   },
   {
     id: '4',
@@ -54,6 +62,8 @@ const storeList: Store[] = [
     status: '营业中',
     hours: '10:00-22:00',
     phone: '18878006788',
+    queueCount: 42,
+    canTakeout: true,
   },
 ];
 
@@ -65,7 +75,17 @@ export default function AddressSelectScreen() {
   const [currentCity, setCurrentCity] = useState('上海市');
 
   // 根据 type 参数设置标题
-  const title = type === 'dine-in' ? '选择堂食门店' : '选择外送门店';
+  const getTitle = () => {
+    switch (type) {
+      case 'dine-in':
+        return '选择堂食门店';
+      case 'queue':
+        return '选择门店';
+      default:
+        return '选择外送门店';
+    }
+  };
+  const title = getTitle();
 
   // 加载保存的城市
   useEffect(() => {
@@ -137,9 +157,9 @@ export default function AddressSelectScreen() {
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <Card style={styles.storeCard} mode="elevated">
-              <Card.Content style={styles.cardContent}>
+              <Card.Content style={type === 'queue' ? styles.queueCardContent : styles.cardContent}>
                 {/* 左侧信息 */}
-                <View style={styles.storeInfo}>
+                <View style={type === 'queue' ? styles.queueStoreInfo : styles.storeInfo}>
                   <Text style={styles.storeName}>{item.name}</Text>
                   <View style={styles.storeDetails}>
                     <Text style={styles.distance}>{item.distance}</Text>
@@ -147,28 +167,62 @@ export default function AddressSelectScreen() {
                   </View>
                   <View style={styles.storeStatus}>
                     <Text style={styles.statusText}>{item.status}</Text>
+                    {type === 'takeout' && item.canTakeout && (
+                      <Text style={styles.takeoutTag}>可外卖</Text>
+                    )}
                     <Text style={styles.hoursText}>{item.hours}</Text>
                   </View>
                 </View>
 
-                {/* 右侧操作区 */}
-                <View style={styles.rightActions}>
-                  <Text style={styles.orderButton}>去下单</Text>
-                  <View style={styles.actionIcons}>
-                    <TouchableOpacity
-                      style={styles.iconButton}
-                      onPress={() => showPhoneDialog(item.phone)}
-                    >
-                      <Icon source="phone" size={20} color="#FF7214" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.iconButton}
-                      onPress={() => console.log('查看地图')}
-                    >
-                      <Icon source="map-marker" size={20} color="#FF7214" />
-                    </TouchableOpacity>
+                {/* 右侧操作区 - 根据类型显示不同内容 */}
+                {type === 'queue' ? (
+                  // 排队取号场景
+                  <View style={styles.queueRightSection}>
+                    <View style={styles.queueTopRow}>
+                      <TouchableOpacity style={styles.queueButton}>
+                        <Text style={styles.queueButtonText}>取号排队</Text>
+                      </TouchableOpacity>
+                      <View style={styles.queueActionIcons}>
+                        <TouchableOpacity
+                          style={styles.iconButton}
+                          onPress={() => showPhoneDialog(item.phone)}
+                        >
+                          <Icon source="phone" size={20} color="#FF7214" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.iconButton}
+                          onPress={() => console.log('查看地图')}
+                        >
+                          <Icon source="map-marker" size={20} color="#FF7214" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    {item.queueCount !== undefined && (
+                      <Text style={styles.queueInfo}>
+                        当前有 <Text style={styles.queueNumber}>{item.queueCount}</Text> 桌正在等位
+                      </Text>
+                    )}
                   </View>
-                </View>
+                ) : (
+                  // 堂食/外卖场景
+                  <View style={styles.rightActions}>
+                    <Text style={styles.orderButton}>去下单</Text>
+                    <View style={styles.actionIcons}>
+                      <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={() => showPhoneDialog(item.phone)}
+                      >
+                        <Icon source="phone" size={20} color="#FF7214" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={() => console.log('查看地图')}
+                      >
+                        <Icon source="map-marker" size={20} color="#FF7214" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
               </Card.Content>
             </Card>
           )}
@@ -268,11 +322,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
+  queueCardContent: {
+    flexDirection: 'column',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
   storeInfo: {
     flex: 1,
     borderRightColor: '#f0f0f0',
     borderRightWidth: 1,
     paddingRight: 12,
+  },
+  queueStoreInfo: {
+    flex: 1,
   },
   storeHeader: {
     flexDirection: 'row',
@@ -310,6 +372,18 @@ const styles = StyleSheet.create({
     color: '#FF7214',
     backgroundColor: 'rgba(254, 241, 232, 1)',
     marginRight: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 2,
+  },
+  takeoutTag: {
+    fontSize: 12,
+    color: '#4ECDC4',
+    backgroundColor: 'rgba(78, 205, 196, 0.1)',
+    marginRight: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 2,
   },
   hoursText: {
     fontSize: 12,
@@ -319,6 +393,43 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingLeft: 12,
+  },
+  queueRightSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  queueTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  queueButton: {
+    backgroundColor: '#FF7214',
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+    borderRadius: 4,
+  },
+  queueButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  queueActionIcons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  queueInfo: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
+  },
+  queueNumber: {
+    color: '#FF7214',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   orderButton: {
     fontSize: 14,
