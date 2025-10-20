@@ -54,6 +54,8 @@ export default function TabLayout() {
         name="order"
         options={{
           title: '点餐', // 标签页显示的中文标题
+          headerShown: true, // 显示头部导航栏
+          headerTitleAlign: 'center',
           // 自定义标签图标：餐具图标，大小28，颜色随主题变化
           tabBarIcon: ({ color }) => <Icon source="silverware-fork-knife" size={28} color={color} />,
         }}
