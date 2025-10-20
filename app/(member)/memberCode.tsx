@@ -1,5 +1,7 @@
+import { topUpStorage } from "@/utils/topUpStorage";
 import Barcode from "@kichiyaki/react-native-barcode-generator";
-import { useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,7 +11,7 @@ import { Card, Icon } from "react-native-paper";
 import QRCode from "react-native-qrcode-svg";
 
 export default function MemberCodeScreen() {
-  const accountBalance = 5000.0;
+  const [accountBalance, setAccountBalance] = useState<number>(0);
   // 生成随机会员码
   const [memberCode, setMemberCode] = useState("");
 
@@ -22,6 +24,18 @@ export default function MemberCodeScreen() {
     const randomCode = part1 + part2 + part3 + part4;
     setMemberCode(randomCode);
   }, []);
+
+  const loadBalance = async () => {
+    const savedBalance = await topUpStorage.getBalance();
+    setAccountBalance(savedBalance);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadBalance();
+    }, [])
+  );
+
 
   return <View style={styles.container} >
     <Card style={styles.card} mode="elevated">
