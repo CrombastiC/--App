@@ -204,12 +204,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    height: 70,
+    minHeight: 80, // 改为 minHeight 确保有足够空间
   },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
+    overflow: 'hidden', // 防止头像超出圆形边界
   },
   avatarPlaceholder: {
     width: 50,

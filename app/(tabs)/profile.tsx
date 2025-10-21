@@ -5,8 +5,8 @@
 import { tokenManager } from '@/services';
 import { StorageUtils } from '@/utils/storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,6 +24,13 @@ export default function ProfileScreen() {
   useEffect(() => {
     loadUserInfo();
   }, []);
+
+  // 页面获得焦点时重新加载用户信息（从充值成功页返回时触发）
+  useFocusEffect(
+    useCallback(() => {
+      loadUserInfo();
+    }, [])
+  );
 
   const loadUserInfo = async () => {
     try {

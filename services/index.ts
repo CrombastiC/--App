@@ -6,16 +6,21 @@
 // 认证服务
 export { authService, tokenManager } from './auth.service';
 export type {
-    LoginRequest,
-    LoginResponse,
-    RegisterRequest,
-    RegisterResponse, ResetPasswordRequest, SendCodeRequest, User
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+  User
 } from './auth.service';
 
 // 用户服务
 export { userService } from './user.service';
 export type {
-    ChangePasswordRequest, UpdateProfileRequest, UserStats
+  ChangePasswordRequest,
+  TopUpRecord,
+  TopUpRecordsResponse,
+  UpdateProfileRequest,
+  UserStats
 } from './user.service';
 
 // ==================== 使用说明 ====================

@@ -1,9 +1,8 @@
-import { tokenManager } from '@/services';
-import { TopUpRecord, topUpStorage } from '@/utils/topUpStorage';
+import { tokenManager, TopUpRecord, userService } from '@/services';
 import { router, useFocusEffect, useNavigation } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Divider, Icon, Text } from 'react-native-paper';
+import { Button, Dialog, Divider, Icon, Portal, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // 充值选项数据
@@ -16,12 +15,14 @@ const topUpOptions = [
 
 export default function TopUpScreen() {
   const navigation = useNavigation();
-  const [activeTab, setActiveTab] = useState<'topup' | 'history'>('topup');
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(1);
+  const [activeTab, setActiveTab] = useState<'topup' | 'history'>('topup');//充值tab or 记录tab
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(1);//选择的金额卡片
   const [hasAgreed, setHasAgreed] = useState(false);
-  const [records, setRecords] = useState<TopUpRecord[]>([]);
+  const [records, setRecords] = useState<TopUpRecord[]>([]);//充值记录
   const [isLoading, setIsLoading] = useState(false);
-  const [balance, setBalance] = useState<number>(0);
+  const [balance, setBalance] = useState<number>(0);//用户余额
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);//充值确认弹窗
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   // 根据 activeTab 更新路由标题
   useEffect(() => {
@@ -37,20 +38,6 @@ export default function TopUpScreen() {
     }, [])
   );
 
-  // 当切换回充值tab时，重新加载余额
-  useEffect(() => {
-    if (activeTab === 'topup') {
-      loadBalance();
-    }
-  }, [activeTab]);
-
-  // 加载充值记录
-  useEffect(() => {
-    if (activeTab === 'history') {
-      loadRecords();
-    }
-  }, [activeTab]);
-
   const loadBalance = async () => {
     // 从 userInfo 中解构取值（来自登录接口的 data.user）
     const userInfo = await tokenManager.getUserInfo();
@@ -61,24 +48,71 @@ export default function TopUpScreen() {
 
   const loadRecords = async () => {
     setIsLoading(true);
-    const data = await topUpStorage.getRecords();
-    setRecords(data);
+    const [error, response] = await userService.getTopUpRecords();
+    
+    if (!error && response && response.data) {
+      setRecords(response.data);
+    } else {
+      console.error('获取充值记录失败:', error);
+      setRecords([]);
+    }
+    
     setIsLoading(false);
   };
 
-  // 处理充值
-  const handleTopUp = async () => {
-    if (!selectedAmount || !hasAgreed) return;
+  // 处理tab切换
+  const handleTabChange = (tab: 'topup' | 'history') => {
+    setActiveTab(tab);
+    
+    // 切换到对应tab时加载数据
+    if (tab === 'topup') {
+      loadBalance();
+    } else if (tab === 'history') {
+      loadRecords();
+    }
+  };
 
+  // 处理充值按钮点击 - 显示确认对话框
+  const handleTopUpClick = () => {
+    if (!selectedAmount || !hasAgreed) return;
+    
     const selectedOption = topUpOptions.find(opt => opt.id === selectedAmount);
     if (!selectedOption) return;
+    
+    setShowConfirmDialog(true);
+  };
 
-    // 保存充值记录
-    await topUpStorage.addRecord({
-      amount: selectedOption.amount,
-      bonus: selectedOption.bonus,
-      totalAmount: selectedOption.amount + selectedOption.bonus,
-      status: 'success',
+  // 确认充值
+  const handleConfirmTopUp = async () => {
+    if (!selectedAmount) return;
+    const selectedOption = getSelectedOption();
+    if (!selectedOption) return;
+    
+    setConfirmLoading(true);
+    
+    const [error, response] = await userService.rechargeBalance(
+      selectedOption.amount,
+      selectedOption.bonus
+    );
+    
+    setConfirmLoading(false);
+    setShowConfirmDialog(false);
+    
+    if (error || !response || !response.data) {
+      console.error('充值失败:', error);
+      return;
+    }
+    
+    // response.data 是实际的用户数据
+    const userData = response.data;
+    
+    // 更新本地状态
+    setBalance(userData.balance || 0);
+    
+    // 更新缓存中的完整用户信息（包含余额和积分）
+    await tokenManager.updateUserInfo({
+      balance: userData.balance,
+      integral: userData.integral,
     });
 
     // 跳转到成功页面
@@ -88,23 +122,33 @@ export default function TopUpScreen() {
     });
   };
 
+  // 取消充值
+  const handleCancelTopUp = () => {
+    setShowConfirmDialog(false);
+  };
+
+  // 获取选中的充值选项
+  const getSelectedOption = () => {
+    return topUpOptions.find(opt => opt.id === selectedAmount);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       {/* 顶部切换组件 */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tabItem, activeTab === 'topup' && styles.tabItemActive]}
-          onPress={() => setActiveTab('topup')}
+          onPress={() => handleTabChange('topup')}
         >
           <Text style={[styles.tabText, activeTab === 'topup' && styles.tabTextActive]}>
             充值
           </Text>
           {activeTab === 'topup' && <View style={styles.tabIndicator} />}
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={[styles.tabItem, activeTab === 'history' && styles.tabItemActive]}
-          onPress={() => setActiveTab('history')}
+          onPress={() => handleTabChange('history')}
         >
           <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>
             充值记录
@@ -112,7 +156,7 @@ export default function TopUpScreen() {
           {activeTab === 'history' && <View style={styles.tabIndicator} />}
         </TouchableOpacity>
       </View>
-      
+
       <Divider />
 
       {/* 内容区域 */}
@@ -125,7 +169,7 @@ export default function TopUpScreen() {
                 <Text style={styles.balanceAmount}>¥{balance.toFixed(1)}</Text>
                 <Text style={styles.balanceLabel}>账户余额</Text>
               </View>
-              
+
               {/* 充值金额标题 */}
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>请选择充值金额</Text>
@@ -204,7 +248,7 @@ export default function TopUpScreen() {
                 ]}
                 activeOpacity={0.8}
                 disabled={!hasAgreed}
-                onPress={handleTopUp}
+                onPress={handleTopUpClick}
               >
                 <Text style={styles.confirmButtonText}>确认充值</Text>
               </TouchableOpacity>
@@ -224,23 +268,23 @@ export default function TopUpScreen() {
             ) : (
               <FlatList
                 data={records}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item, index) => `${item.createdAt}-${index}`}
                 renderItem={({ item }) => (
                   <View style={styles.recordItem}>
                     <View style={styles.recordLeft}>
                       <Text style={styles.recordTitle}>
-                        充值{item.amount}元 赠送{item.bonus}元
+                        充值 {item.balance}元 赠送{item.giveBalance}元
                       </Text>
                       <Text style={styles.recordSubtitle}>
-                        余额{item.amount}元
+                        充值后余额 ¥{item.totalBalance}
                       </Text>
                     </View>
                     <View style={styles.recordRight}>
                       <Text style={styles.recordStatus}>
-                        {item.status === 'success' ? '充值成功' : '充值失败'}
+                        充值成功
                       </Text>
                       <Text style={styles.recordTime}>
-                        {new Date(item.timestamp).toLocaleString('zh-CN', {
+                        {new Date(item.createdAt).toLocaleString('zh-CN', {
                           year: 'numeric',
                           month: '2-digit',
                           day: '2-digit',
@@ -258,6 +302,42 @@ export default function TopUpScreen() {
           </View>
         )}
       </View>
+
+      {/* 充值确认对话框 */}
+      <Portal>
+        <Dialog visible={showConfirmDialog} onDismiss={handleCancelTopUp}>
+          <Dialog.Title>确认充值</Dialog.Title>
+          <Dialog.Content>
+            {getSelectedOption() && (
+              <View>
+                <Text style={styles.dialogText}>
+                  充值金额：¥{getSelectedOption()?.amount}
+                </Text>
+                <Text style={styles.dialogText}>
+                  赠送金额：¥{getSelectedOption()?.bonus}
+                </Text>
+                <Text style={styles.dialogTotal}>
+                  实际到账：¥{(getSelectedOption()?.amount || 0) + (getSelectedOption()?.bonus || 0)}
+                </Text>
+              </View>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={handleCancelTopUp} disabled={confirmLoading}>
+              取消
+            </Button>
+            <Button 
+              onPress={handleConfirmTopUp} 
+              loading={confirmLoading}
+              disabled={confirmLoading}
+              mode="contained"
+              buttonColor="#FF7214"
+            >
+              确认
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </SafeAreaView>
   );
 }
@@ -483,7 +563,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     backgroundColor: '#FF7214',
     borderRadius: 22,
-  paddingVertical: 10,
+    paddingVertical: 10,
     alignItems: 'center',
     width: '100%',
   },
@@ -547,5 +627,16 @@ const styles = StyleSheet.create({
   recordTime: {
     fontSize: 12,
     color: '#999',
+  },
+  dialogText: {
+    fontSize: 15,
+    color: '#666',
+    marginBottom: 8,
+  },
+  dialogTotal: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FF7214',
+    marginTop: 8,
   },
 });

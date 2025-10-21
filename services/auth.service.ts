@@ -29,8 +29,10 @@ export interface LoginRequest {
 
 /**
  * 登录响应数据
+ * 响应格式: { code: 0, token: string, user: User }
  */
 export interface LoginResponse {
+  code: number;
   token: string;
   user: User;
 }
@@ -46,8 +48,10 @@ export interface RegisterRequest {
 
 /**
  * 注册响应数据
+ * 响应格式: { code: 0, token: string, user: User }
  */
 export interface RegisterResponse {
+  code: number;
   token: string;
   user: User;
 }
@@ -147,6 +151,7 @@ export const tokenManager = {
    */
   async saveLoginInfo(data: LoginResponse) {
     try {
+      // 登录响应: { code: 0, token: string, user: User }
       await AsyncStorage.setItem('token', data.token);
       await AsyncStorage.setItem('userId', data.user.id);
       await AsyncStorage.setItem('userInfo', JSON.stringify(data.user));
@@ -179,6 +184,27 @@ export const tokenManager = {
     } catch (error) {
       console.error('获取用户信息失败:', error);
       return null;
+    }
+  },
+
+  /**
+   * 更新用户信息（部分更新或完整更新）
+   */
+  async updateUserInfo(updatedInfo: Partial<User> | User): Promise<boolean> {
+    try {
+      const currentInfo = await this.getUserInfo();
+      if (!currentInfo) {
+        console.error('未找到当前用户信息');
+        return false;
+      }
+      
+      // 合并更新
+      const newInfo = { ...currentInfo, ...updatedInfo };
+      await AsyncStorage.setItem('userInfo', JSON.stringify(newInfo));
+      return true;
+    } catch (error) {
+      console.error('更新用户信息失败:', error);
+      return false;
     }
   },
 

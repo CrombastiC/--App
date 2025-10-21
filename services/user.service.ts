@@ -35,6 +35,24 @@ export interface UserStats {
   points: number;          // 积分
 }
 
+/**
+ * 充值记录项
+ */
+export interface TopUpRecord {
+  balance: number;         // 充值金额
+  giveBalance: string;     // 赠送金额
+  totalBalance: number;    // 总金额（充值后的余额）
+  createdAt: string;       // 创建时间
+}
+
+/**
+ * 充值记录响应
+ */
+export interface TopUpRecordsResponse {
+  code: number;
+  data: TopUpRecord[];
+}
+
 // ==================== 用户服务 ====================
 
 export const userService = {
@@ -88,6 +106,25 @@ export const userService = {
   deleteAccount: () => {
     return request.delete<{ message: string }>('/api/user/account');
   },
+
+  /**
+   * 余额充值
+   * 返回更新后的完整用户信息
+   * 响应格式: { code: 0, data: User }
+   * @param balance 充值金额
+   * @param giveBalance 赠送金额
+   */
+  rechargeBalance: (balance: number, giveBalance: number) => {
+    return request.put<{ code: number; data: User }>('/api/users/update', { balance, giveBalance });
+  },
+
+  /**
+   * 获取充值记录
+   * 响应格式: { code: 0, data: TopUpRecord[] }
+   */
+  getTopUpRecords: () => {
+    return request.get<TopUpRecordsResponse>('/api/users/getRechargeRecord');
+  }
 };
 
 // ==================== 使用示例 ====================
