@@ -4,8 +4,9 @@
 
 import { useRequest } from '@/hooks/use-request';
 import { authService, tokenManager } from '@/services';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { StorageUtils } from '@/utils/storage';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   ImageBackground,
@@ -20,11 +21,24 @@ import { Button, Icon, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
+  // 获取路由参数
+  const params = useLocalSearchParams<{ phone?: string; password?: string }>();
+  
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [phoneError, setPhoneError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+
+  // 当从注册页跳转过来时,自动填充用户名和密码
+  useEffect(() => {
+    if (params.phone) {
+      setPhone(params.phone);
+    }
+    if (params.password) {
+      setPassword(params.password);
+    }
+  }, [params.phone, params.password]);
 
   // 使用 useRequest hook
   const { loading, runAsync } = useRequest(authService.login, {
@@ -69,6 +83,8 @@ export default function LoginScreen() {
         Alert.alert('登录失败', '请检查您的手机号和密码');
       } else if (data) {
         await tokenManager.saveLoginInfo(data);
+        // 保存用户名到单独的 key,供首页使用
+        await StorageUtils.setString('userName', data.user.username);
         Alert.alert('登录成功', '欢迎回来！', [
           {
             text: '确定',

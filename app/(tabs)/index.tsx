@@ -27,13 +27,21 @@ export default function HomeScreen() {
     setIsLoggedIn(loggedIn);
 
     if (loggedIn) {
+      // 优先从 userInfo 中读取 username
+      const userInfo = await tokenManager.getUserInfo();
       const savedAvatar = await StorageUtils.getString(AVATAR_KEY);
-      const savedName = await StorageUtils.getString(USERNAME_KEY);
       const savedBalance = await topUpStorage.getBalance();
       const savedPoints = await topUpStorage.getPoints();
       
       if (savedAvatar) setAvatar(savedAvatar);
-      if (savedName) setUserName(savedName);
+      // 使用从登录接口返回的 username
+      if (userInfo && userInfo.username) {
+        setUserName(userInfo.username);
+      } else {
+        // 降级到从单独的 key 读取
+        const savedName = await StorageUtils.getString(USERNAME_KEY);
+        if (savedName) setUserName(savedName);
+      }
       setBalance(savedBalance);
       setPoints(savedPoints);
     }

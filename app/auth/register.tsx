@@ -3,7 +3,7 @@
  */
 
 import { useRequest } from '@/hooks/use-request';
-import { authService, tokenManager } from '@/services';
+import { authService } from '@/services';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -20,17 +20,17 @@ import { Button, Icon, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegisterScreen() {
-  const [phone, setPhone] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [phone, setPhone] = useState('');//手机号
+  const [username, setUsername] = useState('');//用户名
+  const [password, setPassword] = useState('');//密码
+  const [confirmPassword, setConfirmPassword] = useState('');//确认密码
+  const [passwordVisible, setPasswordVisible] = useState(false);//密码可见性
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);//确认密码可见性
 
-  const [phoneError, setPhoneError] = useState('');
-  const [nicknameError, setNicknameError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [phoneError, setPhoneError] = useState('');//手机号错误
+  const [nicknameError, setNicknameError] = useState('');//昵称错误
+  const [passwordError, setPasswordError] = useState('');//密码错误
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');//确认密码错误
 
   // 注册请求
   const { loading: registering, runAsync: registerAsync } = useRequest(
@@ -57,13 +57,13 @@ export default function RegisterScreen() {
     }
 
     // 验证昵称
-    if (!nickname) {
+    if (!username) {
       setNicknameError('请输入昵称');
       isValid = false;
-    } else if (nickname.length < 2) {
+    } else if (username.length < 2) {
       setNicknameError('昵称至少2个字符');
       isValid = false;
-    } else if (nickname.length > 20) {
+    } else if (username.length > 20) {
       setNicknameError('昵称最多20个字符');
       isValid = false;
     } else {
@@ -98,16 +98,23 @@ export default function RegisterScreen() {
   // 处理注册
   const handleRegister = async () => {
     if (validateForm()) {
-      const [error, data] = await registerAsync({ phone, nickname, password });
+      const [error, data] = await registerAsync({ phone, username, password });
       if (error) {
-        Alert.alert('注册失败', '注册失败，请稍后重试');
+        Alert.alert('注册失败', '注册失败,请稍后重试');
       } else if (data) {
-        // 注册成功后自动登录
-        await tokenManager.saveLoginInfo(data);
-        Alert.alert('注册成功', '欢迎加入！', [
+        // 注册成功后跳转到登录页并自动填充用户名密码
+        Alert.alert('注册成功', '欢迎加入!即将跳转到登录页面...', [
           {
             text: '确定',
-            onPress: () => router.replace('/(tabs)'),
+            onPress: () => {
+              router.replace({
+                pathname: '/auth/login',
+                params: {
+                  phone: phone,
+                  password: password,
+                },
+              });
+            },
           },
         ]);
       }
@@ -171,9 +178,9 @@ export default function RegisterScreen() {
               {/* 昵称 */}
               <TextInput
                 label="昵称"
-                value={nickname}
+                value={username}
                 onChangeText={(text) => {
-                  setNickname(text);
+                  setUsername(text);
                   setNicknameError('');
                 }}
                 maxLength={20}

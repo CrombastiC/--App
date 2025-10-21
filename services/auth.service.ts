@@ -13,11 +13,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export interface User {
   id: string;
   username: string;
-  email: string;
   phone?: string;
   avatar?: string;
-  nickname?: string;
-  createdAt?: string;
 }
 
 /**
@@ -33,7 +30,6 @@ export interface LoginRequest {
  */
 export interface LoginResponse {
   token: string;
-  refreshToken: string;
   user: User;
 }
 
@@ -43,7 +39,7 @@ export interface LoginResponse {
 export interface RegisterRequest {
   phone: string;
   password: string;
-  nickname: string; // 昵称
+  username: string; // 昵称
 }
 
 /**
@@ -51,7 +47,6 @@ export interface RegisterRequest {
  */
 export interface RegisterResponse {
   token: string;
-  refreshToken: string;
   user: User;
 }
 
@@ -82,7 +77,7 @@ export const authService = {
    * @returns [error, response]
    */
   login: (data: LoginRequest) => {
-    return request.post<LoginResponse>('/api/auth/login', data);
+    return request.post<LoginResponse>('/api/users/login', data);
   },
 
   /**
@@ -91,7 +86,7 @@ export const authService = {
    * @returns [error, response]
    */
   register: (data: RegisterRequest) => {
-    return request.post<RegisterResponse>('/api/auth/register', data);
+    return request.post<RegisterResponse>('/api/users/register', data);
   },
 
   // 以下接口暂时不可用，需要接入短信平台后启用
@@ -151,7 +146,6 @@ export const tokenManager = {
   async saveLoginInfo(data: LoginResponse) {
     try {
       await AsyncStorage.setItem('token', data.token);
-      await AsyncStorage.setItem('refreshToken', data.refreshToken);
       await AsyncStorage.setItem('userId', data.user.id);
       await AsyncStorage.setItem('userInfo', JSON.stringify(data.user));
       return true;
@@ -169,18 +163,6 @@ export const tokenManager = {
       return await AsyncStorage.getItem('token');
     } catch (error) {
       console.error('获取Token失败:', error);
-      return null;
-    }
-  },
-
-  /**
-   * 获取RefreshToken
-   */
-  async getRefreshToken(): Promise<string | null> {
-    try {
-      return await AsyncStorage.getItem('refreshToken');
-    } catch (error) {
-      console.error('获取RefreshToken失败:', error);
       return null;
     }
   },
@@ -205,7 +187,6 @@ export const tokenManager = {
     try {
       await AsyncStorage.multiRemove([
         'token',
-        'refreshToken',
         'userId',
         'userInfo',
       ]);
