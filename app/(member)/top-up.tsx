@@ -1,3 +1,4 @@
+import { tokenManager } from '@/services';
 import { TopUpRecord, topUpStorage } from '@/utils/topUpStorage';
 import { router, useFocusEffect, useNavigation } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -51,8 +52,11 @@ export default function TopUpScreen() {
   }, [activeTab]);
 
   const loadBalance = async () => {
-    const currentBalance = await topUpStorage.getBalance();
-    setBalance(currentBalance);
+    // 从 userInfo 中解构取值（来自登录接口的 data.user）
+    const userInfo = await tokenManager.getUserInfo();
+    if (userInfo) {
+      setBalance(userInfo.balance || 0);
+    }
   };
 
   const loadRecords = async () => {

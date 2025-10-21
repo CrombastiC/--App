@@ -4,7 +4,6 @@
 
 import { useRequest } from '@/hooks/use-request';
 import { authService, tokenManager } from '@/services';
-import { StorageUtils } from '@/utils/storage';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -83,8 +82,6 @@ export default function LoginScreen() {
         Alert.alert('登录失败', '请检查您的手机号和密码');
       } else if (data) {
         await tokenManager.saveLoginInfo(data);
-        // 保存用户名到单独的 key,供首页使用
-        await StorageUtils.setString('userName', data.user.username);
         Alert.alert('登录成功', '欢迎回来！', [
           {
             text: '确定',

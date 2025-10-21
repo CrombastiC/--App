@@ -3,16 +3,11 @@
  */
 
 import { tokenManager } from '@/services';
-import { StorageUtils } from '@/utils/storage';
-import { topUpStorage } from '@/utils/topUpStorage';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Image, ImageBackground, StyleSheet, View } from 'react-native';
-import { Card, Icon, IconButton, Text } from 'react-native-paper';
+import { ImageBackground, StyleSheet, View } from 'react-native';
+import { Avatar, Card, Icon, IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const AVATAR_KEY = 'userAvatar';
-const USERNAME_KEY = 'userName';
 
 export default function HomeScreen() {
   const [avatar, setAvatar] = useState<string | null>(null);
@@ -27,23 +22,15 @@ export default function HomeScreen() {
     setIsLoggedIn(loggedIn);
 
     if (loggedIn) {
-      // 优先从 userInfo 中读取 username
+      // 从 userInfo 中解构取值（来自登录接口的 data.user）
       const userInfo = await tokenManager.getUserInfo();
-      const savedAvatar = await StorageUtils.getString(AVATAR_KEY);
-      const savedBalance = await topUpStorage.getBalance();
-      const savedPoints = await topUpStorage.getPoints();
-      
-      if (savedAvatar) setAvatar(savedAvatar);
-      // 使用从登录接口返回的 username
-      if (userInfo && userInfo.username) {
-        setUserName(userInfo.username);
-      } else {
-        // 降级到从单独的 key 读取
-        const savedName = await StorageUtils.getString(USERNAME_KEY);
-        if (savedName) setUserName(savedName);
+      if (userInfo) {
+        const { username, avatar, balance, integral } = userInfo;
+        setUserName(username || '用户名');
+        setAvatar(avatar || null);
+        setBalance(balance || 0);
+        setPoints(integral || 0);
       }
-      setBalance(savedBalance);
-      setPoints(savedPoints);
     }
   };
 
@@ -73,7 +60,7 @@ export default function HomeScreen() {
               <Card.Content style={styles.cardContent}>
                 {/* 头像 */}
                 {avatar ? (
-                  <Image source={{ uri: avatar }} style={styles.avatar} />
+                  <Avatar.Image source={{ uri: avatar }} style={styles.avatar} />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
                     <Icon source="account" size={24} color="#999" />

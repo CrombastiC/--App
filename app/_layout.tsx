@@ -63,72 +63,14 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           {/* 认证相关页面（登录、注册、重置密码），隐藏默认头部 */}
           <Stack.Screen name="auth" options={{ headerShown: false }} />
-          {/* 会员相关页面 */}
-          <Stack.Screen
-            name="(member)/memberCode"
-            options={{
-              // 显示头部导航栏
-              headerShown: true,
-              title: '会员码',
-              // 使用卡片式过渡动画
-              presentation: 'card',
-              // 标题居中显示
-              headerTitleAlign: 'center',
-            }}
-          />
-          {/* 会员充值页面 */}
-          <Stack.Screen
-            name="(member)/top-up"
-            options={{
-              // 显示头部导航栏
-              headerShown: true,
-              title: '余额',
-              // 使用卡片式过渡动画
-              presentation: 'card',
-              // 标题居中显示
-              headerTitleAlign: 'center',
-            }}
-          />
-          {/* 充值成功页面 */}
-          <Stack.Screen
-            name="(member)/topUpSuccess"
-            options={{
-              // 显示头部导航栏
-              headerShown: true,
-              title: '充值成功',
-              // 使用卡片式过渡动画
-              presentation: 'card',
-              // 标题居中显示
-              headerTitleAlign: 'center',
-            }}
-          />
-          {/* 位置相关页面 - 门店选择 */}
-          <Stack.Screen
-            name="(location)/addressSelect"
-            options={{
-              // 显示头部导航栏
-              headerShown: true,
-              // 标题将在页面内部根据路由参数动态设置
-              title: '选择门店',
-              // 使用卡片式过渡动画
-              presentation: 'card',
-              // 标题居中显示
-              headerTitleAlign: 'center',
-            }}
-          />
-          {/* 位置相关页面 - 城市选择 */}
-          <Stack.Screen
-            name="(location)/citySelect"
-            options={{
-              // 显示头部导航栏
-              headerShown: true,
-              title: '选择城市',
-              // 使用卡片式过渡动画
-              presentation: 'card',
-              // 标题居中显示
-              headerTitleAlign: 'center',
-            }}
-          />
+          {/* 用户相关页面，具体页面配置在 user/_layout.tsx */}
+          <Stack.Screen name="user" options={{ headerShown: false }} />
+          {/* 会员相关页面，具体页面配置在 (member)/_layout.tsx */}
+          <Stack.Screen name="(member)" options={{ headerShown: false }} />
+          {/* 位置相关页面，具体页面配置在 (location)/_layout.tsx */}
+          <Stack.Screen name="(location)" options={{ headerShown: false }} />
+          {/* 点餐相关页面，具体页面配置在 (orderfood)/_layout.tsx */}
+          <Stack.Screen name="(orderfood)" options={{ headerShown: false }} />
         </Stack>
         {/* 状态栏组件，自动适配系统主题 */}
         <StatusBar style="auto" />

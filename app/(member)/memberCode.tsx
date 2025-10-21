@@ -1,11 +1,11 @@
-import { topUpStorage } from "@/utils/topUpStorage";
+import { tokenManager } from "@/services";
 import Barcode from "@kichiyaki/react-native-barcode-generator";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { Card, Icon } from "react-native-paper";
 import QRCode from "react-native-qrcode-svg";
@@ -26,8 +26,11 @@ export default function MemberCodeScreen() {
   }, []);
 
   const loadBalance = async () => {
-    const savedBalance = await topUpStorage.getBalance();
-    setAccountBalance(savedBalance);
+    // 从 userInfo 中解构取值（来自登录接口的 data.user）
+    const userInfo = await tokenManager.getUserInfo();
+    if (userInfo) {
+      setAccountBalance(userInfo.balance || 0);
+    }
   };
 
   useFocusEffect(

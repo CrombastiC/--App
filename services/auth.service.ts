@@ -15,6 +15,8 @@ export interface User {
   username: string;
   phone?: string;
   avatar?: string;
+  balance?: number;    // 余额
+  integral?: number;   // 积分
 }
 
 /**
