@@ -67,6 +67,8 @@ export default function RootLayout() {
           <Stack.Screen name="user" options={{ headerShown: false }} />
           {/* 会员相关页面，具体页面配置在 (member)/_layout.tsx */}
           <Stack.Screen name="(member)" options={{ headerShown: false }} />
+          {/* 积分相关页面，具体页面配置在 (points)/_layout.tsx */}
+          <Stack.Screen name="(points)" options={{ headerShown: false }} />
           {/* 位置相关页面，具体页面配置在 (location)/_layout.tsx */}
           <Stack.Screen name="(location)" options={{ headerShown: false }} />
           {/* 点餐相关页面，具体页面配置在 (orderfood)/_layout.tsx */}

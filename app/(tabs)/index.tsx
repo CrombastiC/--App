@@ -146,7 +146,7 @@ export default function HomeScreen() {
                 <Text style={styles.serviceText}>会员充值</Text>
               </Card.Content>
             </Card>
-            <Card style={[styles.serviceCard, styles.mallCard]} mode="elevated">
+            <Card style={[styles.serviceCard, styles.mallCard]} mode="elevated" onPress={() => router.push('/pointsMall')}>
               <Card.Content style={styles.serviceContent}>
                 <Icon source="store" size={40} color="#9B59B6" />
                 <Text style={styles.serviceText}>积分商城</Text>
