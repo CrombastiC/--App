@@ -40,9 +40,9 @@ interface CategoryData {
 }
 
 // // 渲染用的商品项（带分类标题）
-// interface ProductItem extends Product {
-//   isHeader?: boolean;
-// }
+interface ProductItem extends Product {
+  isTitle?: boolean;
+}
 
 // 图标映射
 const categoryIcons: { [key: string]: string } = {
@@ -58,7 +58,7 @@ export default function OrderScreen() {
   const [orderType, setOrderType] = useState<'dine-in' | 'takeout'>('dine-in');
   const [selectedCategory, setSelectedCategory] = useState('');//选择的分类ID
   const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,13 +96,13 @@ export default function OrderScreen() {
           setCategories(categoryList);
 
           // 处理商品数据并添加quantity字段
-          const productList: Product[] = [];
+          const productList: ProductItem[] = [];
           categoryData.forEach(cat => {
             cat.foods.forEach(food => {
               productList.push({
                 ...food,
                 quantity: 0,
-                // todo 可根据isHeader字段用于显示分类标题
+                isTitle: false,
               });
             });
           });
@@ -170,8 +170,8 @@ export default function OrderScreen() {
     if (isScrollingRef.current || viewableItems.length === 0) return;
 
     // 获取第一个可见项的分类ID
-    const firstVisibleItem = viewableItems[0]?.item as Product;
-    if (firstVisibleItem && firstVisibleItem.classifyId) {
+    const firstVisibleItem = viewableItems[0]?.item as ProductItem;
+    if (firstVisibleItem && firstVisibleItem.classifyId && !firstVisibleItem.isTitle) {
       setSelectedCategory(firstVisibleItem.classifyId);
     }
   }).current;
@@ -310,12 +310,12 @@ export default function OrderScreen() {
                 flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
               });
             }}
-            renderItem={({ item }) => (
-              item.isHeader ? (
-                <View style={styles.categoryTitleContainer}>
-                  <Text style={styles.categoryTitle}>{item.foodName}</Text>
-                </View>
-              ) : (
+            renderItem={({ item }) => {
+              if (item.isTitle) {
+                return <Text style={styles.categoryTitle}>{item.foodName}</Text>;
+              }
+              
+              return (
                 <View style={styles.productCard}>
                   {/* 商品图片 */}
                   <View style={styles.productImage}>
@@ -359,8 +359,8 @@ export default function OrderScreen() {
                     </View>
                   </View>
                 </View>
-              )
-            )}
+              );
+            }}
 
           />
         </View>
@@ -518,16 +518,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   // 右侧商品列表
-  // 商品分类标题容器
-  categoryTitleContainer: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-  },
   categoryTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginVertical: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
   },
   productContainer: {
     flex: 1,
