@@ -1,7 +1,8 @@
-import { createDish, getProductInfo } from '@/services/order.service';
+import { createDish, getProductInfo, uploadImage } from '@/services/order.service';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, Dialog, Divider, Icon, Modal, Portal, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,7 +18,9 @@ export default function CreateOrderScreen() {
   const [categoryDrawerVisible, setCategoryDrawerVisible] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [dishName, setDishName] = useState('');
- const [dishPrice, setDishPrice] = useState('');
+  const [dishPrice, setDishPrice] = useState('');
+  const [foodImage, setFoodImage] = useState('');
+  const [imageUri, setImageUri] = useState('');
   const [visible, setVisible] = useState(false);
   // 加载商品数据
   useEffect(() => {
@@ -64,6 +67,72 @@ export default function CreateOrderScreen() {
     closeCategoryDrawer();
   };
 
+  // 选择图片
+  const pickImage = async () => {
+    try {
+      // 请求媒体库权限
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('提示', '需要访问相册权限才能上传图片');
+        return;
+      }
+
+      // 打开图片选择器
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const selectedImage = result.assets[0];
+        setImageUri(selectedImage.uri);
+
+        // 上传图片
+        await uploadImageToServer(selectedImage.uri);
+      }
+    } catch (error) {
+      console.error('选择图片失败:', error);
+      Alert.alert('错误', '选择图片失败,请重试');
+    }
+  };
+
+  // 上传图片到服务器
+  const uploadImageToServer = async (uri: string) => {
+    try {
+      // 创建 FormData
+      const formData = new FormData();
+      const filename = uri.split('/').pop() || 'image.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+      formData.append('file', {
+        uri,
+        name: filename,
+        type,
+      } as any);
+
+      // 调用上传接口
+      const [isError, data] = await uploadImage(formData);
+
+      if (!isError && data) {
+        const responseData = data as any;
+        if (responseData.code === 0 && responseData.data?.url) {
+          setFoodImage(responseData.data.url);
+          console.log('图片上传成功:', responseData.data.url);
+          Alert.alert('成功', '图片上传成功');
+        } else {
+          console.log('图片上传失败:', responseData.message);
+          Alert.alert('失败', responseData.message || '图片上传失败');
+        }
+      }
+    } catch (error) {
+      console.error('上传图片失败:', error);
+      Alert.alert('错误', '上传图片失败,请重试');
+    }
+  };
+
   // 提交订单
   const handleSubmit = async () => {
     if (!selectedCategory) {
@@ -75,17 +144,19 @@ export default function CreateOrderScreen() {
       return;
     }
     
-    //传参为分类id，菜品名称，菜品价格
+    //传参为分类id,菜品名称,菜品价格
     console.log('提交订单:', {
       classifyId: selectedCategoryId,
       foodName: dishName.trim(),
       foodPrice: dishPrice,
+      foodImage: foodImage,
     });
     // TODO: 调用提交订单的 API
     const [isError, data] =await createDish({
       classifyId: selectedCategoryId,
       foodName: dishName.trim(),
       foodPrice: dishPrice,
+      foodImage: foodImage,
     });
     if (!isError && data) {
       const responseData = data as any;
@@ -98,6 +169,8 @@ export default function CreateOrderScreen() {
         setSelectedCategoryId('');
         setDishName('');
         setDishPrice('');
+        setFoodImage('');
+        setImageUri('');
       } else {
         console.log('订单创建失败:', responseData.message);
       }
@@ -144,6 +217,29 @@ export default function CreateOrderScreen() {
             outlineColor="#e0e0e0"
             activeOutlineColor="#FF7214"
           />
+
+          {/* 图片上传 */}
+          <Text style={styles.fieldLabel}>菜品图片</Text>
+          <TouchableOpacity style={styles.imageUploadContainer} onPress={pickImage}>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.uploadedImage} />
+            ) : (
+              <View style={styles.uploadPlaceholder}>
+                <Icon source="camera" size={48} color="#999" />
+                <Text style={styles.uploadText}>点击上传图片</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          {imageUri && (
+            <Button
+              mode="text"
+              onPress={pickImage}
+              textColor="#FF7214"
+              style={styles.reuploadButton}
+            >
+              重新上传
+            </Button>
+          )}
 
 
           {/* 提交按钮 */}
@@ -310,5 +406,33 @@ const styles = StyleSheet.create({
   categoryItemText: {
     fontSize: 16,
     color: '#333',
+  },
+  imageUploadContainer: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    backgroundColor: '#f9f9f9',
+  },
+  uploadPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#999',
+  },
+  uploadedImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  reuploadButton: {
+    marginTop: 8,
   },
 });

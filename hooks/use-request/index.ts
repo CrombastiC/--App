@@ -39,6 +39,7 @@ export function useRequest<T>(
          setLoading(true)
          const res = await serviceMethod(...params)
          const [err, data] = res
+         console.log(res);
          setError(err)
          setLoading(false)
          setData(data)

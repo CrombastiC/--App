@@ -10,6 +10,8 @@ export default function AuthLayout() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: '#F6EAE3' },
+        // 防止手势返回导致的意外导航
+        gestureEnabled: false,
       }}
     >
       <Stack.Screen name="login" />

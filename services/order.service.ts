@@ -13,3 +13,14 @@ export const getProductInfo = (id?: string) => {
 export const createDish = (data: any) => {
   return request.post('/api/menu/createFood', data);
 };
+
+/**
+ * 上传图片
+ */
+export const uploadImage = (data: any) => {
+  return request.post('/api/upload/uploadImg', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+}

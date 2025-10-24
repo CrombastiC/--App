@@ -93,7 +93,7 @@ export default function HomeScreen() {
               </Card.Content>
             </Card>
           ) : (
-            <Card style={styles.card} mode="elevated" onPress={() => router.push('/auth/login' as any)}>
+            <Card style={styles.card} mode="elevated" onPress={() => router.replace('/auth/login' as any)}>
               <Card.Content style={styles.loginCardContent}>
                 <View style={styles.loginIconContainer}>
                   <Icon source="account-circle" size={48} color="#FF7214" />

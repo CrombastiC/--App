@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#333',
     marginBottom: 8,
-    height: 20,
+    // 文本省略由 Text 组件的 numberOfLines 属性控制,不需要这些样式
   },
   priceContainer: {
     flexDirection: 'row',

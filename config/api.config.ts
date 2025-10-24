@@ -12,7 +12,7 @@ export const ENV = {
   },
   // 生产环境
   production: {
-    baseURL: 'https://api.yourdomain.com',
+    baseURL: 'http://192.168.1.136:5000',
     timeout: 15000,
   },
   // 测试环境
