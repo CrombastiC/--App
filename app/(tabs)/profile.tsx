@@ -165,10 +165,10 @@ export default function ProfileScreen() {
             </View>
             <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/user/createOrder')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={22} color="#333" />
-              <Text style={styles.menuItemText}>任务中心</Text>
+              <Text style={styles.menuItemText}>创建订单</Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
           </TouchableOpacity>

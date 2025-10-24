@@ -2,81 +2,215 @@
  * 点餐页面
  */
 
+import { getProductInfo } from '@/services/order.service';
 import { Stack } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View, ViewToken } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // 分类数据类型
 interface Category {
-  id: string;
-  name: string;
-  icon: string;
+  classifyId: string; // 分类ID
+  classifyName: string; // 分类名称
+  icon: string; // 分类图标
 }
 
 // 商品数据类型
 interface Product {
-  id: string;
-  name: string;
-  price: number;
-  rating: number;
-  image: string;
-  categoryId: string;
-  quantity: number;
+  _id: string; // 商品ID
+  classifyId: string; // 分类ID
+  foodName: string; // 商品名称
+  foodImage: string; // 商品图片
+  foodPrice: number; // 商品价格
+  quantity: number; // 商品数量
 }
 
-// 模拟分类数据
-const categories: Category[] = [
-  { id: '1', name: '人气', icon: 'fire' },
-  { id: '2', name: '轻食系列', icon: 'food-apple' },
-  { id: '3', name: '午排系列', icon: 'food-steak' },
-  { id: '4', name: '三明治', icon: 'hamburger' },
-  { id: '5', name: '水果沙拉', icon: 'fruit-cherries' },
-  { id: '6', name: '饮品', icon: 'cup' },
-];
+// API返回的分类数据
+interface CategoryData {
+  classifyId: string; // 分类ID
+  classifyName: string; // 分类名称 
+  foods: {
+    _id: string; // 商品ID
+    classifyId: string; // 分类ID
+    foodName: string; // 商品名称
+    foodImage: string; // 商品图片
+    foodPrice: number; // 商品价格
+  }[];
+}
 
-// 模拟商品数据
-const products: Product[] = [
-  { id: '1', name: '热烤鸡胸蔬菜沙拉', price: 42.0, rating: 5.4, image: '', categoryId: '1', quantity: 0 },
-  { id: '2', name: '热烤鸡胸蔬菜沙拉', price: 42.0, rating: 5.4, image: '', categoryId: '1', quantity: 0 },
-  { id: '3', name: '热烤鸡胸蔬菜沙拉', price: 42.0, rating: 5.4, image: '', categoryId: '1', quantity: 0 },
-  { id: '4', name: '热烤鸡胸蔬菜沙拉', price: 42.0, rating: 5.4, image: '', categoryId: '1', quantity: 0 },
-  { id: '5', name: '热烤鸡胸蔬菜沙拉', price: 42.0, rating: 5.4, image: '', categoryId: '1', quantity: 0 },
-];
+// // 渲染用的商品项（带分类标题）
+// interface ProductItem extends Product {
+//   isHeader?: boolean;
+// }
+
+// 图标映射
+const categoryIcons: { [key: string]: string } = {
+  '人气': 'fire',
+  '轻食系列': 'food-apple',
+  '牛排系列': 'food-steak',
+  '三明治': 'hamburger',
+  '水果沙拉': 'fruit-cherries',
+  '饮品': 'cup',
+};
 
 export default function OrderScreen() {
   const [orderType, setOrderType] = useState<'dine-in' | 'takeout'>('dine-in');
-  const [selectedCategory, setSelectedCategory] = useState('1');
-  const [cart, setCart] = useState<Product[]>(products);
+  const [selectedCategory, setSelectedCategory] = useState('');//选择的分类ID
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const storeName = '中海大厦店';
   const distance = '1.2km';
+  const flatListRef = useRef<FlatList>(null);
+  const isScrollingRef = useRef(false);
 
   // 根据订餐类型获取标题
   const title = orderType === 'dine-in' ? '堂食点餐' : '外送点餐';
 
+  // 加载商品数据
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [isError, data] = await getProductInfo();
+
+      if (!isError && data) {
+        const responseData = data as any;
+
+        if (responseData.code === 0 && responseData.data) {
+          const categoryData: CategoryData[] = responseData.data;
+
+          // 处理分类数据
+          const categoryList: Category[] = categoryData.map(cat => ({
+            classifyId: cat.classifyId,
+            classifyName: cat.classifyName,
+            icon: categoryIcons[cat.classifyName] || 'food',
+          }));
+          setCategories(categoryList);
+
+          // 处理商品数据并添加quantity字段
+          const productList: Product[] = [];
+          categoryData.forEach(cat => {
+            cat.foods.forEach(food => {
+              productList.push({
+                ...food,
+                quantity: 0,
+                // todo 可根据isHeader字段用于显示分类标题
+              });
+            });
+          });
+          setProducts(productList);
+
+          // 设置默认选中第一个分类
+          if (categoryList.length > 0) {
+            setSelectedCategory(categoryList[0].classifyId);
+          }
+        } else {
+          setError('数据格式错误');
+        }
+      } else {
+        setError('加载商品信息失败');
+      }
+    } catch (err) {
+      setError('加载商品信息失败');
+      console.error('加载商品信息失败:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 计算购物车总数量和总价
-  const cartTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const cartPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartTotal = products.reduce((sum, item) => sum + item.quantity, 0);
+  const cartPrice = products.reduce((sum, item) => sum + item.foodPrice * item.quantity, 0);
 
   // 增加商品数量
   const increaseQuantity = (productId: string) => {
-    setCart(cart.map(item => 
-      item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
+    setProducts(products.map(item =>
+      item._id === productId ? { ...item, quantity: item.quantity + 1 } : item
     ));
   };
 
   // 减少商品数量
   const decreaseQuantity = (productId: string) => {
-    setCart(cart.map(item => 
-      item.id === productId && item.quantity > 0 ? { ...item, quantity: item.quantity - 1 } : item
+    setProducts(products.map(item =>
+      item._id === productId && item.quantity > 0 ? { ...item, quantity: item.quantity - 1 } : item
     ));
   };
+
+  // 点击分类滚动到对应商品
+  const handleCategoryPress = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    isScrollingRef.current = true;
+
+    // 找到该分类的第一个商品的索引
+    const index = products.findIndex(p => p.classifyId === categoryId);
+    if (index !== -1 && flatListRef.current) {
+      flatListRef.current.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 0,
+      });
+
+      // 延迟重置滚动标志
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 1000);
+    }
+  };
+
+  // 监听可见项变化
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (isScrollingRef.current || viewableItems.length === 0) return;
+
+    // 获取第一个可见项的分类ID
+    const firstVisibleItem = viewableItems[0]?.item as Product;
+    if (firstVisibleItem && firstVisibleItem.classifyId) {
+      setSelectedCategory(firstVisibleItem.classifyId);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+        <Stack.Screen options={{ title }} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF7214" />
+          <Text style={styles.loadingText}>加载中...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+        <Stack.Screen options={{ title }} />
+        <View style={styles.errorContainer}>
+          <Icon source="alert-circle" size={48} color="#ff4444" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadProducts}>
+            <Text style={styles.retryButtonText}>重试</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <Stack.Screen options={{ title }} />
-      
+
       {/* 头部 */}
       <View style={styles.header}>
         {/* 左侧：门店信息 */}
@@ -136,25 +270,25 @@ export default function OrderScreen() {
           <ScrollView showsVerticalScrollIndicator={false}>
             {categories.map((category) => (
               <TouchableOpacity
-                key={category.id}
+                key={category.classifyId}
                 style={[
                   styles.categoryItem,
-                  selectedCategory === category.id && styles.categoryItemActive,
+                  selectedCategory === category.classifyId && styles.categoryItemActive,
                 ]}
-                onPress={() => setSelectedCategory(category.id)}
+                onPress={() => handleCategoryPress(category.classifyId)}
               >
                 <Icon
                   source={category.icon}
                   size={20}
-                  color={selectedCategory === category.id ? '#FF7214' : '#666'}
+                  color={selectedCategory === category.classifyId ? '#FF7214' : '#666'}
                 />
                 <Text
                   style={[
                     styles.categoryText,
-                    selectedCategory === category.id && styles.categoryTextActive,
+                    selectedCategory === category.classifyId && styles.categoryTextActive,
                   ]}
                 >
-                  {category.name}
+                  {category.classifyName}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -164,51 +298,70 @@ export default function OrderScreen() {
         {/* 右侧：商品列表 */}
         <View style={styles.productContainer}>
           <FlatList
-            data={cart}
-            keyExtractor={(item) => item.id}
+            ref={flatListRef}
+            data={products}
+            keyExtractor={(item) => item._id}
             showsVerticalScrollIndicator={false}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            onScrollToIndexFailed={(info) => {
+              const wait = new Promise(resolve => setTimeout(resolve, 500));
+              wait.then(() => {
+                flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+              });
+            }}
             renderItem={({ item }) => (
-              <View style={styles.productCard}>
-                {/* 商品图片 */}
-                <View style={styles.productImage}>
-                  <Icon source="food" size={60} color="#ddd" />
+              item.isHeader ? (
+                <View style={styles.categoryTitleContainer}>
+                  <Text style={styles.categoryTitle}>{item.foodName}</Text>
                 </View>
-
-                {/* 商品信息 */}
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName}>{item.name}</Text>
-                  <View style={styles.ratingRow}>
-                    <Icon source="star" size={14} color="#FFB800" />
-                    <Text style={styles.ratingText}>{item.rating}分</Text>
+              ) : (
+                <View style={styles.productCard}>
+                  {/* 商品图片 */}
+                  <View style={styles.productImage}>
+                    {item.foodImage ? (
+                      <Image
+                        source={{ uri: item.foodImage }}
+                        style={styles.foodImageStyle}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Icon source="food" size={60} color="#ddd" />
+                    )}
                   </View>
-                  <View style={styles.priceRow}>
-                    <Text style={styles.price}>¥{item.price.toFixed(1)}</Text>
-                    <Text style={styles.oldPrice}>(¥)</Text>
+
+                  {/* 商品信息 */}
+                  <View style={styles.productInfo}>
+                    <Text style={styles.productName} numberOfLines={2}>{item.foodName}</Text>
+                    <View style={styles.productBottom}>
+                      <Text style={styles.price}>¥{item.foodPrice.toFixed(2)}</Text>
+
+                      {/* 数量控制 */}
+                      <View style={styles.quantityControl}>
+                        {item.quantity > 0 ? (
+                          <>
+                            <TouchableOpacity
+                              style={styles.quantityButton}
+                              onPress={() => decreaseQuantity(item._id)}
+                            >
+                              <Icon source="minus-circle" size={24} color="#FF7214" />
+                            </TouchableOpacity>
+                            <Text style={styles.quantityText}>{item.quantity}</Text>
+                          </>
+                        ) : null}
+                        <TouchableOpacity
+                          style={styles.quantityButton}
+                          onPress={() => increaseQuantity(item._id)}
+                        >
+                          <Icon source="plus-circle" size={24} color="#FF7214" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   </View>
                 </View>
-
-                {/* 数量控制 */}
-                <View style={styles.quantityControl}>
-                  {item.quantity > 0 ? (
-                    <>
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => decreaseQuantity(item.id)}
-                      >
-                        <Icon source="minus-circle" size={24} color="#FF7214" />
-                      </TouchableOpacity>
-                      <Text style={styles.quantityText}>{item.quantity}</Text>
-                    </>
-                  ) : null}
-                  <TouchableOpacity
-                    style={styles.quantityButton}
-                    onPress={() => increaseQuantity(item.id)}
-                  >
-                    <Icon source="plus-circle" size={24} color="#FF7214" />
-                  </TouchableOpacity>
-                </View>
-              </View>
+              )
             )}
+
           />
         </View>
       </View>
@@ -225,7 +378,7 @@ export default function OrderScreen() {
             )}
           </View>
           <View style={styles.priceInfo}>
-            <Text style={styles.totalPrice}>¥{cartPrice.toFixed(0)}</Text>
+            <Text style={styles.totalPrice}>¥{cartPrice.toFixed(2)}</Text>
             <Text style={styles.deliveryInfo}>配送费¥3</Text>
           </View>
         </View>
@@ -241,6 +394,40 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: '#FF7214',
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   header: {
     flexDirection: 'row',
@@ -331,6 +518,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   // 右侧商品列表
+  // 商品分类标题容器
+  categoryTitleContainer: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+  },
+  categoryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginVertical: 12,
+  },
   productContainer: {
     flex: 1,
     backgroundColor: '#fff',
@@ -349,6 +547,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  foodImageStyle: {
+    width: '100%',
+    height: '100%',
   },
   productInfo: {
     flex: 1,
@@ -360,15 +563,10 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 4,
   },
-  ratingRow: {
+  productBottom: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-  },
-  ratingText: {
-    fontSize: 12,
-    color: '#FFB800',
-    marginLeft: 4,
+    justifyContent: 'space-between',
   },
   priceRow: {
     flexDirection: 'row',
@@ -378,18 +576,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FF7214',
-    marginRight: 8,
-  },
-  oldPrice: {
-    fontSize: 12,
-    color: '#999',
-    textDecorationLine: 'line-through',
   },
   quantityControl: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 80,
+    justifyContent: 'flex-end',
   },
   quantityButton: {
     padding: 4,

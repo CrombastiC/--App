@@ -10,6 +10,14 @@ export default function UserLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="createOrder"
+        options={{
+          title: '创建订单',
+          headerShown: true,
+          headerTitleAlign: 'center',
+        }}
+      />
     </Stack>
   );
 }
