@@ -47,11 +47,12 @@ interface ProductItem extends Product {
 // 图标映射
 const categoryIcons: { [key: string]: string } = {
   '人气': 'fire',
-  '轻食系列': 'food-apple',
-  '牛排系列': 'food-steak',
+  '轻食': 'food-apple',
+  '牛排': 'food-steak',
   '三明治': 'hamburger',
   '水果沙拉': 'fruit-cherries',
   '饮品': 'cup',
+  '小炒': 'chili-hot',
 };
 
 export default function OrderScreen() {
@@ -139,10 +140,10 @@ export default function OrderScreen() {
   // 切换购物车显示
   const toggleCart = () => {
     if (cartTotal === 0) return; // 购物车为空时不显示
-    
+
     const toValue = cartVisible ? 0 : 1;
     setCartVisible(!cartVisible);
-    
+
     Animated.spring(slideAnim, {
       toValue,
       useNativeDriver: true,
@@ -342,7 +343,7 @@ export default function OrderScreen() {
               if (item.isTitle) {
                 return <Text style={styles.categoryTitle}>{item.foodName}</Text>;
               }
-              
+
               return (
                 <View style={styles.productCard}>
                   {/* 商品图片 */}
@@ -374,7 +375,9 @@ export default function OrderScreen() {
                             >
                               <Icon source="minus-circle" size={24} color="#FF7214" />
                             </TouchableOpacity>
-                            <Text style={styles.quantityText}>{item.quantity}</Text>
+                            <View style={styles.quantityTextContainer}>
+                              <Text style={styles.quantityText}>{item.quantity}</Text>
+                            </View>
                           </>
                         ) : null}
                         <TouchableOpacity
@@ -396,8 +399,8 @@ export default function OrderScreen() {
 
       {/* 遮罩层 - 覆盖主内容区域 */}
       {cartVisible && (
-        <TouchableOpacity 
-          style={styles.cartOverlay} 
+        <TouchableOpacity
+          style={styles.cartOverlay}
           activeOpacity={1}
           onPress={toggleCart}
         />
@@ -407,7 +410,7 @@ export default function OrderScreen() {
       <View style={styles.bottomContainer} pointerEvents="box-none">
         {/* 购物车列表区域 */}
         {cartVisible && (
-          <Animated.View 
+          <Animated.View
             style={[
               styles.cartListContainer,
               {
@@ -438,7 +441,7 @@ export default function OrderScreen() {
                     <Text style={styles.cartItemName} numberOfLines={1}>{item.foodName}</Text>
                     <Text style={styles.cartItemPrice}>¥{item.foodPrice.toFixed(2)}</Text>
                   </View>
-                  
+
                   {/* 数量控制 */}
                   <View style={styles.cartItemControl}>
                     <TouchableOpacity
@@ -462,7 +465,7 @@ export default function OrderScreen() {
         )}
 
         {/* 底部固定按钮 */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.bottomBar}
           onPress={toggleCart}
           activeOpacity={0.8}
@@ -484,7 +487,7 @@ export default function OrderScreen() {
               <Text style={styles.deliveryInfo}>另需配送费¥3</Text>
             </View>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.checkoutButton,
               cartTotal === 0 && styles.checkoutButtonDisabled
@@ -690,16 +693,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    minWidth: 90, // 设置最小宽度确保按钮对齐
   },
   quantityButton: {
     padding: 4,
+  },
+  quantityTextContainer: {
+    minWidth: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   quantityText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginHorizontal: 12,
-    minWidth: 20,
     textAlign: 'center',
   },
   // 底部容器

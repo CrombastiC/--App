@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Button, Dialog, Divider, Icon, Modal, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Dialog, Divider, Icon, Portal, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // 分类数据类型
@@ -79,9 +79,9 @@ export default function CreateOrderScreen() {
 
       // 打开图片选择器
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images', 'videos'],
         allowsEditing: true,
-        aspect: [4, 3],
+        aspect: [2, 2],
         quality: 0.8,
       });
 
@@ -137,13 +137,24 @@ export default function CreateOrderScreen() {
   const handleSubmit = async () => {
     if (!selectedCategory) {
       console.log('请选择分类');
+      Alert.alert('提示', '请选择分类');
       return;
     }
     if (!dishName.trim()) {
       console.log('请输入菜品名称');
+      Alert.alert('提示', '请输入菜品名称');
       return;
     }
-    
+    if (!dishPrice.trim() || isNaN(Number(dishPrice))) {
+      console.log('请输入有效的菜品价格');
+      Alert.alert('提示', '请输入有效的菜品价格');
+      return;
+    }
+    if (!foodImage) {
+      console.log('请上传菜品图片');
+      Alert.alert('提示', '请上传菜品图片');
+      return;
+    }
     //传参为分类id,菜品名称,菜品价格
     console.log('提交订单:', {
       classifyId: selectedCategoryId,
@@ -256,42 +267,50 @@ export default function CreateOrderScreen() {
       </ScrollView>
 
       {/* 底部抽屉 */}
-      <Portal>
-        <Modal
-          visible={categoryDrawerVisible}
-          onDismiss={closeCategoryDrawer}
-          contentContainerStyle={styles.modalContent}
-        >
-          <View style={styles.drawerContainer}>
-            {/* 抽屉标题 */}
-            <View style={styles.drawerHeader}>
-              <Text style={styles.drawerTitle}>选择分类</Text>
-              <TouchableOpacity onPress={closeCategoryDrawer}>
-                <Icon source="close" size={24} color="#333" />
+      {categoryDrawerVisible && (
+        <Portal>
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={closeCategoryDrawer}
+          >
+            <View style={styles.modalContent}>
+              <TouchableOpacity 
+                activeOpacity={1}
+                style={styles.drawerContainer}
+                onPress={(e) => e.stopPropagation()}
+              >
+                {/* 抽屉标题 */}
+                <View style={styles.drawerHeader}>
+                  <Text style={styles.drawerTitle}>选择分类</Text>
+                  <TouchableOpacity onPress={closeCategoryDrawer}>
+                    <Icon source="close" size={24} color="#333" />
+                  </TouchableOpacity>
+                </View>
+                <Divider />
+
+                {/* 分类列表 */}
+                <FlatList
+                  data={categories}
+                  keyExtractor={(item) => item.classifyId}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.categoryItem}
+                      onPress={() => selectCategory(item.classifyId, item.classifyName)}
+                    >
+                      <Text style={styles.categoryItemText}>{item.classifyName}</Text>
+                      {selectedCategory === item.classifyName && (
+                        <Icon source="check" size={24} color="#FF7214" />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                  ItemSeparatorComponent={() => <Divider />}
+                />
               </TouchableOpacity>
             </View>
-            <Divider />
-
-            {/* 分类列表 */}
-            <FlatList
-              data={categories}
-              keyExtractor={(item) => item.classifyId}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.categoryItem}
-                  onPress={() => selectCategory(item.classifyId, item.classifyName)}
-                >
-                  <Text style={styles.categoryItemText}>{item.classifyName}</Text>
-                  {selectedCategory === item.classifyName && (
-                    <Icon source="check" size={24} color="#FF7214" />
-                  )}
-                </TouchableOpacity>
-              )}
-              ItemSeparatorComponent={() => <Divider />}
-            />
-          </View>
-        </Modal>
-      </Portal>
+          </TouchableOpacity>
+        </Portal>
+      )}
       {/* 成功提示 */}
       <Portal>
       <Dialog visible={visible} onDismiss={hideDialog}>
@@ -374,10 +393,17 @@ const styles = StyleSheet.create({
   submitButtonContent: {
     height: 48,
   },
-  modalContent: {
-    backgroundColor: 'transparent',
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
-    margin: 0,
+  },
+  modalContent: {
+    justifyContent: 'flex-end',
   },
   drawerContainer: {
     backgroundColor: '#fff',
