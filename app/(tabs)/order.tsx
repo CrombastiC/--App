@@ -3,8 +3,8 @@
  */
 
 import { getProductInfo } from '@/services/order.service';
-import { Stack } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { Stack, useFocusEffect } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View, ViewToken } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -71,9 +71,11 @@ export default function OrderScreen() {
   const title = orderType === 'dine-in' ? '堂食点餐' : '外送点餐';
 
   // 加载商品数据
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadProducts();
+    }, [])
+  );
 
   const loadProducts = async () => {
     try {
@@ -102,7 +104,6 @@ export default function OrderScreen() {
               productList.push({
                 ...food,
                 quantity: 0,
-                isTitle: false,
               });
             });
           });
