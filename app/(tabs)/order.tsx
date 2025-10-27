@@ -5,7 +5,7 @@
 import { getProductInfo } from '@/services/order.service';
 import { Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View, ViewToken } from 'react-native';
+import { ActivityIndicator, Animated, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View, ViewToken } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -61,6 +61,8 @@ export default function OrderScreen() {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cartVisible, setCartVisible] = useState(false); // 购物车列表显示状态
+  const slideAnim = useRef(new Animated.Value(0)).current; // 购物车滑动动画
 
   const storeName = '中海大厦店';
   const distance = '1.2km';
@@ -130,6 +132,31 @@ export default function OrderScreen() {
   // 计算购物车总数量和总价
   const cartTotal = products.reduce((sum, item) => sum + item.quantity, 0);
   const cartPrice = products.reduce((sum, item) => sum + item.foodPrice * item.quantity, 0);
+
+  // 获取购物车中的商品
+  const cartItems = products.filter(item => item.quantity > 0);
+
+  // 切换购物车显示
+  const toggleCart = () => {
+    if (cartTotal === 0) return; // 购物车为空时不显示
+    
+    const toValue = cartVisible ? 0 : 1;
+    setCartVisible(!cartVisible);
+    
+    Animated.spring(slideAnim, {
+      toValue,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 10,
+    }).start();
+  };
+
+  // 清空购物车
+  const clearCart = () => {
+    setProducts(products.map(item => ({ ...item, quantity: 0 })));
+    setCartVisible(false);
+    slideAnim.setValue(0);
+  };
 
   // 增加商品数量
   const increaseQuantity = (productId: string) => {
@@ -367,24 +394,109 @@ export default function OrderScreen() {
         </View>
       </View>
 
-      {/* 底部固定按钮 */}
-      <View style={styles.bottomBar}>
-        <View style={styles.cartInfo}>
-          <View style={styles.cartIconContainer}>
-            <Icon source="cart" size={24} color="#fff" />
-            {cartTotal > 0 && (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>{cartTotal}</Text>
-              </View>
-            )}
+      {/* 遮罩层 - 覆盖主内容区域 */}
+      {cartVisible && (
+        <TouchableOpacity 
+          style={styles.cartOverlay} 
+          activeOpacity={1}
+          onPress={toggleCart}
+        />
+      )}
+
+      {/* 底部区域容器 */}
+      <View style={styles.bottomContainer} pointerEvents="box-none">
+        {/* 购物车列表区域 */}
+        {cartVisible && (
+          <Animated.View 
+            style={[
+              styles.cartListContainer,
+              {
+                transform: [{
+                  translateY: slideAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [300, 0], // 从下方滑入
+                  })
+                }],
+                opacity: slideAnim,
+              }
+            ]}
+          >
+            {/* 购物车头部 */}
+            <View style={styles.cartListHeader}>
+              <Text style={styles.cartListTitle}>已选商品</Text>
+              <TouchableOpacity onPress={clearCart} style={styles.clearCartButton}>
+                <Icon source="delete-outline" size={18} color="#999" />
+                <Text style={styles.clearCartText}>清空</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 购物车商品列表 */}
+            <ScrollView style={styles.cartListScroll} showsVerticalScrollIndicator={false}>
+              {cartItems.map((item) => (
+                <View key={item._id} style={styles.cartListItem}>
+                  <View style={styles.cartItemInfo}>
+                    <Text style={styles.cartItemName} numberOfLines={1}>{item.foodName}</Text>
+                    <Text style={styles.cartItemPrice}>¥{item.foodPrice.toFixed(2)}</Text>
+                  </View>
+                  
+                  {/* 数量控制 */}
+                  <View style={styles.cartItemControl}>
+                    <TouchableOpacity
+                      style={styles.cartQuantityButton}
+                      onPress={() => decreaseQuantity(item._id)}
+                    >
+                      <Icon source="minus-circle" size={22} color="#FF7214" />
+                    </TouchableOpacity>
+                    <Text style={styles.cartQuantityText}>{item.quantity}</Text>
+                    <TouchableOpacity
+                      style={styles.cartQuantityButton}
+                      onPress={() => increaseQuantity(item._id)}
+                    >
+                      <Icon source="plus-circle" size={22} color="#FF7214" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </Animated.View>
+        )}
+
+        {/* 底部固定按钮 */}
+        <TouchableOpacity 
+          style={styles.bottomBar}
+          onPress={toggleCart}
+          activeOpacity={0.8}
+        >
+          <View style={styles.cartInfo}>
+            <View style={[
+              styles.cartIconContainer,
+              cartTotal > 0 && styles.cartIconContainerActive
+            ]}>
+              <Icon source="cart" size={24} color="#fff" />
+              {cartTotal > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>{cartTotal}</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.priceInfo}>
+              <Text style={styles.totalPrice}>¥{cartPrice.toFixed(2)}</Text>
+              <Text style={styles.deliveryInfo}>另需配送费¥3</Text>
+            </View>
           </View>
-          <View style={styles.priceInfo}>
-            <Text style={styles.totalPrice}>¥{cartPrice.toFixed(2)}</Text>
-            <Text style={styles.deliveryInfo}>配送费¥3</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.checkoutButton}>
-          <Text style={styles.checkoutButtonText}>去下单</Text>
+          <TouchableOpacity 
+            style={[
+              styles.checkoutButton,
+              cartTotal === 0 && styles.checkoutButtonDisabled
+            ]}
+            disabled={cartTotal === 0}
+            onPress={(e) => {
+              e.stopPropagation();
+              // 这里处理去下单逻辑
+            }}
+          >
+            <Text style={styles.checkoutButtonText}>去下单</Text>
+          </TouchableOpacity>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -590,16 +702,38 @@ const styles = StyleSheet.create({
     minWidth: 20,
     textAlign: 'center',
   },
-  // 底部购物车
+  // 底部容器
+  bottomContainer: {
+    backgroundColor: 'transparent',
+    zIndex: 1000,
+  },
+  // 购物车列表遮罩
+  cartOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999,
+  },
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     backgroundColor: '#2c2c2c',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
   },
   cartInfo: {
     flexDirection: 'row',
@@ -608,13 +742,17 @@ const styles = StyleSheet.create({
   },
   cartIconContainer: {
     position: 'relative',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FF7214',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#555',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    marginTop: -20,
+  },
+  cartIconContainerActive: {
+    backgroundColor: '#FF7214',
   },
   cartBadge: {
     position: 'absolute',
@@ -627,10 +765,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 6,
+    borderWidth: 2,
+    borderColor: '#2c2c2c',
   },
   cartBadgeText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
   },
   priceInfo: {
@@ -642,18 +782,101 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   deliveryInfo: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#999',
+    marginTop: 2,
   },
   checkoutButton: {
     backgroundColor: '#FF7214',
-    paddingHorizontal: 32,
+    paddingHorizontal: 28,
     paddingVertical: 12,
-    borderRadius: 24,
+    borderRadius: 20,
+  },
+  checkoutButtonDisabled: {
+    backgroundColor: '#666',
   },
   checkoutButtonText: {
     color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  // 购物车列表
+  cartListContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: 300,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  cartListHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  cartListTitle: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#333',
+  },
+  clearCartButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  clearCartText: {
+    fontSize: 13,
+    color: '#999',
+  },
+  cartListScroll: {
+    maxHeight: 240,
+  },
+  cartListItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  cartItemInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  cartItemName: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 4,
+  },
+  cartItemPrice: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FF7214',
+  },
+  cartItemControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cartQuantityButton: {
+    padding: 4,
+  },
+  cartQuantityText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginHorizontal: 10,
+    minWidth: 20,
+    textAlign: 'center',
   },
 });
