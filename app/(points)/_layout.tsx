@@ -11,6 +11,14 @@ export default function UserLayout() {
           headerTitleAlign: 'center',
         }}
       />
+      <Stack.Screen
+        name="pointPage"
+        options={{
+          title: '积分页面',
+          headerShown: true,
+          headerTitleAlign: 'center',
+        }}
+      />
     </Stack>
   );
 }

@@ -10,6 +10,15 @@ export interface Commodity {
   commodityIntegral: number;
   commodityDescription?: string;
 }
+/**
+ * 积分记录
+ */
+export interface PointRecord {
+  integral: number;
+  isGet: string;
+  remark: string;
+  createdAt: string;
+}
 
 /**
  * 获取商品列表响应接口
@@ -29,4 +38,11 @@ export const pointsService = {
   getCommodityList: () => {
     return request.get<CommodityListResponse>('/api/store/getCommodityList');
   },
+
+    /**
+   * 获取积分列表
+   */
+  getPointsList: () => {
+    return request.get<PointRecord[]>('/api/users/getIntegralRecord');
+  }
 };

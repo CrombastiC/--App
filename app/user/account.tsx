@@ -1,8 +1,9 @@
-import { userService } from "@/services";
+import { tokenManager, userService } from "@/services";
 import { uploadImage } from "@/services/order.service";
+import { StorageUtils } from "@/utils/storage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -265,6 +266,31 @@ export default function AccountScreen() {
       Alert.alert('提示', '头像上传失败，请重试');
     }
   };
+
+    const handleLogout = () => {
+      Alert.alert(
+        '退出登录',
+        '确定要退出登录吗?',
+        [
+          {
+            text: '取消',
+            style: 'cancel',
+          },
+          {
+            text: '确定',
+            onPress: async () => {
+              // 清除本地登录信息
+              await tokenManager.clearLoginInfo();
+              await StorageUtils.delete('userName');
+              await StorageUtils.delete('userAvatar');
+              // 跳转到登录页
+              router.replace('/auth/login');
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    };
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.content}>
@@ -334,6 +360,12 @@ export default function AccountScreen() {
           minimumDate={new Date(1950, 0, 1)}
           maximumDate={new Date(2050, 11, 31)}
         />
+      </View>
+
+      <View style={styles.logoutContainer}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>退出登录</Text>
+        </TouchableOpacity>
       </View>
 
       {/* 性别选择器 - 底部弹窗 */}
@@ -612,5 +644,23 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     paddingHorizontal: 16,
     paddingTop: 8,
+  },
+  logoutContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+  },
+  logoutButton: {
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: '#FF7214',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  logoutText: {
+    fontSize: 16,
+    color: '#FF7214',
+    fontWeight: '500',
   },
 });

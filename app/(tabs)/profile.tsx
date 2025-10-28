@@ -2,12 +2,11 @@
  * 我的页面
  */
 
-import { tokenManager, userService } from '@/services';
-import { StorageUtils } from '@/utils/storage';
+import { userService } from '@/services';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface UserInfo {
@@ -67,30 +66,7 @@ export default function ProfileScreen() {
     router.push('/qrScanner');
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      '退出登录',
-      '确定要退出登录吗?',
-      [
-        {
-          text: '取消',
-          style: 'cancel',
-        },
-        {
-          text: '确定',
-          onPress: async () => {
-            // 清除本地登录信息
-            await tokenManager.clearLoginInfo();
-            await StorageUtils.delete('userName');
-            await StorageUtils.delete('userAvatar');
-            // 跳转到登录页
-            router.replace('/auth/login');
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
+
 
   // 格式化数字，添加千位分隔符
   const formatNumber = (num: number) => {
@@ -117,10 +93,7 @@ export default function ProfileScreen() {
           />
         }
       >
-        {/* 顶部右侧菜单按钮 */}
-        <TouchableOpacity style={styles.menuButton} onPress={handleLogout}>
-          <MaterialCommunityIcons name="logout" size={24} color="#999" />
-        </TouchableOpacity>
+
 
         {/* 用户信息卡片 */}
         <View style={styles.userCard}>
@@ -171,13 +144,12 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             {/* <View style={styles.statDivider} /> */}
-
-            <View style={[styles.statItem, styles.statItemRight]}>
-              <View style={[styles.statContent, styles.statContentRight]}>
-                <Text style={styles.statValue}>{userInfo?.integral || 0}</Text>
-                <Text style={styles.statLabel}>积分</Text>
-              </View>
-            </View>
+            <TouchableOpacity onPress={() => router.push('/(points)/pointPage')} activeOpacity={0.7} style={[styles.statItem, styles.statItemCenter]}>
+                <View style={[styles.statContent, styles.statContentRight]}>
+                  <Text style={styles.statValue}>{userInfo?.integral || 0}</Text>
+                  <Text style={styles.statLabel}>积分</Text>
+                </View>
+            </TouchableOpacity>
           </View>
         </View>
 

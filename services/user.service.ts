@@ -70,6 +70,9 @@ export interface Coupon {
   couponUseTime: string;
   status: 'unused' | 'used'; // unused: 未使用, used: 已使用
 }
+
+
+
 // ==================== 用户服务 ====================
 
 export const userService = {
@@ -149,7 +152,9 @@ export const userService = {
    */
   getCoupons: (isExpired?: boolean) => {
     return request.post<Coupon[]>('/api/coupon/getCouponList', { isExpired });
-  }
+  },
+
+
 };
 
 // ==================== 使用示例 ====================
