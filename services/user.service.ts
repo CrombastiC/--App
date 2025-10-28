@@ -53,6 +53,23 @@ export interface TopUpRecordsResponse {
   data: TopUpRecord[];
 }
 
+/**
+ * 优惠券
+ * @param couponId 优惠券ID
+ * @param couponName 优惠券名称
+ * @param couponAmount 优惠券金额
+ * @param consumeMoney 使用条件
+ * @param couponUseTime 有效期
+ * @param status 使用状态
+ */
+export interface Coupon {
+  couponId: string;
+  couponName: string;
+  couponAmount: string;
+  consumeMoney: string;
+  couponUseTime: string;
+  status: 'unused' | 'used'; // unused: 未使用, used: 已使用
+}
 // ==================== 用户服务 ====================
 
 export const userService = {
@@ -124,6 +141,14 @@ export const userService = {
    */
   getTopUpRecords: () => {
     return request.get<TopUpRecordsResponse>('/api/users/getRechargeRecord');
+  },
+
+  /**
+   * 获取用户优惠券列表
+   * @param isExpired 是否过期 
+   */
+  getCoupons: (isExpired?: boolean) => {
+    return request.post<Coupon[]>('/api/coupon/getCouponList', { isExpired });
   }
 };
 

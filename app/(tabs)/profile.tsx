@@ -125,7 +125,7 @@ export default function ProfileScreen() {
         <View style={styles.userCard}>
           {/* 头像和基本信息 */}
           <View style={styles.userHeader}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.avatarContainer}
               onPress={() => router.push('/user/account')}
             >
@@ -160,11 +160,12 @@ export default function ProfileScreen() {
             </View>
 
             {/* <View style={styles.statDivider} /> */}
-
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>4</Text>
-              <Text style={styles.statLabel}>优惠券</Text>
-            </View>
+            <TouchableOpacity onPress={() => router.push('/user/coupon')}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>4</Text>
+                <Text style={styles.statLabel}>优惠券</Text>
+              </View>
+            </TouchableOpacity>
 
             {/* <View style={styles.statDivider} /> */}
 

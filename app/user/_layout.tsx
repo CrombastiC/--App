@@ -18,6 +18,14 @@ export default function UserLayout() {
           headerTitleAlign: 'center',
         }}
       />
+      <Stack.Screen
+        name="coupon"
+        options={{
+          title: '优惠券',
+          headerShown: true,
+          headerTitleAlign: 'center',
+        }}
+      />
     </Stack>
   );
 }
