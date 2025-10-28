@@ -5,8 +5,8 @@
 import { tokenManager, userService } from '@/services';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ImageBackground, StyleSheet, View } from 'react-native';
-import { Avatar, Card, Icon, IconButton, Text } from 'react-native-paper';
+import { Image, ImageBackground, StyleSheet, View } from 'react-native';
+import { Card, Icon, IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
@@ -65,7 +65,7 @@ export default function HomeScreen() {
               <Card.Content style={styles.cardContent}>
                 {/* 头像 */}
                 {avatar ? (
-                  <Avatar.Image source={{ uri: avatar }} style={styles.avatar} />
+                   <Image source={{ uri:avatar }} style={styles.avatar} />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
                     <Icon source="account" size={24} color="#999" />
