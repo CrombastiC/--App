@@ -3,7 +3,7 @@
  * 处理用户信息相关操作
  */
 import request from '@/request';
-import { User } from './auth.service';
+import { User, UserProfile } from './auth.service';
 
 // ==================== 数据类型定义 ====================
 
@@ -11,10 +11,10 @@ import { User } from './auth.service';
  * 更新用户信息请求
  */
 export interface UpdateProfileRequest {
-  nickname?: string;
+  username?: string;
   avatar?: string;
-  email?: string;
-  phone?: string;
+  gender?: number; // 0: 男, 1: 女, 2: 保密
+  birthday?: string;
 }
 
 /**
@@ -61,7 +61,7 @@ export const userService = {
    * @returns [error, user]
    */
   getProfile: () => {
-    return request.get<User>('/api/user/profile');
+    return request.get<UserProfile>('/api/users/getUserInfo');
   },
 
   /**
@@ -70,7 +70,7 @@ export const userService = {
    * @returns [error, user]
    */
   updateProfile: (data: UpdateProfileRequest) => {
-    return request.put<User>('/api/user/profile', data);
+    return request.put<User>('/api/users/update', data);
   },
 
   /**
@@ -108,14 +108,14 @@ export const userService = {
   },
 
   /**
-   * 余额充值
+   * 余额充值与扣除
    * 返回更新后的完整用户信息
    * 响应格式: { code: 0, data: User }
    * @param balance 充值金额
    * @param giveBalance 赠送金额
    */
-  rechargeBalance: (balance: number, giveBalance: number) => {
-    return request.put<{ code: number; data: User }>('/api/users/update', { balance, giveBalance });
+  rechargeBalance: (balance: number, giveBalance: number, isRecharge: boolean) => {
+    return request.post<{ code: number; data: User }>('/api/users/rechargeAndDeduct', { balance, giveBalance, isRecharge });
   },
 
   /**

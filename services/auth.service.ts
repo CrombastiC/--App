@@ -20,6 +20,13 @@ export interface User {
 }
 
 /**
+ * 用户个人资料
+ */
+export interface UserProfile extends User {
+  birthday?: string;
+  gender?: string;
+}
+/**
  * 登录请求参数
  */
 export interface LoginRequest {

@@ -2,12 +2,12 @@
  * 我的页面
  */
 
-import { tokenManager } from '@/services';
+import { tokenManager, userService } from '@/services';
 import { StorageUtils } from '@/utils/storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface UserInfo {
@@ -15,11 +15,14 @@ interface UserInfo {
   username: string;
   phone?: string;
   avatar?: string;
+  balance?: number;
+  integral?: number;
 }
 
 export default function ProfileScreen() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [phone, setPhone] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadUserInfo();
@@ -34,15 +37,22 @@ export default function ProfileScreen() {
 
   const loadUserInfo = async () => {
     try {
-      // 从缓存中获取用户信息
-      const userInfoStr = await StorageUtils.getString('userInfo');
-      if (userInfoStr) {
-        const user = JSON.parse(userInfoStr) as UserInfo;
+      // 从API获取用户信息
+      const [error, result] = await userService.getProfile();
+      if (error) {
+        console.error('Failed to load user info:', error);
+        return;
+      }
+
+      // result 是包含 code 和 data 的对象，真正的用户数据在 result.data 中
+      const data = (result as any)?.data;
+      if (data) {
+        const user = data as UserInfo;
         setUserInfo(user);
 
         // 格式化手机号，隐藏中间4位
-        if (user.phone) {
-          const formattedPhone = user.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+        if (data.phone) {
+          const formattedPhone = data.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
           setPhone(formattedPhone);
         }
       }
@@ -86,9 +96,26 @@ export default function ProfileScreen() {
     return num.toFixed(1);
   };
 
+  // 下拉刷新
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadUserInfo();
+    setRefreshing(false);
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#FF7214']} // Android
+            tintColor="#FF7214" // iOS
+          />
+        }
+      >
         {/* 顶部右侧菜单按钮 */}
         <TouchableOpacity style={styles.menuButton} onPress={handleLogout}>
           <MaterialCommunityIcons name="logout" size={24} color="#999" />
@@ -127,7 +154,7 @@ export default function ProfileScreen() {
             <View style={styles.statItem}>
               <View style={styles.statValueContainer}>
                 <Text style={styles.statPrefix}>¥</Text>
-                <Text style={styles.statValue}>{formatNumber(1200.0)}</Text>
+                <Text style={styles.statValue}>{formatNumber(userInfo?.balance || 0)}</Text>
               </View>
               <Text style={styles.statLabel}>余额</Text>
             </View>
@@ -142,7 +169,7 @@ export default function ProfileScreen() {
             {/* <View style={styles.statDivider} /> */}
 
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>200</Text>
+              <Text style={styles.statValue}>{userInfo?.integral || 0}</Text>
               <Text style={styles.statLabel}>积分</Text>
             </View>
           </View>
@@ -201,7 +228,7 @@ export default function ProfileScreen() {
             <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

@@ -1,4 +1,4 @@
-import { tokenManager, TopUpRecord, userService } from '@/services';
+import { TopUpRecord, userService } from '@/services';
 import { router, useFocusEffect, useNavigation } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -31,6 +31,11 @@ export default function TopUpScreen() {
     });
   }, [activeTab, navigation]);
 
+  // 页面加载时获取余额
+  useEffect(() => {
+    loadBalance();
+  }, []);
+
   // 页面获得焦点时重新加载余额（从成功页返回时触发）
   useFocusEffect(
     useCallback(() => {
@@ -39,31 +44,41 @@ export default function TopUpScreen() {
   );
 
   const loadBalance = async () => {
-    // 从 userInfo 中解构取值（来自登录接口的 data.user）
-    const userInfo = await tokenManager.getUserInfo();
-    if (userInfo) {
-      setBalance(userInfo.balance || 0);
+    try {
+      const [error, result] = await userService.getProfile();
+      if (error) {
+        console.error('Failed to load user info:', error);
+        return;
+      }
+
+      // result 是包含 code 和 data 的对象，真正的用户数据在 result.data 中
+      const data = (result as any)?.data;
+      if (data && data.balance !== undefined) {
+        setBalance(data.balance);
+      }
+    } catch (error) {
+      console.error('Failed to load balance:', error);
     }
   };
 
   const loadRecords = async () => {
     setIsLoading(true);
     const [error, response] = await userService.getTopUpRecords();
-    
+
     if (!error && response && response.data) {
       setRecords(response.data);
     } else {
       console.error('获取充值记录失败:', error);
       setRecords([]);
     }
-    
+
     setIsLoading(false);
   };
 
   // 处理tab切换
   const handleTabChange = (tab: 'topup' | 'history') => {
     setActiveTab(tab);
-    
+
     // 切换到对应tab时加载数据
     if (tab === 'topup') {
       loadBalance();
@@ -75,10 +90,10 @@ export default function TopUpScreen() {
   // 处理充值按钮点击 - 显示确认对话框
   const handleTopUpClick = () => {
     if (!selectedAmount || !hasAgreed) return;
-    
+
     const selectedOption = topUpOptions.find(opt => opt.id === selectedAmount);
     if (!selectedOption) return;
-    
+
     setShowConfirmDialog(true);
   };
 
@@ -87,33 +102,25 @@ export default function TopUpScreen() {
     if (!selectedAmount) return;
     const selectedOption = getSelectedOption();
     if (!selectedOption) return;
-    
+
     setConfirmLoading(true);
-    
+
     const [error, response] = await userService.rechargeBalance(
       selectedOption.amount,
-      selectedOption.bonus
+      selectedOption.bonus,
+      true
     );
-    
+
     setConfirmLoading(false);
     setShowConfirmDialog(false);
-    
-    if (error || !response || !response.data) {
+
+    if (error || !response) {
       console.error('充值失败:', error);
       return;
     }
-    
-    // response.data 是实际的用户数据
-    const userData = response.data;
-    
-    // 更新本地状态
-    setBalance(userData.balance || 0);
-    
-    // 更新缓存中的完整用户信息（包含余额和积分）
-    await tokenManager.updateUserInfo({
-      balance: userData.balance,
-      integral: userData.integral,
-    });
+
+    // 重新获取最新的用户余额
+    await loadBalance();
 
     // 跳转到成功页面
     router.push({
@@ -326,8 +333,8 @@ export default function TopUpScreen() {
             <Button onPress={handleCancelTopUp} disabled={confirmLoading}>
               取消
             </Button>
-            <Button 
-              onPress={handleConfirmTopUp} 
+            <Button
+              onPress={handleConfirmTopUp}
               loading={confirmLoading}
               disabled={confirmLoading}
               mode="contained"

@@ -2,7 +2,7 @@
  * 首页
  */
 
-import { tokenManager } from '@/services';
+import { tokenManager, userService } from '@/services';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ImageBackground, StyleSheet, View } from 'react-native';
@@ -22,10 +22,15 @@ export default function HomeScreen() {
     setIsLoggedIn(loggedIn);
 
     if (loggedIn) {
-      // 从 userInfo 中解构取值（来自登录接口的 data.user）
-      const userInfo = await tokenManager.getUserInfo();
-      if (userInfo) {
-        const { username, avatar, balance, integral } = userInfo;
+      // 调用获取用户信息接口
+      const [error, userInfo] = await userService.getProfile();
+      if (error) {
+        console.error('Failed to load user info:', error);
+        return;
+      }
+      const data = (userInfo as any)?.data;
+      if (data) {
+        const { username, avatar, balance, integral } = data;
         setUserName(username || '用户名');
         setAvatar(avatar || null);
         setBalance(balance || 0);
