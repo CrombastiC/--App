@@ -3,7 +3,7 @@
  */
 
 import { getProductInfo } from '@/services/order.service';
-import { Stack, useFocusEffect } from 'expo-router';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View, ViewToken } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
@@ -484,7 +484,7 @@ export default function OrderScreen() {
             </View>
             <View style={styles.priceInfo}>
               <Text style={styles.totalPrice}>¥{cartPrice.toFixed(2)}</Text>
-              <Text style={styles.deliveryInfo}>另需配送费¥3</Text>
+              {/* <Text style={styles.deliveryInfo}>另需配送费¥3</Text> */}
             </View>
           </View>
           <TouchableOpacity
@@ -495,7 +495,8 @@ export default function OrderScreen() {
             disabled={cartTotal === 0}
             onPress={(e) => {
               e.stopPropagation();
-              // 这里处理去下单逻辑
+              // 跳转结算页面
+              router.push('/(orderfood)/settlement');
             }}
           >
             <Text style={styles.checkoutButtonText}>去下单</Text>

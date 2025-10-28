@@ -17,6 +17,7 @@ interface UserInfo {
   avatar?: string;
   balance?: number;
   integral?: number;
+  couponCount?: number;
 }
 
 export default function ProfileScreen() {
@@ -151,27 +152,31 @@ export default function ProfileScreen() {
 
           {/* 统计信息 */}
           <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <View style={styles.statValueContainer}>
-                <Text style={styles.statPrefix}>¥</Text>
-                <Text style={styles.statValue}>{formatNumber(userInfo?.balance || 0)}</Text>
+            <TouchableOpacity onPress={() => router.push('/(member)/top-up')} activeOpacity={0.7} style={[styles.statItem, styles.statItemLeft]}>
+              <View style={[styles.statContent, styles.statContentLeft]}>
+                <View style={styles.statValueContainer}>
+                  <Text style={styles.statPrefix}>¥</Text>
+                  <Text style={styles.statValue}>{formatNumber(userInfo?.balance || 0)}</Text>
+                </View>
+                <Text style={styles.statLabel}>余额</Text>
               </View>
-              <Text style={styles.statLabel}>余额</Text>
-            </View>
+            </TouchableOpacity>
 
             {/* <View style={styles.statDivider} /> */}
-            <TouchableOpacity onPress={() => router.push('/user/coupon')}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>4</Text>
+            <TouchableOpacity onPress={() => router.push('/user/coupon')} activeOpacity={0.7} style={[styles.statItem, styles.statItemCenter]}>
+              <View style={styles.statContent}>
+                <Text style={styles.statValue}>{userInfo?.couponCount || 0}</Text>
                 <Text style={styles.statLabel}>优惠券</Text>
               </View>
             </TouchableOpacity>
 
             {/* <View style={styles.statDivider} /> */}
 
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{userInfo?.integral || 0}</Text>
-              <Text style={styles.statLabel}>积分</Text>
+            <View style={[styles.statItem, styles.statItemRight]}>
+              <View style={[styles.statContent, styles.statContentRight]}>
+                <Text style={styles.statValue}>{userInfo?.integral || 0}</Text>
+                <Text style={styles.statLabel}>积分</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -310,14 +315,28 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    // paddingTop: 24,
-    // paddingBottom: 8,
-    // borderTopWidth: 1,
-    // borderTopColor: '#f0f0f0',
+    justifyContent: 'space-between',
   },
   statItem: {
     flex: 1,
+  },
+  statItemLeft: {
+    alignItems: 'flex-start',
+  },
+  statItemCenter: {
     alignItems: 'center',
+  },
+  statItemRight: {
+    alignItems: 'flex-end',
+  },
+  statContent: {
+    alignItems: 'center',
+  },
+  statContentLeft: {
+    alignSelf: 'flex-start',
+  },
+  statContentRight: {
+    alignSelf: 'flex-end',
   },
   statValueContainer: {
     flexDirection: 'row',
@@ -339,6 +358,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
     marginTop: 4,
+    textAlign: 'center',
   },
   statDivider: {
     width: 1,

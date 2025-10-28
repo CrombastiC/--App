@@ -115,7 +115,7 @@ export default function HomeScreen() {
             <Card
               style={styles.eatTypeCard}
               mode="elevated"
-              onPress={() => router.push('/(location)/addressSelect?type=dine-in')}
+              onPress={() => router.push('/(orderfood)/peopleSelect')}
             >
               <Card.Content style={styles.eatTypeContent}>
                 <Icon source="food" size={35} color="#FF7214" />

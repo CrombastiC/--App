@@ -13,7 +13,13 @@ export default function OrderFoodLayout() {
       <Stack.Screen
         name="peopleSelect"
         options={{
-          title: '选择人数',
+          title: '选择就餐人数',
+        }}
+      />
+      <Stack.Screen
+        name="settlement"
+        options={{
+          title: '结算',
         }}
       />
     </Stack>
