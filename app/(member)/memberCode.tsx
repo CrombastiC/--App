@@ -1,15 +1,23 @@
-import { tokenManager } from "@/services";
+import { tokenManager, userService } from "@/services";
 import Barcode from "@kichiyaki/react-native-barcode-generator";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    StyleSheet,
-    Text,
-    View,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { Card, Icon } from "react-native-paper";
 import QRCode from "react-native-qrcode-svg";
-
+interface UserInfo {
+  id: string;
+  username: string;
+  phone?: string;
+  avatar?: string;
+  balance?: number;
+  integral?: number;
+  couponCount?: number;
+}
 export default function MemberCodeScreen() {
   const [accountBalance, setAccountBalance] = useState<number>(0);
   // 生成随机会员码
@@ -36,8 +44,31 @@ export default function MemberCodeScreen() {
   useFocusEffect(
     useCallback(() => {
       loadBalance();
+      loadUserInfo();
     }, [])
   );
+ const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+    const loadUserInfo = async () => {
+      try {
+        // 从API获取用户信息
+        const [error, result] = await userService.getProfile();
+        if (error) {
+          console.error('Failed to load user info:', error);
+          return;
+        }
+  
+        // result 是包含 code 和 data 的对象，真正的用户数据在 result.data 中
+        const data = (result as any)?.data;
+        if (data) {
+          const user = data as UserInfo;
+          setUserInfo(user);
+  
+          
+        }
+      } catch (error) {
+        console.error('Failed to load user info:', error);
+      }
+    };
 
 
   return <View style={styles.container} >
@@ -80,7 +111,7 @@ export default function MemberCodeScreen() {
         {/* 底部余额显示 */}
         <View style={styles.cardFooter}>
           <Text style={styles.balanceLabel}>账户余额</Text>
-          <Text style={styles.balanceAmount}>¥{accountBalance.toFixed(2)}</Text>
+          <Text style={styles.balanceAmount}>¥{userInfo?.balance?.toFixed(2)}</Text>
         </View>
       </Card.Content>
     </Card>
