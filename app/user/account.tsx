@@ -267,30 +267,30 @@ export default function AccountScreen() {
     }
   };
 
-    const handleLogout = () => {
-      Alert.alert(
-        '退出登录',
-        '确定要退出登录吗?',
-        [
-          {
-            text: '取消',
-            style: 'cancel',
+  const handleLogout = () => {
+    Alert.alert(
+      '退出登录',
+      '确定要退出登录吗?',
+      [
+        {
+          text: '取消',
+          style: 'cancel',
+        },
+        {
+          text: '确定',
+          onPress: async () => {
+            // 清除本地登录信息
+            await tokenManager.clearLoginInfo();
+            await StorageUtils.delete('userName');
+            await StorageUtils.delete('userAvatar');
+            // 跳转到登录页
+            router.replace('/auth/login');
           },
-          {
-            text: '确定',
-            onPress: async () => {
-              // 清除本地登录信息
-              await tokenManager.clearLoginInfo();
-              await StorageUtils.delete('userName');
-              await StorageUtils.delete('userAvatar');
-              // 跳转到登录页
-              router.replace('/auth/login');
-            },
-          },
-        ],
-        { cancelable: true }
-      );
-    };
+        },
+      ],
+      { cancelable: true }
+    );
+  };
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.content}>

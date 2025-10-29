@@ -154,6 +154,13 @@ export const userService = {
     return request.post<Coupon[]>('/api/coupon/getCouponList', { isExpired });
   },
 
+  /**
+   * 获取金额卡片
+   */
+  getTopUpOptions: () => {
+    return request.get('/api/money/getMoneyList');
+  }
+
 
 };
 

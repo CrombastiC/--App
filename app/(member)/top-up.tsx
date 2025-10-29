@@ -1,29 +1,32 @@
 import { TopUpRecord, userService } from '@/services';
 import { router, useFocusEffect, useNavigation } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, Dialog, Divider, Icon, Portal, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // 充值选项数据
-const topUpOptions = [
-  { id: 1, amount: 500, bonus: 50 },
-  { id: 2, amount: 1000, bonus: 100 },
-  { id: 3, amount: 2000, bonus: 300 },
-  { id: 4, amount: 3000, bonus: 400 },
-];
+// const topUpOptions = [
+//   { id: 1, amount: 500, bonus: 50 },
+//   { id: 2, amount: 1000, bonus: 100 },
+//   { id: 3, amount: 2000, bonus: 300 },
+//   { id: 4, amount: 3000, bonus: 400 },
+// ];
 
 export default function TopUpScreen() {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<'topup' | 'history'>('topup');//充值tab or 记录tab
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(1);//选择的金额卡片
+  const [selectedAmount, setSelectedAmount] = useState<string | null>(null);//选择的金额卡片(改为string类型以匹配moneyId)
+  const [customAmount, setCustomAmount] = useState<string>('');//自定义金额
   const [hasAgreed, setHasAgreed] = useState(false);
   const [records, setRecords] = useState<TopUpRecord[]>([]);//充值记录
   const [isLoading, setIsLoading] = useState(false);
   const [balance, setBalance] = useState<number>(0);//用户余额
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);//充值确认弹窗
   const [confirmLoading, setConfirmLoading] = useState(false);
-
+  const [topUpOptions, setTopUpOptions] = useState<{ moneyId: string; money: number; giveMoney: number }[]>([]);//充值选项
+  const [showCustomModal, setShowCustomModal] = useState(false);//自定义金额输入模态框
+  const [tempCustomAmount, setTempCustomAmount] = useState<string>('');//临时存储自定义金额输入
   // 根据 activeTab 更新路由标题
   useEffect(() => {
     navigation.setOptions({
@@ -34,6 +37,7 @@ export default function TopUpScreen() {
   // 页面加载时获取余额
   useEffect(() => {
     loadBalance();
+    loadTopUpOptions();
   }, []);
 
   // 页面获得焦点时重新加载余额（从成功页返回时触发）
@@ -42,7 +46,30 @@ export default function TopUpScreen() {
       loadBalance();
     }, [])
   );
+  //获取金额卡片
+  const loadTopUpOptions = async () => {
+    try {
+      const [error, result] = await userService.getTopUpOptions();
+      if (error) {
+        console.error('Failed to load top-up options:', error);
+        return;
+      }
 
+      // 处理接口返回的数据
+      if (result && (result as any).data) {
+        const optionsData = (result as any).data;
+        setTopUpOptions(optionsData);
+        // 默认选中第一个选项
+        if (optionsData.length > 0) {
+          setSelectedAmount(optionsData[0].moneyId);
+        }
+        console.log('充值选项加载成功:', optionsData);
+      }
+    } catch (error) {
+      console.error('Failed to load top-up options:', error);
+    }
+  };
+  // 加载用户余额
   const loadBalance = async () => {
     try {
       const [error, result] = await userService.getProfile();
@@ -60,7 +87,7 @@ export default function TopUpScreen() {
       console.error('Failed to load balance:', error);
     }
   };
-
+  // 加载充值记录
   const loadRecords = async () => {
     setIsLoading(true);
     const [error, response] = await userService.getTopUpRecords();
@@ -89,10 +116,22 @@ export default function TopUpScreen() {
 
   // 处理充值按钮点击 - 显示确认对话框
   const handleTopUpClick = () => {
-    if (!selectedAmount || !hasAgreed) return;
+    if (!hasAgreed) return;
 
-    const selectedOption = topUpOptions.find(opt => opt.id === selectedAmount);
-    if (!selectedOption) return;
+    // 验证是否选择了金额
+    if (selectedAmount === null) return;
+
+    // 如果选择了自定义金额，验证输入
+    if (selectedAmount === 'custom') {
+      const amount = parseFloat(customAmount);
+      if (isNaN(amount) || amount <= 0) {
+        return;
+      }
+    } else {
+      // 如果选择了预设金额，验证选项存在
+      const selectedOption = topUpOptions.find(opt => opt.moneyId === selectedAmount);
+      if (!selectedOption) return;
+    }
 
     setShowConfirmDialog(true);
   };
@@ -106,8 +145,8 @@ export default function TopUpScreen() {
     setConfirmLoading(true);
 
     const [error, response] = await userService.rechargeBalance(
-      selectedOption.amount,
-      selectedOption.bonus,
+      selectedOption.money,
+      selectedOption.giveMoney,
       true
     );
 
@@ -125,7 +164,7 @@ export default function TopUpScreen() {
     // 跳转到成功页面
     router.push({
       pathname: '/(member)/topUpSuccess',
-      params: { amount: selectedOption.amount.toString() },
+      params: { amount: selectedOption.money.toString() },
     });
   };
 
@@ -136,7 +175,91 @@ export default function TopUpScreen() {
 
   // 获取选中的充值选项
   const getSelectedOption = () => {
-    return topUpOptions.find(opt => opt.id === selectedAmount);
+    if (selectedAmount === 'custom') {
+      // 自定义金额
+      const amount = parseFloat(customAmount);
+      if (isNaN(amount) || amount <= 0) return null;
+      return { moneyId: 'custom', money: amount, giveMoney: 0 };
+    }
+    return topUpOptions.find(opt => opt.moneyId === selectedAmount);
+  };
+
+  // 处理自定义金额选择
+  const handleCustomAmountSelect = () => {
+    setTempCustomAmount('');
+    setShowCustomModal(true);
+  };
+
+  // 处理自定义金额输入
+  const handleCustomAmountChange = (text: string) => {
+    // 只允许输入数字和小数点
+    const filtered = text.replace(/[^0-9.]/g, '');
+    // 确保只有一个小数点
+    const parts = filtered.split('.');
+    if (parts.length > 2) {
+      return;
+    }
+    setCustomAmount(filtered);
+  };
+
+  // 数字键盘按钮点击
+  const handleNumberPress = (num: string) => {
+    if (num === '.' && tempCustomAmount.includes('.')) {
+      return; // 已经有小数点了
+    }
+    setTempCustomAmount(prev => prev + num);
+  };
+
+  // 删除按钮点击
+  const handleDelete = () => {
+    setTempCustomAmount(prev => prev.slice(0, -1));
+  };
+
+  // 确认自定义金额
+  const handleConfirmCustomAmount = async () => {
+    const amount = parseFloat(tempCustomAmount);
+    if (isNaN(amount) || amount < 1) {
+      // 可以在这里显示提示
+      return;
+    }
+
+    // 直接进行充值,不弹出确认对话框
+    setConfirmLoading(true);
+    setShowCustomModal(false);
+
+    const [error, response] = await userService.rechargeBalance(
+      amount,
+      0, // 自定义金额不赠送
+      true
+    );
+
+    setConfirmLoading(false);
+
+    if (error || !response) {
+      console.error('充值失败:', error);
+      setTempCustomAmount('');
+      return;
+    }
+
+    // 重新获取最新的用户余额
+    await loadBalance();
+
+    // 清空临时金额
+    setTempCustomAmount('');
+    setCustomAmount(amount.toString());
+    setSelectedAmount('custom');
+
+    // 跳转到成功页面
+    router.push({
+      pathname: '/(member)/topUpSuccess',
+      params: { amount: amount.toString() },
+    });
+  };
+
+  // 取消自定义金额输入
+  const handleCancelCustomAmount = () => {
+    setShowCustomModal(false);
+    setTempCustomAmount('');
   };
 
   return (
@@ -170,7 +293,12 @@ export default function TopUpScreen() {
       <View style={styles.content}>
         {activeTab === 'topup' ? (
           <>
-            <View style={styles.contentContainer}>
+            {/* 可滚动内容区域 */}
+            <ScrollView
+              style={styles.scrollContent}
+              contentContainerStyle={styles.scrollContentContainer}
+              showsVerticalScrollIndicator={false}
+            >
               {/* 账户余额卡片 */}
               <View style={styles.balanceCard}>
                 <Text style={styles.balanceAmount}>¥{balance.toFixed(1)}</Text>
@@ -186,35 +314,78 @@ export default function TopUpScreen() {
               <View style={styles.optionsGrid}>
                 {topUpOptions.map((option) => (
                   <TouchableOpacity
-                    key={option.id}
+                    key={option.moneyId}
                     style={[
                       styles.optionCard,
-                      selectedAmount === option.id && styles.optionCardSelected,
+                      selectedAmount === option.moneyId && styles.optionCardSelected,
                     ]}
-                    onPress={() => setSelectedAmount(option.id)}
+                    onPress={() => setSelectedAmount(option.moneyId)}
                   >
                     <View style={styles.optionContent}>
                       <View>
                         <Text style={[
                           styles.optionAmount,
-                          selectedAmount === option.id && styles.optionAmountSelected,
+                          selectedAmount === option.moneyId && styles.optionAmountSelected,
                         ]}>
-                          充值{option.amount}元
+                          充值{option.money}元
                         </Text>
-                        <Text style={styles.optionBonus}>送{option.bonus}元</Text>
+                        <Text style={styles.optionBonus}>送{option.giveMoney}元</Text>
                       </View>
                       <View style={[
                         styles.radioCircle,
-                        selectedAmount === option.id && styles.radioCircleSelected,
+                        selectedAmount === option.moneyId && styles.radioCircleSelected,
                       ]}>
-                        {selectedAmount === option.id && (
+                        {selectedAmount === option.moneyId && (
                           <View style={styles.radioDot} />
                         )}
                       </View>
                     </View>
                   </TouchableOpacity>
                 ))}
+
+                {/* 自定义金额卡片 */}
+                <TouchableOpacity
+                  style={[
+                    styles.optionCard,
+                    selectedAmount === 'custom' && styles.optionCardSelected,
+                  ]}
+                  onPress={handleCustomAmountSelect}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.optionContent}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[
+                        styles.optionAmount,
+                        selectedAmount === 'custom' && styles.optionAmountSelected,
+                      ]}>
+                        {'输入金额'}
+                      </Text>
+                      <Text style={styles.optionBonus}>
+                        {'最低可充1元'}
+                      </Text>
+                    </View>
+                    <View style={[
+                      styles.radioCircle,
+                      selectedAmount === 'custom' && styles.radioCircleSelected,
+                    ]}>
+                      {selectedAmount === 'custom' && (
+                        <View style={styles.radioDot} />
+                      )}
+                    </View>
+                  </View>
+                </TouchableOpacity>
               </View>
+
+              {/* 自定义金额提示 */}
+              {selectedAmount === 'custom' && (
+                <View style={styles.customAmountNotice}>
+                  <Icon source="information-outline" size={16} color="#FF7214" />
+                  <Text style={styles.customAmountNoticeText}>
+                    自定义金额充值不赠送额外金额
+                  </Text>
+                </View>
+              )}
+
               {/* 充值须知 */}
               <View style={styles.noticeCard}>
                 <View style={styles.noticeHeader}>
@@ -223,11 +394,14 @@ export default function TopUpScreen() {
                 </View>
                 <View style={styles.noticeContent}>
                   <Text style={styles.noticeItem}>1. 您本次充值的预付卡余额有效期为3年，请在有效期内消费。</Text>
-                  <Text style={styles.noticeItem}>2. 本卡不记名、不挂失、不兑换，仅限本人使用。</Text>
-                  <Text style={styles.noticeItem}>3. 充值后概不退款，如有疑问，可联系商家。</Text>
+                  <Text style={styles.noticeItem}>2. 自定义金额充值不赠送额外金额。</Text>
+                  <Text style={styles.noticeItem}>3. 本卡不记名、不挂失、不兑换，仅限本人使用。</Text>
+                  <Text style={styles.noticeItem}>4. 充值后概不退款，如有疑问，可联系商家。</Text>
+
                 </View>
               </View>
-            </View>
+            </ScrollView>
+
             {/* 底部固定区域 */}
             <View style={styles.bottomSection}>
               <TouchableOpacity
@@ -318,13 +492,18 @@ export default function TopUpScreen() {
             {getSelectedOption() && (
               <View>
                 <Text style={styles.dialogText}>
-                  充值金额：¥{getSelectedOption()?.amount}
+                  充值金额：¥{getSelectedOption()?.money}
                 </Text>
                 <Text style={styles.dialogText}>
-                  赠送金额：¥{getSelectedOption()?.bonus}
+                  赠送金额：¥{getSelectedOption()?.giveMoney}
                 </Text>
+                {selectedAmount === 'custom' && (
+                  <Text style={[styles.dialogText, { color: '#FF7214', fontSize: 13 }]}>
+                    * 自定义金额不赠送
+                  </Text>
+                )}
                 <Text style={styles.dialogTotal}>
-                  实际到账：¥{(getSelectedOption()?.amount || 0) + (getSelectedOption()?.bonus || 0)}
+                  实际到账：¥{(getSelectedOption()?.money || 0) + (getSelectedOption()?.giveMoney || 0)}
                 </Text>
               </View>
             )}
@@ -345,6 +524,147 @@ export default function TopUpScreen() {
           </Dialog.Actions>
         </Dialog>
       </Portal>
+
+      {/* 自定义金额输入模态框 */}
+      <Modal
+        visible={showCustomModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={handleCancelCustomAmount}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={handleCancelCustomAmount}
+        >
+          <TouchableOpacity
+            style={styles.modalContent}
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* 金额输入显示区 */}
+            <View style={styles.amountDisplay}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputPrefix}>充值金额</Text>
+                <View style={styles.inputContentWrapper}>
+                  <Text style={styles.inputText}>
+                    {tempCustomAmount || ''}
+                  </Text>
+                  {!tempCustomAmount && (
+                    <Text style={styles.inputPlaceholder}>最低可充1</Text>
+                  )}
+                  <Text style={styles.inputSuffix}>元</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* 快捷金额选项 */}
+            <View style={styles.quickAmountContainer}>
+              {[
+                { value: 50, label: '50元' },
+                { value: 200, label: '200元' },
+                { value: 1000, label: '1000元' },
+                { value: 10000, label: '1万元' }
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={styles.quickAmountBtn}
+                  onPress={() => setTempCustomAmount(item.value.toString())}
+                >
+                  <Text style={styles.quickAmountText}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* 分割线 */}
+            {/* <Divider style={styles.divider} /> */}
+
+            {/* 数字键盘 */}
+            <View style={styles.keyboardContainer}>
+              {/* 第一行: 1 2 3 删除 */}
+              <View style={styles.keyboardRow}>
+                {['1', '2', '3'].map((num) => (
+                  <TouchableOpacity
+                    key={num}
+                    style={styles.keyboardBtn}
+                    onPress={() => handleNumberPress(num)}
+                  >
+                    <Text style={styles.keyboardBtnText}>{num}</Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                  style={[styles.keyboardBtn, styles.deleteBtn]}
+                  onPress={handleDelete}
+                >
+                  <Icon source="close-circle-outline" size={20} color="#999" />
+                </TouchableOpacity>
+              </View>
+
+              {/* 第二行到第四行的容器 */}
+              <View style={styles.keyboardMainRow}>
+                {/* 左侧数字键盘 */}
+                <View style={styles.keyboardLeft}>
+                  {/* 第二行: 4 5 6 */}
+                  <View style={styles.keyboardRow}>
+                    {['4', '5', '6'].map((num) => (
+                      <TouchableOpacity
+                        key={num}
+                        style={styles.keyboardBtn}
+                        onPress={() => handleNumberPress(num)}
+                      >
+                        <Text style={styles.keyboardBtnText}>{num}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {/* 第三行: 7 8 9 */}
+                  <View style={styles.keyboardRow}>
+                    {['7', '8', '9'].map((num) => (
+                      <TouchableOpacity
+                        key={num}
+                        style={styles.keyboardBtn}
+                        onPress={() => handleNumberPress(num)}
+                      >
+                        <Text style={styles.keyboardBtnText}>{num}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {/* 第四行: 0 (占3个按钮宽度) */}
+                  <View style={styles.keyboardRow}>
+                    <TouchableOpacity
+                      style={styles.keyboardBtnWide}
+                      onPress={() => handleNumberPress('0')}
+                    >
+                      <Text style={styles.keyboardBtnText}>0</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* 右侧充值按钮 */}
+                <TouchableOpacity
+                  style={[
+                    styles.keyboardConfirmBtn,
+                    ((!tempCustomAmount || parseFloat(tempCustomAmount) < 1) || confirmLoading) && styles.keyboardConfirmBtnDisabled
+                  ]}
+                  onPress={handleConfirmCustomAmount}
+                  disabled={(!tempCustomAmount || parseFloat(tempCustomAmount) < 1) || confirmLoading}
+                >
+                  <Text style={styles.keyboardConfirmBtnText}>
+                    {confirmLoading ? '充值中' : '充值'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* 底部协议文本 */}
+            <View style={styles.modalFooter}>
+              <Text style={styles.agreementTextSmall}>
+                已阅读并同意<Text style={styles.agreementLink}>充值协议</Text>和
+                <Text style={styles.agreementLink}>充值安全提示</Text>
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -388,6 +708,14 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  scrollContent: {
+    flex: 1,
+    backgroundColor: '#F5F7F7',
+  },
+  scrollContentContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
   contentContainer: {
     flex: 1,
     justifyContent: 'space-between',
@@ -404,7 +732,7 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   balanceCard: {
-    width: '90%',
+    width: '100%',
     backgroundColor: '#fff',
     borderRadius: 12,
     paddingVertical: 18,
@@ -434,7 +762,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionHeader: {
-    width: '90%',
+    width: '100%',
     marginTop: 16,
     marginBottom: 12,
   },
@@ -444,7 +772,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   optionsGrid: {
-    width: '90%',
+    width: '100%',
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
@@ -481,6 +809,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
   },
+  customInput: {
+    fontSize: 13,
+    color: '#666',
+    padding: 0,
+    marginTop: 4,
+  },
+  customAmountNotice: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF8F1',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 12,
+    gap: 6,
+  },
+  customAmountNoticeText: {
+    fontSize: 13,
+    color: '#FF7214',
+    flex: 1,
+  },
   radioCircle: {
     width: 20,
     height: 20,
@@ -500,8 +849,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF7214',
   },
   noticeCard: {
-    width: '90%',
-    alignSelf: 'center',
+    width: '100%',
     backgroundColor: '#FFF8F1',
     borderColor: '#FFD7BD',
     borderWidth: 1,
@@ -645,5 +993,169 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FF7214',
     marginTop: 8,
+  },
+  // 自定义金额模态框样式
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+    maxHeight: '50%', // 限制最大高度为屏幕的50%
+  },
+  amountDisplay: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  // 金额输入框样式
+  inputContainer: {
+    backgroundColor: '#F5F7F7',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputPrefix: {
+    fontSize: 14,
+    color: '#333',
+    marginRight: 8,
+  },
+  inputContentWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  inputText: {
+    fontSize: 24,
+    fontWeight: '500',
+    color: '#333',
+  },
+  inputPlaceholder: {
+    color: '#999',
+    fontSize: 14,
+  },
+  inputSuffix: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 4,
+  },
+  diamondHint: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  quickAmountContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+    marginBottom: 8,
+    gap: 6,
+  },
+  quickAmountBtn: {
+    flex: 1,
+    backgroundColor: '#F5F7F7',
+    borderRadius: 6,
+    paddingVertical: 5,
+    alignItems: 'center',
+  },
+  quickAmountText: {
+    fontSize: 11,
+    color: '#333',
+    fontWeight: '500',
+  },
+  divider: {
+    marginHorizontal: 20,
+    marginVertical: 8,
+  },
+  keyboardContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 4,
+  },
+  keyboardMainRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  keyboardLeft: {
+    flex: 3,
+  },
+  keyboardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+    gap: 6,
+  },
+  keyboardBtn: {
+    flex: 1,
+    backgroundColor: '#F5F7F7',
+    borderRadius: 6,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  keyboardBtnWide: {
+    flex: 3,
+    backgroundColor: '#F5F7F7',
+    borderRadius: 6,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  keyboardBtnText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  deleteBtn: {
+    backgroundColor: '#F5F7F7',
+  },
+  clearBtn: {
+    backgroundColor: '#FFF8F5',
+  },
+  keyboardConfirmBtn: {
+    flex: 1,
+    backgroundColor: '#FF7214',
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  keyboardConfirmBtnDisabled: {
+    backgroundColor: '#FFCDA6',
+  },
+  keyboardConfirmBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalFooter: {
+    paddingHorizontal: 20,
+    paddingTop: 6,
+    paddingBottom: 6,
+  },
+  agreementTextSmall: {
+    fontSize: 9,
+    color: '#666',
+    textAlign: 'center',
+  },
+  modalConfirmBtn: {
+    backgroundColor: '#FF7214',
+    borderRadius: 22,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  modalConfirmBtnDisabled: {
+    backgroundColor: '#FFCDA6',
+  },
+  modalConfirmBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
