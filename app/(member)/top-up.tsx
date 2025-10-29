@@ -1,7 +1,7 @@
 import { TopUpRecord, userService } from '@/services';
 import { router, useFocusEffect, useNavigation } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Modal, ScrollView, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, Dialog, Divider, Icon, Portal, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,9 +18,9 @@ export default function TopUpScreen() {
   const [activeTab, setActiveTab] = useState<'topup' | 'history'>('topup');//充值tab or 记录tab
   const [selectedAmount, setSelectedAmount] = useState<string | null>(null);//选择的金额卡片(改为string类型以匹配moneyId)
   const [customAmount, setCustomAmount] = useState<string>('');//自定义金额
-  const [hasAgreed, setHasAgreed] = useState(false);
+  const [hasAgreed, setHasAgreed] = useState(false);//是否同意充值协议
   const [records, setRecords] = useState<TopUpRecord[]>([]);//充值记录
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);//充值记录加载状态
   const [balance, setBalance] = useState<number>(0);//用户余额
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);//充值确认弹窗
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -114,6 +114,32 @@ export default function TopUpScreen() {
     }
   };
 
+  // 按月份分组充值记录
+  const groupedRecords = useMemo(() => {
+    if (records.length === 0) return [];
+
+    // 按月份分组
+    const groups: { [key: string]: TopUpRecord[] } = {};
+    
+    records.forEach((record) => {
+      const date = new Date(record.createdAt);
+      const monthKey = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月`;
+      
+      if (!groups[monthKey]) {
+        groups[monthKey] = [];
+      }
+      groups[monthKey].push(record);
+    });
+
+    // 转换为 SectionList 数据格式
+    return Object.keys(groups)
+      .sort((a, b) => b.localeCompare(a)) // 按时间倒序
+      .map((monthKey) => ({
+        title: monthKey,
+        data: groups[monthKey],
+      }));
+  }, [records]);
+
   // 处理充值按钮点击 - 显示确认对话框
   const handleTopUpClick = () => {
     if (!hasAgreed) return;
@@ -190,23 +216,10 @@ export default function TopUpScreen() {
     setShowCustomModal(true);
   };
 
-  // 处理自定义金额输入
-  const handleCustomAmountChange = (text: string) => {
-    // 只允许输入数字和小数点
-    const filtered = text.replace(/[^0-9.]/g, '');
-    // 确保只有一个小数点
-    const parts = filtered.split('.');
-    if (parts.length > 2) {
-      return;
-    }
-    setCustomAmount(filtered);
-  };
+
 
   // 数字键盘按钮点击
   const handleNumberPress = (num: string) => {
-    if (num === '.' && tempCustomAmount.includes('.')) {
-      return; // 已经有小数点了
-    }
     setTempCustomAmount(prev => prev + num);
   };
 
@@ -306,7 +319,7 @@ export default function TopUpScreen() {
               </View>
 
               {/* 充值金额标题 */}
-              <View style={styles.sectionHeader}>
+              <View style={styles.amountSectionHeader}>
                 <Text style={styles.sectionTitle}>请选择充值金额</Text>
               </View>
 
@@ -447,14 +460,14 @@ export default function TopUpScreen() {
                 <Text style={styles.emptyText}>暂无充值记录</Text>
               </View>
             ) : (
-              <FlatList
-                data={records}
+              <SectionList
+                sections={groupedRecords}
                 keyExtractor={(item, index) => `${item.createdAt}-${index}`}
                 renderItem={({ item }) => (
                   <View style={styles.recordItem}>
                     <View style={styles.recordLeft}>
                       <Text style={styles.recordTitle}>
-                        充值 {item.balance}元 赠送{item.giveBalance}元
+                        充值 {item.balance}元 {item.giveBalance > 0 ? `赠送${item.giveBalance}元` : ''}
                       </Text>
                       <Text style={styles.recordSubtitle}>
                         充值后余额 ¥{item.totalBalance}
@@ -466,7 +479,6 @@ export default function TopUpScreen() {
                       </Text>
                       <Text style={styles.recordTime}>
                         {new Date(item.createdAt).toLocaleString('zh-CN', {
-                          year: 'numeric',
                           month: '2-digit',
                           day: '2-digit',
                           hour: '2-digit',
@@ -476,7 +488,13 @@ export default function TopUpScreen() {
                     </View>
                   </View>
                 )}
+                renderSectionHeader={({ section: { title } }) => (
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionHeaderText}>{title}</Text>
+                  </View>
+                )}
                 ItemSeparatorComponent={() => <Divider />}
+                stickySectionHeadersEnabled={true}
                 contentContainerStyle={styles.listContent}
               />
             )}
@@ -762,6 +780,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionHeader: {
+    backgroundColor: '#F5F7F7',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  sectionHeaderText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  amountSectionHeader: {
     width: '100%',
     marginTop: 16,
     marginBottom: 12,

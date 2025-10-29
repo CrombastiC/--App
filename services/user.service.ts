@@ -40,7 +40,7 @@ export interface UserStats {
  */
 export interface TopUpRecord {
   balance: number;         // 充值金额
-  giveBalance: string;     // 赠送金额
+  giveBalance: number;     // 赠送金额
   totalBalance: number;    // 总金额（充值后的余额）
   createdAt: string;       // 创建时间
 }
