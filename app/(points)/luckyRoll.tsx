@@ -1,5 +1,5 @@
 import { LuckyRollData, LuckyRollDataResponse, pointsService } from '@/services/points.service';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -16,11 +16,30 @@ const borderCircles = [
   { type: 'solid', color: 'rgb(227, 120, 21)' }, // 角落 - 橙色
 ];
 
+// 抽奖转动路径（包含所有9个格子）
+// 路径：0 → 1 → 2 → 5 → 4 → 3 → 6 → 7 → 8 → 循环
+// 布局：0 1 2
+//       3 4 5
+//       6 7 8
+const LOTTERY_PATH = [0, 1, 2, 5, 4, 3, 6, 7, 8];
+
 export default function LuckyRollScreen() {
   const [luckyRollData, setLuckyRollData] = useState<LuckyRollData[]>([]);
-  
+  const [currentIndex, setCurrentIndex] = useState<number>(-1); // 当前高亮的格子索引
+  const [isRolling, setIsRolling] = useState<boolean>(false); // 是否正在抽奖
+  const timerRef = useRef<number | null>(null);
+  //初始化数据
   useEffect(() => {
     getLuckyRollData();
+  }, []);
+  
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
   }, []);
   
   const getLuckyRollData = async () => {
@@ -36,9 +55,57 @@ export default function LuckyRollScreen() {
     }
   }
   
+  // 开始抽奖动画
+  const startLottery = () => {
+    if (isRolling) return; // 如果正在抽奖，不响应
+    
+    setIsRolling(true);
+    setCurrentIndex(-1);
+    
+    let step = 0; // 当前步数
+    let speed = 100; // 初始速度（毫秒）
+    const totalSteps = 30; // 总共转动的步数（至少转3圈多）
+    const targetIndex = Math.floor(Math.random() * LOTTERY_PATH.length); // 随机中奖位置
+    
+    const animate = () => {
+      step++;
+      const pathIndex = step % LOTTERY_PATH.length;
+      setCurrentIndex(LOTTERY_PATH[pathIndex]);
+      
+      // 逐渐减速
+      if (step > totalSteps - 8) {
+        speed += 50; // 最后几步明显减速
+      } else if (step > totalSteps / 2) {
+        speed += 20; // 中间逐渐减速
+      }
+      
+      // 检查是否到达目标位置
+      if (step >= totalSteps && pathIndex === targetIndex) {
+        // 抽奖结束
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+        }
+        setTimeout(() => {
+          setIsRolling(false);
+          const finalIndex = LOTTERY_PATH[targetIndex];
+          const prize = luckyRollData[finalIndex];
+          alert(`恭喜你抽中了：${prize?.prizeName || '奖品'}`);
+        }, 300);
+        return;
+      }
+      
+      // 继续动画
+      timerRef.current = setTimeout(animate, speed) as unknown as number;
+    };
+    
+    animate();
+  };
+  
   // 渲染九宫格项
   const renderGridItem = (index: number) => {
     const item = luckyRollData[index];
+    const isHighlighted = currentIndex === index; // 判断是否高亮
+    
     if (!item) {
       return (
         <View key={index} style={styles.gridItem}>
@@ -48,7 +115,13 @@ export default function LuckyRollScreen() {
     }
     
     return (
-      <View key={index} style={styles.gridItem}>
+      <View 
+        key={index} 
+        style={[
+          styles.gridItem,
+          isHighlighted && styles.gridItemHighlighted
+        ]}
+      >
         <Image 
           source={{ uri: item.prizeImage }} 
           style={styles.gridItemImage}
@@ -162,12 +235,20 @@ export default function LuckyRollScreen() {
         
         {/* 底部按钮区域 */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.singleDrawButton} onPress={() => handlePress('single')}>
+          <TouchableOpacity 
+            style={[styles.singleDrawButton, isRolling && styles.buttonDisabled]} 
+            onPress={startLottery}
+            disabled={isRolling}
+          >
             <Text style={styles.buttonText}>单抽</Text>
             <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
             <Text style={styles.buttonSubText}>200</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.multiDrawButton} onPress={() => handlePress('multi')}>
+          <TouchableOpacity 
+            style={[styles.multiDrawButton, isRolling && styles.buttonDisabled]} 
+            onPress={() => handlePress('multi')}
+            disabled={isRolling}
+          >
             <Text style={styles.buttonText}>十连抽</Text>
             <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
             <Text style={styles.buttonSubText}>2000</Text>
@@ -304,6 +385,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 8,
   },
+  // 高亮状态的格子
+  gridItemHighlighted: {
+    backgroundColor: 'rgb(255, 215, 0)',
+    borderWidth: 3,
+    borderColor: 'rgb(255, 255, 255)',
+    shadowColor: 'rgb(255, 215, 0)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 8,
+    transform: [{ scale: 1.05 }],
+  },
   gridItemImage: {
     width: 40,
     height: 40,
@@ -423,5 +516,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#fff',
     fontWeight: '600',
+  },
+  // 按钮禁用状态
+  buttonDisabled: {
+    opacity: 0.5,
   },
 });
