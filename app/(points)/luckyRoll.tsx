@@ -1,4 +1,6 @@
-import { Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { LuckyRollData, LuckyRollDataResponse, pointsService } from '@/services/points.service';
+import { useEffect, useState } from 'react';
+import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -15,6 +17,49 @@ const borderCircles = [
 ];
 
 export default function LuckyRollScreen() {
+  const [luckyRollData, setLuckyRollData] = useState<LuckyRollData[]>([]);
+  
+  useEffect(() => {
+    getLuckyRollData();
+  }, []);
+  
+  const getLuckyRollData = async () => {
+    const [error, result] = await pointsService.getLuckyRollData();
+    if (error) {
+      console.error('获取抽奖数据失败:', error);
+      return;
+    }
+    const data = (result as LuckyRollDataResponse)?.data?.prizeList;
+    if (data && Array.isArray(data)) {
+      setLuckyRollData(data);
+      console.log('抽奖数据:', data);
+    }
+  }
+  
+  // 渲染九宫格项
+  const renderGridItem = (index: number) => {
+    const item = luckyRollData[index];
+    if (!item) {
+      return (
+        <View key={index} style={styles.gridItem}>
+          <Text style={styles.gridItemText}>加载中...</Text>
+        </View>
+      );
+    }
+    
+    return (
+      <View key={index} style={styles.gridItem}>
+        <Image 
+          source={{ uri: item.prizeImage }} 
+          style={styles.gridItemImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.gridItemText} numberOfLines={1}>
+          {item.prizeName}
+        </Text>
+      </View>
+    );
+  }
   return (
     <ImageBackground
       source={require('@/assets/images/rollBackground.png')}
@@ -94,6 +139,24 @@ export default function LuckyRollScreen() {
           
           {/* 抽奖九宫格 */}
           <View style={styles.luckyRollGrid}>
+            {/* 第一行 */}
+            <View style={styles.rowContainer}>
+              {renderGridItem(0)}
+              {renderGridItem(1)}
+              {renderGridItem(2)}
+            </View>
+            {/* 第二行 */}
+            <View style={styles.rowContainer}>
+              {renderGridItem(3)}
+              {renderGridItem(4)}
+              {renderGridItem(5)}
+            </View>
+            {/* 第三行 */}
+            <View style={styles.rowContainer}>
+              {renderGridItem(6)}
+              {renderGridItem(7)}
+              {renderGridItem(8)}
+            </View>
           </View>
         </View>
         
@@ -101,11 +164,13 @@ export default function LuckyRollScreen() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.singleDrawButton} onPress={() => handlePress('single')}>
             <Text style={styles.buttonText}>单抽</Text>
-            <Text style={styles.buttonSubText}>💎 200</Text>
+            <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
+            <Text style={styles.buttonSubText}>200</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.multiDrawButton} onPress={() => handlePress('multi')}>
             <Text style={styles.buttonText}>十连抽</Text>
-            <Text style={styles.buttonSubText}>💎 2000</Text>
+            <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
+            <Text style={styles.buttonSubText}>2000</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -177,7 +242,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(28, 118, 252)',
     borderRadius: 15,
     borderWidth: 2,
     borderColor: 'rgba(0, 0, 0, 0.1)',
@@ -190,7 +255,7 @@ const styles = StyleSheet.create({
   pointsText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: 'rgb(229, 241, 190)',
   },
   // 抽奖区域
   luckyRollContainer: {
@@ -198,8 +263,9 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH * 0.9,
     backgroundColor: 'rgba(250, 214, 139)',
     borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
+    paddingHorizontal: 10,
     alignItems: 'center',
     shadowColor: 'rgba(252, 190, 102, 0.5)',
     shadowOffset: { width: 0, height: 2 },
@@ -222,6 +288,32 @@ const styles = StyleSheet.create({
     bottom: CIRCLE_SIZE / 2,
     backgroundColor: 'rgba(227, 120, 21, 0.9)',
     borderRadius: 15,
+    padding: 10,
+    gap: 6,
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    gap: 6,
+    flex: 1,
+  },
+  gridItem: {
+    flex: 1,
+    backgroundColor: 'rgb(253, 243, 243)',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+  },
+  gridItemImage: {
+    width: 40,
+    height: 40,
+    marginBottom: 4,
+  },
+  gridItemText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: 'rgb(210, 95, 0)',
+    textAlign: 'center',
   },
   // 上边框 - 横向5个圆
   upperBorder: {
@@ -300,6 +392,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 6,
+    flexDirection: 'row',
+    gap: 10,
   },
   // 十连抽按钮
   multiDrawButton: {
@@ -314,6 +408,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 6,
+    flexDirection: 'row',
+    gap: 8,
   },
   // 按钮文字
   buttonText: {

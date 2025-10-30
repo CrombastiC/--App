@@ -29,6 +29,26 @@ export interface CommodityListResponse {
 }
 
 /**
+ * 获取抽奖数据接口
+ */
+export interface LuckyRollData {
+  _id: string;
+  prizeName: string;
+  prizeImage: string;
+  __v: number;
+}
+
+/**
+ * 获取抽奖数据响应接口
+ */
+export interface LuckyRollDataResponse {
+  code: number;
+  data: {
+    prizeList: LuckyRollData[];
+  };
+}
+
+/**
  * 积分商城服务
  */
 export const pointsService = {
@@ -44,5 +64,12 @@ export const pointsService = {
    */
   getPointsList: () => {
     return request.get<PointRecord[]>('/api/users/getIntegralRecord');
+  },
+
+  /**
+   * 获取抽奖数据
+   */
+  getLuckyRollData: () => {
+    return request.get<LuckyRollDataResponse>('/api/store/getPrizeList');
   }
 };

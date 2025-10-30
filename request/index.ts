@@ -50,11 +50,13 @@ class Request {
     private async requestInterceptor(
       axiosConfig: InternalAxiosRequestConfig
     ): Promise<any> {
-      if ([refreshTokenUrl].includes(axiosConfig.url || '')) {
-        return Promise.resolve(axiosConfig);
-      }
-  
-      if (this.refreshTokenFlag || this.requestingCount >= this.limit) {
+    // 暂时注释掉refreshToken的特殊处理
+    // if ([refreshTokenUrl].includes(axiosConfig.url || '')) {
+    //   return Promise.resolve(axiosConfig);
+    // }
+
+    // if (this.refreshTokenFlag || this.requestingCount >= this.limit) {
+    if (this.requestingCount >= this.limit) {
         return new Promise((resolve) => {
           this.requestQueue.push({
             resolve,
@@ -116,43 +118,49 @@ class Request {
       );
     }
   
-    private async refreshToken() {
-      const refreshToken = await AsyncStorage.getItem('refreshToken');
+  // 暂时注释掉refreshToken逻辑
+  // private async refreshToken() {
+  //   const refreshToken = await AsyncStorage.getItem('refreshToken');
 
-      if (!refreshToken) {
-        this.toLoginPage();
-        return;
-      }
+  //   if (!refreshToken) {
+  //     this.toLoginPage();
+  //     return;
+  //   }
 
-      try {
-        // 调用刷新token接口
-        const response = await this.axiosInstance.post(refreshTokenUrl, {
-          refreshToken,
-        });
+  //   try {
+  //     // 调用刷新token接口
+  //     const response = await this.axiosInstance.post(refreshTokenUrl, {
+  //       refreshToken,
+  //     });
 
-        const { token: newToken, refreshToken: newRefreshToken } = response.data.data;
+  //     const { token: newToken, refreshToken: newRefreshToken } = response.data.data;
 
-        // 保存新的token
-        await AsyncStorage.setItem('token', newToken);
-        await AsyncStorage.setItem('refreshToken', newRefreshToken);
+  //     // 保存新的token
+  //     await AsyncStorage.setItem('token', newToken);
+  //     await AsyncStorage.setItem('refreshToken', newRefreshToken);
 
-        this.refreshTokenFlag = false;
-        this.requestByQueue();
-      } catch (error) {
-        console.error('刷新Token失败:', error);
-        this.toLoginPage();
-      }
-    }
+  //     this.refreshTokenFlag = false;
+  //     this.requestByQueue();
+  //   } catch (error) {
+  //     console.error('刷新Token失败:', error);
+  //     this.toLoginPage();
+  //   }
+  // }
   
-    private async responseSuccessInterceptor(
-      response: AxiosResponse<any, any>
-    ): Promise<any> {
-      if (response.config.url !== refreshTokenUrl) {
-        this.requestingCount -= 1;
-        if (this.requestQueue.length) {
-          this.requestByQueue();
-        }
-      }
+  private async responseSuccessInterceptor(
+    response: AxiosResponse<any, any>
+  ): Promise<any> {
+    // 暂时注释掉refreshToken的特殊处理
+    // if (response.config.url !== refreshTokenUrl) {
+    //   this.requestingCount -= 1;
+    //   if (this.requestQueue.length) {
+    //     this.requestByQueue();
+    //   }
+    // }
+    this.requestingCount -= 1;
+    if (this.requestQueue.length) {
+      this.requestByQueue();
+    }
 
       // 打印响应日志 (开发环境)
       if (__DEV__) {
@@ -178,16 +186,21 @@ class Request {
       this.requestingCount -= 1;
       const {config, status} = error?.response || {};
 
-      // 401 未授权，刷新token
-      if (status === 401) {
-        return new Promise((resolve) => {
-          this.requestQueue.unshift({resolve, config, type: 'response'});
-          if (this.refreshTokenFlag) return;
+    // 401 未授权，刷新token（暂时注释掉）
+    // if (status === 401) {
+    //   return new Promise((resolve) => {
+    //     this.requestQueue.unshift({resolve, config, type: 'response'});
+    //     if (this.refreshTokenFlag) return;
 
-          this.refreshTokenFlag = true;
-          this.refreshToken();
-        });
-      } else {
+    //     this.refreshTokenFlag = true;
+    //     this.refreshToken();
+    //   });
+    // } else {
+    if (status === 401) {
+      // 暂时直接跳转到登录页
+      this.toLoginPage();
+      return Promise.resolve([true, error?.response?.data]);
+    } else {
         // 其他错误
         const errorMessage = error.response?.data?.message || error.message || '请求失败';
         console.warn('请求错误:', errorMessage);
