@@ -2,6 +2,7 @@
  * 我的页面
  */
 
+import MenuItem from '@/components/ui/MenuItem';
 import { userService } from '@/services';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -155,56 +156,47 @@ export default function ProfileScreen() {
 
         {/* 功能列表 */}
         <View style={styles.functionsContainer}>
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="map-marker" size={22} color="#333" />
-              <Text style={styles.menuItemText}>会员权益</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
-          </TouchableOpacity>
+          <MenuItem
+            icon="map-marker"
+            label="会员权益"
+            showDivider
+          />
 
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={22} color="#333" />
-              <Text style={styles.menuItemText}>任务中心</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/user/createOrder')}>
-            <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={22} color="#333" />
-              <Text style={styles.menuItemText}>创建订单</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={22} color="#333" />
-              <Text style={styles.menuItemText}>任务中心</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={22} color="#333" />
-              <Text style={styles.menuItemText}>任务中心</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={22} color="#333" />
-              <Text style={styles.menuItemText}>任务中心</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={22} color="#333" />
-              <Text style={styles.menuItemText}>任务中心</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
-          </TouchableOpacity>
+          <MenuItem
+            icon="checkbox-marked-circle-outline"
+            label="任务中心"
+            showDivider
+          />
+
+          <MenuItem
+            icon="checkbox-marked-circle-outline"
+            label="创建订单"
+            onPress={() => router.push('/user/createOrder')}
+            showDivider
+          />
+
+          <MenuItem
+            icon="checkbox-marked-circle-outline"
+            label="任务中心"
+            showDivider
+          />
+
+          <MenuItem
+            icon="checkbox-marked-circle-outline"
+            label="任务中心"
+            showDivider
+          />
+
+          <MenuItem
+            icon="checkbox-marked-circle-outline"
+            label="任务中心"
+            showDivider
+          />
+
+          <MenuItem
+            icon="checkbox-marked-circle-outline"
+            label="任务中心"
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -339,37 +331,7 @@ const styles = StyleSheet.create({
   },
   functionsContainer: {
     marginTop: 12,
-    paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
-  },
-  menuItem: {
-    backgroundColor: '#fff',
-    paddingVertical: 18,
-    paddingHorizontal: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  menuItemText: {
-    fontSize: 15,
-    color: '#333',
-    fontWeight: '400',
-    marginLeft: 12,
   },
 });

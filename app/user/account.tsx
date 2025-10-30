@@ -1,3 +1,4 @@
+import MenuItem from '@/components/ui/MenuItem';
 import { tokenManager, userService } from "@/services";
 import { uploadImage } from "@/services/order.service";
 import { StorageUtils } from "@/utils/storage";
@@ -295,57 +296,50 @@ export default function AccountScreen() {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.content}>
         {/* 头像 */}
-        <TouchableOpacity style={styles.itemContainer} onPress={handleAvatarPress}>
-          <Text style={styles.label}>头像</Text>
-          <View style={styles.itemRight}>
-            {userInfo?.avatar ? (
-              <Image source={{ uri: userInfo.avatar }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <MaterialCommunityIcons name="account" size={32} color="#fff" />
-              </View>
-            )}
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" style={styles.chevron} />
-          </View>
-        </TouchableOpacity>
+        <MenuItem
+          label="头像"
+          onPress={handleAvatarPress}
+          rightContent={
+            <View style={styles.avatarRight}>
+              {userInfo?.avatar ? (
+                <Image source={{ uri: userInfo.avatar }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <MaterialCommunityIcons name="account" size={32} color="#fff" />
+                </View>
+              )}
+            </View>
+          }
+        />
 
         {/* 昵称 */}
-        <TouchableOpacity style={styles.itemContainer} onPress={handleNicknamePress}>
-          <Text style={styles.label}>昵称</Text>
-          <View style={styles.itemRight}>
-            <Text style={styles.itemValue}>{userInfo?.username || 'Daisy'}</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
-          </View>
-        </TouchableOpacity>
+        <MenuItem
+          label="昵称"
+          value={userInfo?.username || 'Daisy'}
+          onPress={handleNicknamePress}
+        />
 
         {/* 手机号 - 不可更改 */}
-        <View style={styles.itemContainer}>
-          <Text style={styles.label}>手机号</Text>
-          <Text style={styles.itemValueDisabled}>{formatPhone(userInfo?.phone)}</Text>
-        </View>
+        <MenuItem
+          label="手机号"
+          value={formatPhone(userInfo?.phone)}
+          disabled
+          showArrow={false}
+        />
 
         {/* 性别 */}
-        <TouchableOpacity onPress={() => setGenderVisible(true)}>
-          <View style={styles.itemContainer}>
-            <Text style={styles.label}>性别</Text>
-            <View style={styles.itemRight}>
-              <Text style={styles.itemValue}>{getGenderText(userInfo?.gender)}</Text>
-              <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
-            </View>
-          </View>
-        </TouchableOpacity>
+        <MenuItem
+          label="性别"
+          value={getGenderText(userInfo?.gender)}
+          onPress={() => setGenderVisible(true)}
+        />
 
         {/* 生日 */}
-        <TouchableOpacity
-          style={styles.itemContainer}
+        <MenuItem
+          label="生日"
+          value={formatDate(date)}
           onPress={() => setShow(true)}
-        >
-          <Text style={styles.label}>生日</Text>
-          <View style={styles.itemRight}>
-            <Text style={styles.itemValue}>{formatDate(date)}</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
-          </View>
-        </TouchableOpacity>
+        />
 
         {/* 日期选择器 */}
         <DateTimePickerModal
@@ -501,39 +495,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 0,
   },
-  itemContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#e5e5e5',
-  },
-  label: {
-    fontSize: 15,
-    color: '#333',
-    fontWeight: '400',
-  },
-  itemRight: {
+  avatarRight: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  itemValue: {
-    fontSize: 15,
-    color: '#666',
-    marginRight: 8,
-  },
-  itemValueDisabled: {
-    fontSize: 15,
-    color: '#999',
   },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    marginRight: 8,
   },
   avatarPlaceholder: {
     width: 50,
@@ -542,10 +511,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF7214',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
-  },
-  chevron: {
-    marginLeft: 4,
   },
   modalOverlay: {
     flex: 1,
