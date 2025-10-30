@@ -2,7 +2,7 @@
  * 我的页面
  */
 
-import MenuItem from '@/components/ui/MenuItem';
+import MenuList, { MenuListItem } from '@/components/ui/MenuList';
 import { userService } from '@/services';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -19,6 +19,46 @@ interface UserInfo {
   integral?: number;
   couponCount?: number;
 }
+
+// 功能菜单配置
+const menuItems: MenuListItem[] = [
+  {
+    key: 'member-benefits',
+    icon: 'map-marker',
+    label: '会员权益',
+  },
+  {
+    key: 'task-center-1',
+    icon: 'checkbox-marked-circle-outline',
+    label: '任务中心',
+  },
+  {
+    key: 'create-order',
+    icon: 'checkbox-marked-circle-outline',
+    label: '创建订单',
+    onPress: () => router.push('/user/createOrder'),
+  },
+  {
+    key: 'task-center-2',
+    icon: 'checkbox-marked-circle-outline',
+    label: '任务中心',
+  },
+  {
+    key: 'task-center-3',
+    icon: 'checkbox-marked-circle-outline',
+    label: '任务中心',
+  },
+  {
+    key: 'task-center-4',
+    icon: 'checkbox-marked-circle-outline',
+    label: '任务中心',
+  },
+  {
+    key: 'task-center-5',
+    icon: 'checkbox-marked-circle-outline',
+    label: '任务中心',
+  },
+];
 
 export default function ProfileScreen() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -155,49 +195,10 @@ export default function ProfileScreen() {
         </View>
 
         {/* 功能列表 */}
-        <View style={styles.functionsContainer}>
-          <MenuItem
-            icon="map-marker"
-            label="会员权益"
-            showDivider
-          />
-
-          <MenuItem
-            icon="checkbox-marked-circle-outline"
-            label="任务中心"
-            showDivider
-          />
-
-          <MenuItem
-            icon="checkbox-marked-circle-outline"
-            label="创建订单"
-            onPress={() => router.push('/user/createOrder')}
-            showDivider
-          />
-
-          <MenuItem
-            icon="checkbox-marked-circle-outline"
-            label="任务中心"
-            showDivider
-          />
-
-          <MenuItem
-            icon="checkbox-marked-circle-outline"
-            label="任务中心"
-            showDivider
-          />
-
-          <MenuItem
-            icon="checkbox-marked-circle-outline"
-            label="任务中心"
-            showDivider
-          />
-
-          <MenuItem
-            icon="checkbox-marked-circle-outline"
-            label="任务中心"
-          />
-        </View>
+        <MenuList
+          items={menuItems}
+          containerStyle={styles.functionsContainer}
+        />
       </ScrollView>
     </SafeAreaView>
   );

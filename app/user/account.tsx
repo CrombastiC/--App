@@ -1,11 +1,11 @@
-import MenuItem from '@/components/ui/MenuItem';
+import MenuList, { MenuListItem } from '@/components/ui/MenuList';
 import { tokenManager, userService } from "@/services";
 import { uploadImage } from "@/services/order.service";
 import { StorageUtils } from "@/utils/storage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -292,54 +292,57 @@ export default function AccountScreen() {
       { cancelable: true }
     );
   };
+
+  // 使用 useMemo 创建菜单配置
+  const accountMenuItems: MenuListItem[] = useMemo(() => [
+    {
+      key: 'avatar',
+      label: '头像',
+      onPress: handleAvatarPress,
+      rightContent: (
+        <View style={styles.avatarRight}>
+          {userInfo?.avatar ? (
+            <Image source={{ uri: userInfo.avatar }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <MaterialCommunityIcons name="account" size={32} color="#fff" />
+            </View>
+          )}
+        </View>
+      ),
+    },
+    {
+      key: 'nickname',
+      label: '昵称',
+      value: userInfo?.username || 'Daisy',
+      onPress: handleNicknamePress,
+    },
+    {
+      key: 'phone',
+      label: '手机号',
+      value: formatPhone(userInfo?.phone),
+      disabled: true,
+      showArrow: false,
+    },
+    {
+      key: 'gender',
+      label: '性别',
+      value: getGenderText(userInfo?.gender),
+      onPress: () => setGenderVisible(true),
+    },
+    {
+      key: 'birthday',
+      label: '生日',
+      value: formatDate(date),
+      onPress: () => setShow(true),
+    },
+  ], [userInfo, date]);
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.content}>
-        {/* 头像 */}
-        <MenuItem
-          label="头像"
-          onPress={handleAvatarPress}
-          rightContent={
-            <View style={styles.avatarRight}>
-              {userInfo?.avatar ? (
-                <Image source={{ uri: userInfo.avatar }} style={styles.avatar} />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <MaterialCommunityIcons name="account" size={32} color="#fff" />
-                </View>
-              )}
-            </View>
-          }
-        />
-
-        {/* 昵称 */}
-        <MenuItem
-          label="昵称"
-          value={userInfo?.username || 'Daisy'}
-          onPress={handleNicknamePress}
-        />
-
-        {/* 手机号 - 不可更改 */}
-        <MenuItem
-          label="手机号"
-          value={formatPhone(userInfo?.phone)}
-          disabled
-          showArrow={false}
-        />
-
-        {/* 性别 */}
-        <MenuItem
-          label="性别"
-          value={getGenderText(userInfo?.gender)}
-          onPress={() => setGenderVisible(true)}
-        />
-
-        {/* 生日 */}
-        <MenuItem
-          label="生日"
-          value={formatDate(date)}
-          onPress={() => setShow(true)}
-        />
+        {/* 账户信息列表 */}
+        <MenuList items={accountMenuItems}/>
 
         {/* 日期选择器 */}
         <DateTimePickerModal
