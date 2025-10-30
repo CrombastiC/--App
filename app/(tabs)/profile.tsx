@@ -40,8 +40,9 @@ const menuItems: MenuListItem[] = [
   },
   {
     key: 'task-center-2',
-    icon: 'checkbox-marked-circle-outline',
-    label: '任务中心',
+    icon: 'gift-outline',
+    label: '幸运抽奖',
+    onPress: () => router.push('/(points)/luckyRoll'),
   },
   {
     key: 'task-center-3',

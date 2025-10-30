@@ -19,6 +19,14 @@ export default function UserLayout() {
           headerTitleAlign: 'center',
         }}
       />
+      <Stack.Screen
+        name="luckyRoll"
+        options={{
+          title: '幸运抽奖',
+          headerShown: true,
+          headerTitleAlign: 'center',
+        }}
+      />
     </Stack>
   );
 }
