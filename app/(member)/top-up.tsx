@@ -1,3 +1,4 @@
+import TabSwitch from '@/components/ui/TabSwitch';
 import { TopUpRecord, userService } from '@/services';
 import { router, useFocusEffect, useNavigation } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -12,6 +13,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 //   { id: 3, amount: 2000, bonus: 300 },
 //   { id: 4, amount: 3000, bonus: 400 },
 // ];
+
+// 定义tabs配置
+const topUpTabs = [
+  { key: 'topup' as const, label: '充值' },
+  { key: 'history' as const, label: '充值记录' },
+];
 
 export default function TopUpScreen() {
   const navigation = useNavigation();
@@ -278,27 +285,11 @@ export default function TopUpScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       {/* 顶部切换组件 */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'topup' && styles.tabItemActive]}
-          onPress={() => handleTabChange('topup')}
-        >
-          <Text style={[styles.tabText, activeTab === 'topup' && styles.tabTextActive]}>
-            充值
-          </Text>
-          {activeTab === 'topup' && <View style={styles.tabIndicator} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'history' && styles.tabItemActive]}
-          onPress={() => handleTabChange('history')}
-        >
-          <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>
-            充值记录
-          </Text>
-          {activeTab === 'history' && <View style={styles.tabIndicator} />}
-        </TouchableOpacity>
-      </View>
+      <TabSwitch
+        tabs={topUpTabs}
+        activeTab={activeTab}
+        onChange={handleTabChange}
+      />
 
       <Divider />
 
@@ -691,37 +682,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 16,
-    position: 'relative',
-  },
-  tabItemActive: {
-    // 激活状态
-  },
-  tabText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
-  },
-  tabTextActive: {
-    color: '#FF7214',
-    fontWeight: '600',
-  },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    width: 32,
-    height: 3,
-    backgroundColor: '#FF7214',
-    borderRadius: 2,
   },
   content: {
     flex: 1,

@@ -1,3 +1,4 @@
+import TabSwitch from '@/components/ui/TabSwitch';
 import { Coupon, userService } from '@/services/user.service';
 import { Stack, useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -18,6 +19,12 @@ const formatDate = (dateString: string) => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+// 定义tabs配置
+const couponTabs = [
+  { key: 'unused' as const, label: '未使用' },
+  { key: 'expired' as const, label: '已过期' },
+];
 
 export default function CouponScreen() {
   const navigation = useNavigation();
@@ -100,27 +107,11 @@ export default function CouponScreen() {
       <Stack.Screen options={{ title: '我的优惠券' }} />
       
       {/* 顶部切换组件 */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'unused' && styles.tabItemActive]}
-          onPress={() => handleTabChange('unused')}
-        >
-          <Text style={[styles.tabText, activeTab === 'unused' && styles.tabTextActive]}>
-            未使用
-          </Text>
-          {activeTab === 'unused' && <View style={styles.tabIndicator} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'expired' && styles.tabItemActive]}
-          onPress={() => handleTabChange('expired')}
-        >
-          <Text style={[styles.tabText, activeTab === 'expired' && styles.tabTextActive]}>
-            已过期
-          </Text>
-          {activeTab === 'expired' && <View style={styles.tabIndicator} />}
-        </TouchableOpacity>
-      </View>
+      <TabSwitch
+        tabs={couponTabs}
+        activeTab={activeTab}
+        onChange={handleTabChange}
+      />
 
       <Divider />
 
@@ -153,37 +144,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 16,
-    position: 'relative',
-  },
-  tabItemActive: {
-    // 激活状态
-  },
-  tabText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
-  },
-  tabTextActive: {
-    color: '#FF7214',
-    fontWeight: '600',
-  },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    width: 32,
-    height: 3,
-    backgroundColor: '#FF7214',
-    borderRadius: 2,
   },
   emptyContainer: {
     flex: 1,
