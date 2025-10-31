@@ -32,7 +32,7 @@ export default function LuckyRollScreen() {
   useEffect(() => {
     getLuckyRollData();
   }, []);
-  
+
   // 清理定时器
   useEffect(() => {
     return () => {
@@ -41,7 +41,7 @@ export default function LuckyRollScreen() {
       }
     };
   }, []);
-  
+
   const getLuckyRollData = async () => {
     const [error, result] = await pointsService.getLuckyRollData();
     if (error) {
@@ -54,31 +54,31 @@ export default function LuckyRollScreen() {
       console.log('抽奖数据:', data);
     }
   }
-  
+
   // 开始抽奖动画
   const startLottery = () => {
     if (isRolling) return; // 如果正在抽奖，不响应
-    
+
     setIsRolling(true);
     setCurrentIndex(-1);
-    
+
     let step = 0; // 当前步数
     let speed = 100; // 初始速度（毫秒）
     const totalSteps = 30; // 总共转动的步数（至少转3圈多）
     const targetIndex = Math.floor(Math.random() * LOTTERY_PATH.length); // 随机中奖位置
-    
+
     const animate = () => {
       step++;
       const pathIndex = step % LOTTERY_PATH.length;
       setCurrentIndex(LOTTERY_PATH[pathIndex]);
-      
+
       // 逐渐减速
       if (step > totalSteps - 8) {
         speed += 50; // 最后几步明显减速
       } else if (step > totalSteps / 2) {
         speed += 20; // 中间逐渐减速
       }
-      
+
       // 检查是否到达目标位置
       if (step >= totalSteps && pathIndex === targetIndex) {
         // 抽奖结束
@@ -93,19 +93,19 @@ export default function LuckyRollScreen() {
         }, 300);
         return;
       }
-      
+
       // 继续动画
       timerRef.current = setTimeout(animate, speed) as unknown as number;
     };
-    
+
     animate();
   };
-  
+
   // 渲染九宫格项
   const renderGridItem = (index: number) => {
     const item = luckyRollData[index];
     const isHighlighted = currentIndex === index; // 判断是否高亮
-    
+
     if (!item) {
       return (
         <View key={index} style={styles.gridItem}>
@@ -113,17 +113,17 @@ export default function LuckyRollScreen() {
         </View>
       );
     }
-    
+
     return (
-      <View 
-        key={index} 
+      <View
+        key={index}
         style={[
           styles.gridItem,
           isHighlighted && styles.gridItemHighlighted
         ]}
       >
-        <Image 
-          source={{ uri: item.prizeImage }} 
+        <Image
+          source={{ uri: item.prizeImage }}
           style={styles.gridItemImage}
           resizeMode="contain"
         />
@@ -156,105 +156,105 @@ export default function LuckyRollScreen() {
         </View>
         {/* 抽奖容器 */}
         <View style={styles.luckyRollContainer}>
-        {/* 九宫格包装器 - 包含边框和九宫格 */}
-        <View style={styles.gridWrapper}>
-          {/* 上边框 - 5个圆 */}
-          <View style={styles.upperBorder}>
-            {borderCircles.map((circle, index) => (
-              <View
-                key={`top-${index}`}
-                style={[
-                  styles.circle,
-                  circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
-                ]}
-              />
-            ))}
-          </View>
-          
-          {/* 右边框 - 5个圆 */}
-          <View style={styles.rightBorder}>
-            {borderCircles.map((circle, index) => (
-              <View
-                key={`right-${index}`}
-                style={[
-                  styles.circle,
-                  circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
-                ]}
-              />
-            ))}
-          </View>
-          
-          {/* 下边框 - 5个圆 */}
-          <View style={styles.lowerBorder}>
-            {borderCircles.map((circle, index) => (
-              <View
-                key={`bottom-${index}`}
-                style={[
-                  styles.circle,
-                  circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
-                ]}
-              />
-            ))}
-          </View>
-          
-          {/* 左边框 - 5个圆 */}
-          <View style={styles.leftBorder}>
-            {borderCircles.map((circle, index) => (
-              <View
-                key={`left-${index}`}
-                style={[
-                  styles.circle,
-                  circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
-                ]}
-              />
-            ))}
-          </View>
-          
-          {/* 抽奖九宫格 */}
-          <View style={styles.luckyRollGrid}>
-            {/* 第一行 */}
-            <View style={styles.rowContainer}>
-              {renderGridItem(0)}
-              {renderGridItem(1)}
-              {renderGridItem(2)}
+          {/* 九宫格包装器 - 包含边框和九宫格 */}
+          <View style={styles.gridWrapper}>
+            {/* 上边框 - 5个圆 */}
+            <View style={styles.upperBorder}>
+              {borderCircles.map((circle, index) => (
+                <View
+                  key={`top-${index}`}
+                  style={[
+                    styles.circle,
+                    circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
+                  ]}
+                />
+              ))}
             </View>
-            {/* 第二行 */}
-            <View style={styles.rowContainer}>
-              {renderGridItem(3)}
-              {renderGridItem(4)}
-              {renderGridItem(5)}
+
+            {/* 右边框 - 5个圆 */}
+            <View style={styles.rightBorder}>
+              {borderCircles.map((circle, index) => (
+                <View
+                  key={`right-${index}`}
+                  style={[
+                    styles.circle,
+                    circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
+                  ]}
+                />
+              ))}
             </View>
-            {/* 第三行 */}
-            <View style={styles.rowContainer}>
-              {renderGridItem(6)}
-              {renderGridItem(7)}
-              {renderGridItem(8)}
+
+            {/* 下边框 - 5个圆 */}
+            <View style={styles.lowerBorder}>
+              {borderCircles.map((circle, index) => (
+                <View
+                  key={`bottom-${index}`}
+                  style={[
+                    styles.circle,
+                    circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
+                  ]}
+                />
+              ))}
             </View>
+
+            {/* 左边框 - 5个圆 */}
+            <View style={styles.leftBorder}>
+              {borderCircles.map((circle, index) => (
+                <View
+                  key={`left-${index}`}
+                  style={[
+                    styles.circle,
+                    circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
+                  ]}
+                />
+              ))}
+            </View>
+
+            {/* 抽奖九宫格 */}
+            <View style={styles.luckyRollGrid}>
+              {/* 第一行 */}
+              <View style={styles.rowContainer}>
+                {renderGridItem(0)}
+                {renderGridItem(1)}
+                {renderGridItem(2)}
+              </View>
+              {/* 第二行 */}
+              <View style={styles.rowContainer}>
+                {renderGridItem(3)}
+                {renderGridItem(4)}
+                {renderGridItem(5)}
+              </View>
+              {/* 第三行 */}
+              <View style={styles.rowContainer}>
+                {renderGridItem(6)}
+                {renderGridItem(7)}
+                {renderGridItem(8)}
+              </View>
+            </View>
+          </View>
+
+          {/* 底部按钮区域 */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.singleDrawButton, isRolling && styles.buttonDisabled]}
+              onPress={startLottery}
+              disabled={isRolling}
+            >
+              <Text style={styles.buttonText}>单抽</Text>
+              <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
+              <Text style={styles.buttonSubText}>200</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.multiDrawButton, isRolling && styles.buttonDisabled]}
+              onPress={() => handlePress('multi')}
+              disabled={isRolling}
+            >
+              <Text style={styles.buttonText}>十连抽</Text>
+              <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
+              <Text style={styles.buttonSubText}>2000</Text>
+            </TouchableOpacity>
           </View>
         </View>
-        
-        {/* 底部按钮区域 */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.singleDrawButton, isRolling && styles.buttonDisabled]} 
-            onPress={startLottery}
-            disabled={isRolling}
-          >
-            <Text style={styles.buttonText}>单抽</Text>
-            <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
-            <Text style={styles.buttonSubText}>200</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.multiDrawButton, isRolling && styles.buttonDisabled]} 
-            onPress={() => handlePress('multi')}
-            disabled={isRolling}
-          >
-            <Text style={styles.buttonText}>十连抽</Text>
-            <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
-            <Text style={styles.buttonSubText}>2000</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
       </View>
     </ImageBackground>
   );
