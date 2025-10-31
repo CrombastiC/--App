@@ -28,6 +28,7 @@ export default function LuckyRollScreen() {
   const [currentIndex, setCurrentIndex] = useState<number>(-1); // 当前高亮的格子索引
   const [isRolling, setIsRolling] = useState<boolean>(false); // 是否正在抽奖
   const timerRef = useRef<number | null>(null);
+  const [currentPoints, setCurrentPoints] = useState<number>(0);
   //初始化数据
   useEffect(() => {
     getLuckyRollData();
@@ -49,6 +50,7 @@ export default function LuckyRollScreen() {
       return;
     }
     const data = (result as LuckyRollDataResponse)?.data?.prizeList;
+    setCurrentPoints(result?.data?.userIntegral || 0);
     if (data && Array.isArray(data)) {
       setLuckyRollData(data);
       console.log('抽奖数据:', data);
@@ -67,7 +69,7 @@ export default function LuckyRollScreen() {
     const totalSteps = 30; // 总共转动的步数（至少转3圈多）
     const targetIndex = Math.floor(Math.random() * LOTTERY_PATH.length); // 随机中奖位置
 
-    const animate = () => {
+    const animate = async () => {
       step++;
       const pathIndex = step % LOTTERY_PATH.length;
       setCurrentIndex(LOTTERY_PATH[pathIndex]);
@@ -85,11 +87,26 @@ export default function LuckyRollScreen() {
         if (timerRef.current) {
           clearTimeout(timerRef.current);
         }
+
+        // 调用接口兑换奖品，单抽扣200积分
+        const [error, result] = await pointsService.exchangePrize(luckyRollData[targetIndex]._id, 200);
+        
         setTimeout(() => {
           setIsRolling(false);
+          
+          // 检查接口是否报错
+          if (error) {
+            alert(`兑换失败：${error}`);
+            return;
+          }
+          
+          // 接口没报错才提示结果
           const finalIndex = LOTTERY_PATH[targetIndex];
           const prize = luckyRollData[finalIndex];
           alert(`恭喜你抽中了：${prize?.prizeName || '奖品'}`);
+          
+          // 更新积分
+          getLuckyRollData();
         }, 300);
         return;
       }
@@ -151,7 +168,7 @@ export default function LuckyRollScreen() {
         <View>
           {/* 积分显示圆角矩形 */}
           <View style={styles.pointsContainer}>
-            <Text style={styles.pointsText}>当前积分: 100</Text>
+            <Text style={styles.pointsText}>当前积分: {currentPoints}</Text>
           </View>
         </View>
         {/* 抽奖容器 */}
@@ -260,9 +277,14 @@ export default function LuckyRollScreen() {
   );
 }
 
-function handlePress(type: string) {
-  // 抽奖逻辑待实现
+async function handlePress(type: string) {
+  // 十连抽逻辑
   console.log(`${type === 'single' ? '单抽' : '十连抽'}按钮被点击`);
+  
+  if (type === 'multi') {
+    // 十连抽，扣除2000积分
+    alert('十连抽功能开发中，敬请期待！');
+  }
 }
 
 const styles = StyleSheet.create({

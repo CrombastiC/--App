@@ -44,6 +44,7 @@ export interface LuckyRollData {
 export interface LuckyRollDataResponse {
   code: number;
   data: {
+    userIntegral: number;
     prizeList: LuckyRollData[];
   };
 }
@@ -71,5 +72,12 @@ export const pointsService = {
    */
   getLuckyRollData: () => {
     return request.get<LuckyRollDataResponse>('/api/store/getPrizeList');
+  },
+
+  /**
+   * 兑换奖品
+   */
+  exchangePrize: (prizeId: string,integral:number) => {
+    return request.post<{ code: number; data: any }>('/api/store/exchangePrize', { prizeId,integral });
   }
 };
