@@ -44,6 +44,7 @@ export interface LuckyRollData {
 export interface LuckyRollDataResponse {
   code: number;
   data: {
+    luckyDrawCount: number;
     userIntegral: number;
     prizeList: LuckyRollData[];
   };
@@ -60,9 +61,9 @@ export const pointsService = {
     return request.get<CommodityListResponse>('/api/store/getCommodityList');
   },
 
-    /**
-   * 获取积分列表
-   */
+  /**
+ * 获取积分列表
+ */
   getPointsList: () => {
     return request.get<PointRecord[]>('/api/users/getIntegralRecord');
   },
@@ -77,7 +78,7 @@ export const pointsService = {
   /**
    * 兑换奖品
    */
-  exchangePrize: (prizeId: string,integral:number) => {
-    return request.post<{ code: number; data: any }>('/api/store/exchangePrize', { prizeId,integral });
+  exchangePrize: (prizeId: string, integral: number) => {
+    return request.post<{ code: number; data: any }>('/api/store/exchangePrize', { prizeId, integral });
   }
 };

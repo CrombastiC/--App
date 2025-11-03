@@ -29,6 +29,7 @@ export default function LuckyRollScreen() {
   const [isRolling, setIsRolling] = useState<boolean>(false); // 是否正在抽奖
   const timerRef = useRef<number | null>(null);
   const [currentPoints, setCurrentPoints] = useState<number>(0);
+  const [freeDrawCount, setFreeDrawCount] = useState<number>(0);
   //初始化数据
   useEffect(() => {
     getLuckyRollData();
@@ -51,6 +52,7 @@ export default function LuckyRollScreen() {
     }
     const data = (result as LuckyRollDataResponse)?.data?.prizeList;
     setCurrentPoints(result?.data?.userIntegral || 0);
+    setFreeDrawCount(result?.data?.luckyDrawCount || 0);
     if (data && Array.isArray(data)) {
       setLuckyRollData(data);
       console.log('抽奖数据:', data);
@@ -60,6 +62,15 @@ export default function LuckyRollScreen() {
   // 开始抽奖动画
   const startLottery = () => {
     if (isRolling) return; // 如果正在抽奖，不响应
+
+    // 判断是否免费抽奖
+    const costIntegral = freeDrawCount > 0 ? 0 : 200;
+
+    // 如果不是免费抽奖，检查积分是否足够
+    if (freeDrawCount <= 0 && currentPoints < 200) {
+      alert('积分不足，无法抽奖');
+      return;
+    }
 
     setIsRolling(true);
     setCurrentIndex(-1);
@@ -88,24 +99,24 @@ export default function LuckyRollScreen() {
           clearTimeout(timerRef.current);
         }
 
-        // 调用接口兑换奖品，单抽扣200积分
-        const [error, result] = await pointsService.exchangePrize(luckyRollData[targetIndex]._id, 200);
-        
+        // 调用接口兑换奖品，根据是否免费抽奖传入不同的积分值
+        const finalIndex = LOTTERY_PATH[targetIndex];
+        const [error, result] = await pointsService.exchangePrize(luckyRollData[finalIndex]._id, costIntegral);
+
         setTimeout(() => {
           setIsRolling(false);
-          
+
           // 检查接口是否报错
           if (error) {
             alert(`兑换失败：${error}`);
             return;
           }
-          
+
           // 接口没报错才提示结果
-          const finalIndex = LOTTERY_PATH[targetIndex];
           const prize = luckyRollData[finalIndex];
           alert(`恭喜你抽中了：${prize?.prizeName || '奖品'}`);
-          
-          // 更新积分
+
+          // 更新积分和免费次数
           getLuckyRollData();
         }, 300);
         return;
@@ -253,22 +264,46 @@ export default function LuckyRollScreen() {
           {/* 底部按钮区域 */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.singleDrawButton, isRolling && styles.buttonDisabled]}
+              style={[
+                styles.singleDrawButton,
+                isRolling && styles.buttonDisabled
+              ]}
               onPress={startLottery}
               disabled={isRolling}
             >
-              <Text style={styles.buttonText}>单抽</Text>
-              <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
-              <Text style={styles.buttonSubText}>200</Text>
+              <View style={styles.buttonContent}>
+                <Text style={styles.buttonText}>单抽</Text>
+                {freeDrawCount > 0 ? (
+                  <View style={styles.freeRow}>
+                    <Text
+                      style={styles.freeDrawSubText}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit={true}
+                      minimumFontScale={0.7}
+                    >
+                      免费抽奖次数：{freeDrawCount}次
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.costRow}>
+                    <Image source={require('@/assets/images/积分.png')} style={styles.costIcon} />
+                    <Text style={styles.buttonSubText}>200</Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.multiDrawButton, isRolling && styles.buttonDisabled]}
               onPress={() => handlePress('multi')}
               disabled={isRolling}
             >
-              <Text style={styles.buttonText}>十连抽</Text>
-              <Image source={require('@/assets/images/积分.png')} style={{ width: 20, height: 20 }} />
-              <Text style={styles.buttonSubText}>2000</Text>
+              <View style={styles.buttonContent}>
+                <Text style={styles.buttonText}>十连抽</Text>
+                <View style={styles.costRow}>
+                  <Image source={require('@/assets/images/积分.png')} style={styles.costIcon} />
+                  <Text style={styles.buttonSubText}>2000</Text>
+                </View>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -280,7 +315,7 @@ export default function LuckyRollScreen() {
 async function handlePress(type: string) {
   // 十连抽逻辑
   console.log(`${type === 'single' ? '单抽' : '十连抽'}按钮被点击`);
-  
+
   if (type === 'multi') {
     // 十连抽，扣除2000积分
     alert('十连抽功能开发中，敬请期待！');
@@ -507,9 +542,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 6,
-    flexDirection: 'row',
-    gap: 10,
+    minHeight: 48,
   },
+
   // 十连抽按钮
   multiDrawButton: {
     flex: 1,
@@ -523,21 +558,50 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 6,
-    flexDirection: 'row',
-    gap: 8,
+    minHeight: 48,
+  },
+  // 按钮内容容器
+  buttonContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    width: '100%',
   },
   // 按钮文字
   buttonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 2,
   },
   // 按钮副文字（积分）
   buttonSubText: {
     fontSize: 13,
     color: '#fff',
     fontWeight: '600',
+  },
+  // 积分行
+  costRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 20,
+  },
+  // 积分图标
+  costIcon: {
+    width: 20,
+    height: 20,
+  },
+  // 免费次数行保持高度与积分行一致
+  freeRow: {
+    minHeight: 20,
+    justifyContent: 'center',
+  },
+  // 免费抽奖副文字
+  freeDrawSubText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: '400',
+    opacity: 0.9,
   },
   // 按钮禁用状态
   buttonDisabled: {
