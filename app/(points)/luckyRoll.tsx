@@ -1,6 +1,7 @@
 import { LuckyRollData, LuckyRollDataResponse, pointsService } from '@/services/points.service';
 import { useEffect, useRef, useState } from 'react';
-import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { IconButton } from 'react-native-paper';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -23,6 +24,34 @@ const borderCircles = [
 //       6 7 8
 const LOTTERY_PATH = [0, 1, 2, 5, 4, 3, 6, 7, 8];
 
+// Mock 中奖记录数据
+interface WinRecord {
+  id: string;
+  avatar: string;
+  username: string;
+  prize: string;
+}
+
+const MOCK_WIN_RECORDS: WinRecord[] = [
+  { id: '1', avatar: '👨', username: '胡毛毛', prize: '抽中 Pico Neo3' },
+  { id: '2', avatar: '👩', username: 'C···', prize: '抽中 苹果耳机AIRPOD' },
+  { id: '3', avatar: '👨', username: '傻', prize: '抽中 「睡眠日」小夜灯' },
+  { id: '4', avatar: '👩', username: 'J·', prize: '抽中 「睡眠日」小夜灯' },
+  { id: '5', avatar: '👨', username: '随', prize: '抽中 「睡眠日」小夜灯' },
+  { id: '6', avatar: '👨', username: '用户A', prize: '抽中 Pico Neo3' },
+  { id: '7', avatar: '👩', username: '用户B', prize: '抽中 苹果耳机AIRPOD' },
+  { id: '8', avatar: '👨', username: '用户C', prize: '抽中 「睡眠日」小夜灯' },
+  { id: '9', avatar: '👩', username: '用户D', prize: '抽中 「睡眠日」小夜灯' },
+  { id: '10', avatar: '👨', username: '用户E', prize: '抽中 Pico Neo3' },
+  { id: '11', avatar: '👩', username: '用户F', prize: '抽中 苹果耳机AIRPOD' },
+  { id: '12', avatar: '👨', username: '用户G', prize: '抽中 「睡眠日」小夜灯' },
+  { id: '13', avatar: '👩', username: '用户H', prize: '抽中 「睡眠日」小夜灯' },
+  { id: '14', avatar: '👨', username: '用户I', prize: '抽中 Pico Neo3' },
+  { id: '15', avatar: '👩', username: '用户J', prize: '抽中 苹果耳机AIRPOD' },
+];
+
+const RECORDS_PER_PAGE = 5;
+
 export default function LuckyRollScreen() {
   const [luckyRollData, setLuckyRollData] = useState<LuckyRollData[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(-1); // 当前高亮的格子索引
@@ -30,6 +59,18 @@ export default function LuckyRollScreen() {
   const timerRef = useRef<number | null>(null);
   const [currentPoints, setCurrentPoints] = useState<number>(0);
   const [freeDrawCount, setFreeDrawCount] = useState<number>(0);
+  
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const totalPages = Math.ceil(MOCK_WIN_RECORDS.length / RECORDS_PER_PAGE);
+  
+  // 获取当前页的记录
+  const getCurrentPageRecords = () => {
+    const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
+    const endIndex = startIndex + RECORDS_PER_PAGE;
+    return MOCK_WIN_RECORDS.slice(startIndex, endIndex);
+  };
+  
   //初始化数据
   useEffect(() => {
     getLuckyRollData();
@@ -168,22 +209,27 @@ export default function LuckyRollScreen() {
       resizeMode="stretch"
       imageStyle={styles.backgroundImage}
     >
-      <View style={styles.contentContainer}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.titleText}>
-            <Text style={styles.blueText}>掘金福利</Text>
-            <Text style={styles.orangeText}>限量抽</Text>
-          </Text>
-          <Text style={styles.subTitleText}>惊喜大奖等你来拿！</Text>
-        </View>
-        <View>
-          {/* 积分显示圆角矩形 */}
-          <View style={styles.pointsContainer}>
-            <Text style={styles.pointsText}>当前积分: {currentPoints}</Text>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.contentContainer}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.titleText}>
+              <Text style={styles.blueText}>掘金福利</Text>
+              <Text style={styles.orangeText}>限量抽</Text>
+            </Text>
+            <Text style={styles.subTitleText}>惊喜大奖等你来拿！</Text>
           </View>
-        </View>
-        {/* 抽奖容器 */}
-        <View style={styles.luckyRollContainer}>
+          <View>
+            {/* 积分显示圆角矩形 */}
+            <View style={styles.pointsContainer}>
+              <Text style={styles.pointsText}>当前积分: {currentPoints}</Text>
+            </View>
+          </View>
+          {/* 抽奖容器 */}
+          <View style={styles.luckyRollContainer}>
           {/* 九宫格包装器 - 包含边框和九宫格 */}
           <View style={styles.gridWrapper}>
             {/* 上边框 - 5个圆 */}
@@ -307,7 +353,84 @@ export default function LuckyRollScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* 国观大奖区域 */}
+        <View style={styles.winRecordsContainer}>
+          <Text style={styles.winRecordsTitle}>一国观大奖一</Text>
+          
+          {/* 中奖记录列表 */}
+          <View style={styles.recordsList}>
+            {getCurrentPageRecords().map((record) => (
+              <View key={record.id} style={styles.recordItem}>
+                <View style={styles.recordLeft}>
+                  <View style={styles.recordImage}>
+                    <Image 
+                      source={require('@/assets/images/积分.png')} 
+                      style={styles.prizeImage}
+                    />
+                  </View>
+                  <View style={styles.recordInfo}>
+                    <Text style={styles.recordFullText} numberOfLines={1} ellipsizeMode="tail">
+                      <Text style={styles.congratsText}>恭喜 </Text>
+                      <Text style={styles.avatarText}>{record.avatar} </Text>
+                      <Text style={styles.usernameText}>{record.username} </Text>
+                      <Text style={styles.prizeText}>{record.prize}</Text>
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* 分页器 */}
+          <View style={styles.pagination}>
+            <IconButton
+              icon="chevron-left"
+              iconColor="#fff"
+              size={24}
+              onPress={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              style={[
+                styles.paginationArrow,
+                currentPage === 1 && styles.paginationArrowDisabled
+              ]}
+            />
+            
+            <View style={styles.pageNumbers}>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <TouchableOpacity
+                  key={page}
+                  style={[
+                    styles.pageNumber,
+                    currentPage === page && styles.pageNumberActive
+                  ]}
+                  onPress={() => setCurrentPage(page)}
+                >
+                  <Text style={[
+                    styles.pageNumberText,
+                    currentPage === page && styles.pageNumberTextActive
+                  ]}>
+                    {page}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <IconButton
+              icon="chevron-right"
+              iconColor="#fff"
+              size={24}
+              onPress={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              style={[
+                styles.paginationArrow,
+                currentPage === totalPages && styles.paginationArrowDisabled
+              ]}
+            />
+          </View>
+        </View>
       </View>
+      </ScrollView>
     </ImageBackground>
   );
 }
@@ -325,12 +448,18 @@ async function handlePress(type: string) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(44, 104, 255)', // 添加背景色，防止图片未覆盖区域显示空白
+    backgroundColor: 'rgba(44, 104, 255)', // 添加背景色,防止图片未覆盖区域显示空白
   },
   backgroundImage: {
     // 可以根据需要调整图片的位置和缩放
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   contentContainer: {
     flex: 1,
@@ -606,5 +735,120 @@ const styles = StyleSheet.create({
   // 按钮禁用状态
   buttonDisabled: {
     opacity: 0.5,
+  },
+  // 国观大奖容器
+  winRecordsContainer: {
+    marginTop: 30,
+    width: SCREEN_WIDTH * 0.9,
+    backgroundColor: 'rgba(53, 107, 255, 0.95)',
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: 'rgba(255, 165, 0, 0.8)',
+    padding: 20,
+    paddingBottom: 15,
+    shadowColor: 'rgba(255, 165, 0, 0.5)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  winRecordsTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 15,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  recordsList: {
+    gap: 12,
+  },
+  recordItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  recordLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  recordImage: {
+    width: 50,
+    height: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  prizeImage: {
+    width: 40,
+    height: 40,
+  },
+  recordInfo: {
+    flex: 1,
+  },
+  recordFullText: {
+    fontSize: 14,
+    color: '#fff',
+  },
+  userRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  congratsText: {
+    fontWeight: '500',
+  },
+  avatarText: {
+    fontSize: 16,
+  },
+  usernameText: {
+    fontWeight: '600',
+  },
+  prizeText: {
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  // 分页器
+  pagination: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    gap: 10,
+  },
+  paginationArrow: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    margin: 0,
+  },
+  paginationArrowDisabled: {
+    opacity: 0.3,
+  },
+  pageNumbers: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pageNumber: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pageNumberActive: {
+    backgroundColor: 'rgba(255, 165, 0, 0.9)',
+  },
+  pageNumberText: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  pageNumberTextActive: {
+    fontWeight: 'bold',
   },
 });
