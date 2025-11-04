@@ -1,4 +1,4 @@
-import { LuckyRollData, LuckyRollDataResponse, pointsService } from '@/services/points.service';
+import { LuckyRollData, LuckyRollDataResponse, pointsService, WinningInfo } from '@/services/points.service';
 import { useEffect, useRef, useState } from 'react';
 import { Dimensions, Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
@@ -24,32 +24,6 @@ const borderCircles = [
 //       6 7 8
 const LOTTERY_PATH = [0, 1, 2, 5, 4, 3, 6, 7, 8];
 
-// Mock 中奖记录数据
-interface WinRecord {
-  id: string;
-  avatar: string;
-  username: string;
-  prize: string;
-}
-
-const MOCK_WIN_RECORDS: WinRecord[] = [
-  { id: '1', avatar: '👨', username: '胡毛毛', prize: '抽中 Pico Neo3' },
-  { id: '2', avatar: '👩', username: 'C···', prize: '抽中 苹果耳机AIRPOD' },
-  { id: '3', avatar: '👨', username: '傻', prize: '抽中 「睡眠日」小夜灯' },
-  { id: '4', avatar: '👩', username: 'J·', prize: '抽中 「睡眠日」小夜灯' },
-  { id: '5', avatar: '👨', username: '随', prize: '抽中 「睡眠日」小夜灯' },
-  { id: '6', avatar: '👨', username: '用户A', prize: '抽中 Pico Neo3' },
-  { id: '7', avatar: '👩', username: '用户B', prize: '抽中 苹果耳机AIRPOD' },
-  { id: '8', avatar: '👨', username: '用户C', prize: '抽中 「睡眠日」小夜灯' },
-  { id: '9', avatar: '👩', username: '用户D', prize: '抽中 「睡眠日」小夜灯' },
-  { id: '10', avatar: '👨', username: '用户E', prize: '抽中 Pico Neo3' },
-  { id: '11', avatar: '👩', username: '用户F', prize: '抽中 苹果耳机AIRPOD' },
-  { id: '12', avatar: '👨', username: '用户G', prize: '抽中 「睡眠日」小夜灯' },
-  { id: '13', avatar: '👩', username: '用户H', prize: '抽中 「睡眠日」小夜灯' },
-  { id: '14', avatar: '👨', username: '用户I', prize: '抽中 Pico Neo3' },
-  { id: '15', avatar: '👩', username: '用户J', prize: '抽中 苹果耳机AIRPOD' },
-];
-
 const RECORDS_PER_PAGE = 5;
 
 export default function LuckyRollScreen() {
@@ -60,20 +34,24 @@ export default function LuckyRollScreen() {
   const [currentPoints, setCurrentPoints] = useState<number>(0);
   const [freeDrawCount, setFreeDrawCount] = useState<number>(0);
   
+  // 围观大奖数据
+  const [bigPrizeData, setBigPrizeData] = useState<WinningInfo[]>([]);
+  
   // 分页状态
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const totalPages = Math.ceil(MOCK_WIN_RECORDS.length / RECORDS_PER_PAGE);
+  const totalPages = Math.ceil(bigPrizeData.length / RECORDS_PER_PAGE);
   
   // 获取当前页的记录
   const getCurrentPageRecords = () => {
     const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
     const endIndex = startIndex + RECORDS_PER_PAGE;
-    return MOCK_WIN_RECORDS.slice(startIndex, endIndex);
+    return bigPrizeData.slice(startIndex, endIndex);
   };
   
   //初始化数据
   useEffect(() => {
     getLuckyRollData();
+    fetchBigPrizeData();
   }, []);
 
   // 清理定时器
@@ -202,6 +180,18 @@ export default function LuckyRollScreen() {
       </View>
     );
   }
+
+  //获取围观大奖数据
+  const fetchBigPrizeData = async () => {
+    const [error, result] = await pointsService.getWinningRecords(true);
+    if (error) {
+      console.error('获取围观大奖数据失败:', error);
+      return;
+    }
+    console.log('获取围观大奖数据成功:', result.data);
+    setBigPrizeData(result.data);
+  };
+
   return (
     <ImageBackground
       source={require('@/assets/images/rollBackground.png')}
@@ -354,27 +344,36 @@ export default function LuckyRollScreen() {
           </View>
         </View>
 
-        {/* 国观大奖区域 */}
+        {/* 围观大奖区域 */}
         <View style={styles.winRecordsContainer}>
-          <Text style={styles.winRecordsTitle}>一国观大奖一</Text>
+          <Text style={styles.winRecordsTitle}>一围观大奖一</Text>
           
           {/* 中奖记录列表 */}
           <View style={styles.recordsList}>
             {getCurrentPageRecords().map((record) => (
-              <View key={record.id} style={styles.recordItem}>
+              <View key={record._id} style={styles.recordItem}>
                 <View style={styles.recordLeft}>
+                  {/* 奖品图片 */}
                   <View style={styles.recordImage}>
                     <Image 
-                      source={require('@/assets/images/积分.png')} 
+                      source={record.prizeImage ? { uri: record.prizeImage } : require('@/assets/images/积分.png')} 
                       style={styles.prizeImage}
                     />
                   </View>
                   <View style={styles.recordInfo}>
-                    <Text style={styles.recordFullText} numberOfLines={1} ellipsizeMode="tail">
-                      <Text style={styles.congratsText}>恭喜 </Text>
-                      <Text style={styles.avatarText}>{record.avatar} </Text>
-                      <Text style={styles.usernameText}>{record.username} </Text>
-                      <Text style={styles.prizeText}>{record.prize}</Text>
+                    <Text style={styles.congratsText}>恭喜 </Text>
+                    {record.userAvatar && (
+                      <Image 
+                        source={{ uri: record.userAvatar }} 
+                        style={styles.inlineAvatar}
+                      />
+                    )}
+                    <Text style={styles.usernameText} numberOfLines={1} ellipsizeMode="tail">
+                      {record.username}
+                    </Text>
+                    <Text style={styles.congratsText}> 抽中 </Text>
+                    <Text style={styles.prizeText} numberOfLines={1} ellipsizeMode="tail">
+                      {record.prizeName}
                     </Text>
                   </View>
                 </View>
@@ -751,6 +750,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 8,
     elevation: 8,
+    height: 480,
+    position: 'relative',
   },
   winRecordsTitle: {
     fontSize: 22,
@@ -764,16 +765,19 @@ const styles = StyleSheet.create({
   },
   recordsList: {
     gap: 12,
+    flex: 1,
+    marginBottom: 60,
   },
   recordItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   recordLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    gap: 8,
   },
   recordImage: {
     width: 50,
@@ -782,7 +786,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
   prizeImage: {
     width: 40,
@@ -790,10 +793,18 @@ const styles = StyleSheet.create({
   },
   recordInfo: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   recordFullText: {
     fontSize: 14,
     color: '#fff',
+  },
+  inlineAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginHorizontal: 4,
   },
   userRow: {
     flexDirection: 'row',
@@ -803,23 +814,33 @@ const styles = StyleSheet.create({
   },
   congratsText: {
     fontWeight: '500',
+    fontSize: 14,
+    color: '#fff',
   },
   avatarText: {
     fontSize: 16,
   },
   usernameText: {
     fontWeight: '600',
+    fontSize: 14,
+    color: '#fff',
+    maxWidth: 50,
   },
   prizeText: {
     color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
+    flex: 1,
   },
   // 分页器
   pagination: {
+    position: 'absolute',
+    bottom: 15,
+    left: 20,
+    right: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
-    gap: 10,
+    gap: 5,
   },
   paginationArrow: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
