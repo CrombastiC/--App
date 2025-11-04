@@ -1,6 +1,6 @@
 import { LuckyRollData, LuckyRollDataResponse, pointsService, WinningInfo } from '@/services/points.service';
 import { useEffect, useRef, useState } from 'react';
-import { Dimensions, Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -33,25 +33,33 @@ export default function LuckyRollScreen() {
   const timerRef = useRef<number | null>(null);
   const [currentPoints, setCurrentPoints] = useState<number>(0);
   const [freeDrawCount, setFreeDrawCount] = useState<number>(0);
-  
+
   // 围观大奖数据
   const [bigPrizeData, setBigPrizeData] = useState<WinningInfo[]>([]);
-  
+
+  // 中奖播报数据
+  const [broadcastMessages, setBroadcastMessages] = useState<WinningInfo[]>([]);
+  const [displayMessages, setDisplayMessages] = useState<WinningInfo[]>([]); // 用于显示的循环数据
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const animationRef = useRef<any>(null);
+
   // 分页状态
   const [currentPage, setCurrentPage] = useState<number>(1);
   const totalPages = Math.ceil(bigPrizeData.length / RECORDS_PER_PAGE);
-  
+
   // 获取当前页的记录
   const getCurrentPageRecords = () => {
     const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
     const endIndex = startIndex + RECORDS_PER_PAGE;
     return bigPrizeData.slice(startIndex, endIndex);
   };
-  
+
   //初始化数据
   useEffect(() => {
     getLuckyRollData();
     fetchBigPrizeData();
+    fetchBroadcastData();
   }, []);
 
   // 清理定时器
@@ -60,8 +68,56 @@ export default function LuckyRollScreen() {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+      if (animationRef.current) {
+        animationRef.current.stop();
+      }
     };
   }, []);
+
+  // 自动滚动效果 - 弹幕式丝滑滚动
+  useEffect(() => {
+    if (broadcastMessages.length > 0) {
+      // 创建循环数据：原始数据重复多次，实现无缝循环
+      const loopedMessages = [
+        ...broadcastMessages,
+        ...broadcastMessages,
+        ...broadcastMessages,
+        ...broadcastMessages,
+      ];
+      setDisplayMessages(loopedMessages);
+
+      // 等待渲染完成后开始滚动
+      setTimeout(() => {
+        startSmoothScroll();
+      }, 100);
+
+      return () => {
+        if (animationRef.current) {
+          animationRef.current.stop();
+        }
+      };
+    }
+  }, [broadcastMessages]);
+
+  // 启动平滑滚动
+  const startSmoothScroll = () => {
+    const itemHeight = 40;
+    const totalHeight = broadcastMessages.length * itemHeight;
+    
+    // 使用 Animated.loop 实现无缝循环
+    scrollY.setValue(0);
+    
+    animationRef.current = Animated.loop(
+      Animated.timing(scrollY, {
+        toValue: totalHeight,
+        duration: broadcastMessages.length * 1500, // 每条消息显示约2秒 数值越大越慢
+        useNativeDriver: true,
+        easing: (t) => t, // 线性插值，确保匀速
+      })
+    );
+
+    animationRef.current.start();
+  };
 
   const getLuckyRollData = async () => {
     const [error, result] = await pointsService.getLuckyRollData();
@@ -135,8 +191,10 @@ export default function LuckyRollScreen() {
           const prize = luckyRollData[finalIndex];
           alert(`恭喜你抽中了：${prize?.prizeName || '奖品'}`);
 
-          // 更新积分和免费次数
+          // 更新积分和免费次数和抽奖数据
           getLuckyRollData();
+          fetchBigPrizeData();
+          fetchBroadcastData();
         }, 300);
         return;
       }
@@ -192,6 +250,16 @@ export default function LuckyRollScreen() {
     setBigPrizeData(result.data);
   };
 
+  // 获取中奖播报数据
+  const fetchBroadcastData = async () => {
+    const [error, result] = await pointsService.getWinningRecords(false);
+    if (error) {
+      console.error('获取中奖播报数据失败:', error);
+      return;
+    }
+    console.log('获取中奖播报数据成功:', result.data);
+    setBroadcastMessages(result.data);
+  };
   return (
     <ImageBackground
       source={require('@/assets/images/rollBackground.png')}
@@ -199,7 +267,7 @@ export default function LuckyRollScreen() {
       resizeMode="stretch"
       imageStyle={styles.backgroundImage}
     >
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -220,215 +288,267 @@ export default function LuckyRollScreen() {
           </View>
           {/* 抽奖容器 */}
           <View style={styles.luckyRollContainer}>
-          {/* 九宫格包装器 - 包含边框和九宫格 */}
-          <View style={styles.gridWrapper}>
-            {/* 上边框 - 5个圆 */}
-            <View style={styles.upperBorder}>
-              {borderCircles.map((circle, index) => (
-                <View
-                  key={`top-${index}`}
-                  style={[
-                    styles.circle,
-                    circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
-                  ]}
-                />
-              ))}
-            </View>
-
-            {/* 右边框 - 5个圆 */}
-            <View style={styles.rightBorder}>
-              {borderCircles.map((circle, index) => (
-                <View
-                  key={`right-${index}`}
-                  style={[
-                    styles.circle,
-                    circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
-                  ]}
-                />
-              ))}
-            </View>
-
-            {/* 下边框 - 5个圆 */}
-            <View style={styles.lowerBorder}>
-              {borderCircles.map((circle, index) => (
-                <View
-                  key={`bottom-${index}`}
-                  style={[
-                    styles.circle,
-                    circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
-                  ]}
-                />
-              ))}
-            </View>
-
-            {/* 左边框 - 5个圆 */}
-            <View style={styles.leftBorder}>
-              {borderCircles.map((circle, index) => (
-                <View
-                  key={`left-${index}`}
-                  style={[
-                    styles.circle,
-                    circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
-                  ]}
-                />
-              ))}
-            </View>
-
-            {/* 抽奖九宫格 */}
-            <View style={styles.luckyRollGrid}>
-              {/* 第一行 */}
-              <View style={styles.rowContainer}>
-                {renderGridItem(0)}
-                {renderGridItem(1)}
-                {renderGridItem(2)}
+            {/* 九宫格包装器 - 包含边框和九宫格 */}
+            <View style={styles.gridWrapper}>
+              {/* 上边框 - 5个圆 */}
+              <View style={styles.upperBorder}>
+                {borderCircles.map((circle, index) => (
+                  <View
+                    key={`top-${index}`}
+                    style={[
+                      styles.circle,
+                      circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
+                    ]}
+                  />
+                ))}
               </View>
-              {/* 第二行 */}
-              <View style={styles.rowContainer}>
-                {renderGridItem(3)}
-                {renderGridItem(4)}
-                {renderGridItem(5)}
+
+              {/* 右边框 - 5个圆 */}
+              <View style={styles.rightBorder}>
+                {borderCircles.map((circle, index) => (
+                  <View
+                    key={`right-${index}`}
+                    style={[
+                      styles.circle,
+                      circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
+                    ]}
+                  />
+                ))}
               </View>
-              {/* 第三行 */}
-              <View style={styles.rowContainer}>
-                {renderGridItem(6)}
-                {renderGridItem(7)}
-                {renderGridItem(8)}
+
+              {/* 下边框 - 5个圆 */}
+              <View style={styles.lowerBorder}>
+                {borderCircles.map((circle, index) => (
+                  <View
+                    key={`bottom-${index}`}
+                    style={[
+                      styles.circle,
+                      circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
+                    ]}
+                  />
+                ))}
+              </View>
+
+              {/* 左边框 - 5个圆 */}
+              <View style={styles.leftBorder}>
+                {borderCircles.map((circle, index) => (
+                  <View
+                    key={`left-${index}`}
+                    style={[
+                      styles.circle,
+                      circle.type === 'hollow' ? styles.hollowCircle : { backgroundColor: circle.color },
+                    ]}
+                  />
+                ))}
+              </View>
+
+              {/* 抽奖九宫格 */}
+              <View style={styles.luckyRollGrid}>
+                {/* 第一行 */}
+                <View style={styles.rowContainer}>
+                  {renderGridItem(0)}
+                  {renderGridItem(1)}
+                  {renderGridItem(2)}
+                </View>
+                {/* 第二行 */}
+                <View style={styles.rowContainer}>
+                  {renderGridItem(3)}
+                  {renderGridItem(4)}
+                  {renderGridItem(5)}
+                </View>
+                {/* 第三行 */}
+                <View style={styles.rowContainer}>
+                  {renderGridItem(6)}
+                  {renderGridItem(7)}
+                  {renderGridItem(8)}
+                </View>
               </View>
             </View>
-          </View>
 
-          {/* 底部按钮区域 */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.singleDrawButton,
-                isRolling && styles.buttonDisabled
-              ]}
-              onPress={startLottery}
-              disabled={isRolling}
-            >
-              <View style={styles.buttonContent}>
-                <Text style={styles.buttonText}>单抽</Text>
-                {freeDrawCount > 0 ? (
-                  <View style={styles.freeRow}>
-                    <Text
-                      style={styles.freeDrawSubText}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit={true}
-                      minimumFontScale={0.7}
-                    >
-                      免费抽奖次数：{freeDrawCount}次
-                    </Text>
-                  </View>
-                ) : (
+            {/* 底部按钮区域 */}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.singleDrawButton,
+                  isRolling && styles.buttonDisabled
+                ]}
+                onPress={startLottery}
+                disabled={isRolling}
+              >
+                <View style={styles.buttonContent}>
+                  <Text style={styles.buttonText}>单抽</Text>
+                  {freeDrawCount > 0 ? (
+                    <View style={styles.freeRow}>
+                      <Text
+                        style={styles.freeDrawSubText}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit={true}
+                        minimumFontScale={0.7}
+                      >
+                        免费抽奖次数：{freeDrawCount}次
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.costRow}>
+                      <Image source={require('@/assets/images/积分.png')} style={styles.costIcon} />
+                      <Text style={styles.buttonSubText}>200</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.multiDrawButton, isRolling && styles.buttonDisabled]}
+                onPress={() => handlePress('multi')}
+                disabled={isRolling}
+              >
+                <View style={styles.buttonContent}>
+                  <Text style={styles.buttonText}>十连抽</Text>
                   <View style={styles.costRow}>
                     <Image source={require('@/assets/images/积分.png')} style={styles.costIcon} />
-                    <Text style={styles.buttonSubText}>200</Text>
+                    <Text style={styles.buttonSubText}>2000</Text>
                   </View>
-                )}
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.multiDrawButton, isRolling && styles.buttonDisabled]}
-              onPress={() => handlePress('multi')}
-              disabled={isRolling}
-            >
-              <View style={styles.buttonContent}>
-                <Text style={styles.buttonText}>十连抽</Text>
-                <View style={styles.costRow}>
-                  <Image source={require('@/assets/images/积分.png')} style={styles.costIcon} />
-                  <Text style={styles.buttonSubText}>2000</Text>
                 </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
 
-        {/* 围观大奖区域 */}
-        <View style={styles.winRecordsContainer}>
-          <Text style={styles.winRecordsTitle}>一围观大奖一</Text>
-          
-          {/* 中奖记录列表 */}
-          <View style={styles.recordsList}>
-            {getCurrentPageRecords().map((record) => (
-              <View key={record._id} style={styles.recordItem}>
-                <View style={styles.recordLeft}>
-                  {/* 奖品图片 */}
-                  <View style={styles.recordImage}>
-                    <Image 
-                      source={record.prizeImage ? { uri: record.prizeImage } : require('@/assets/images/积分.png')} 
-                      style={styles.prizeImage}
-                    />
-                  </View>
-                  <View style={styles.recordInfo}>
-                    <Text style={styles.congratsText}>恭喜 </Text>
-                    {record.userAvatar && (
-                      <Image 
-                        source={{ uri: record.userAvatar }} 
-                        style={styles.inlineAvatar}
+          {/* 围观大奖区域 */}
+          <View style={styles.winRecordsContainer}>
+            <View style={styles.broadcastTitleContainer}>
+              {/* 左侧线 */}
+              <View style={styles.singleLine} />
+              <Text style={styles.broadcastTitle}>围观大奖</Text>
+              {/* 右侧线 */}
+              <View style={styles.singleLine} />
+            </View>
+
+            {/* 中奖记录列表 */}
+            <View style={styles.recordsList}>
+              {getCurrentPageRecords().map((record) => (
+                <View key={record._id} style={styles.recordItem}>
+                  <View style={styles.recordLeft}>
+                    {/* 奖品图片 */}
+                    <View style={styles.recordImage}>
+                      <Image
+                        source={record.prizeImage ? { uri: record.prizeImage } : require('@/assets/images/积分.png')}
+                        style={styles.prizeImage}
+                        resizeMode="contain"
                       />
-                    )}
-                    <Text style={styles.usernameText} numberOfLines={1} ellipsizeMode="tail">
-                      {record.username}
-                    </Text>
-                    <Text style={styles.congratsText}> 抽中 </Text>
-                    <Text style={styles.prizeText} numberOfLines={1} ellipsizeMode="tail">
-                      {record.prizeName}
-                    </Text>
+                    </View>
+                    <View style={styles.recordInfo}>
+                      <Text style={styles.congratsText}>恭喜 </Text>
+                      {record.userAvatar && (
+                        <Image
+                          source={{ uri: record.userAvatar }}
+                          style={styles.inlineAvatar}
+                        />
+                      )}
+                      <Text style={styles.usernameText} numberOfLines={1} ellipsizeMode="tail">
+                        {record.username}
+                      </Text>
+                      <Text style={styles.congratsText}> 抽中 </Text>
+                      <Text style={styles.prizeText} numberOfLines={1} ellipsizeMode="tail">
+                        {record.prizeName}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-            ))}
-          </View>
-
-          {/* 分页器 */}
-          <View style={styles.pagination}>
-            <IconButton
-              icon="chevron-left"
-              iconColor="#fff"
-              size={24}
-              onPress={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              style={[
-                styles.paginationArrow,
-                currentPage === 1 && styles.paginationArrowDisabled
-              ]}
-            />
-            
-            <View style={styles.pageNumbers}>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <TouchableOpacity
-                  key={page}
-                  style={[
-                    styles.pageNumber,
-                    currentPage === page && styles.pageNumberActive
-                  ]}
-                  onPress={() => setCurrentPage(page)}
-                >
-                  <Text style={[
-                    styles.pageNumberText,
-                    currentPage === page && styles.pageNumberTextActive
-                  ]}>
-                    {page}
-                  </Text>
-                </TouchableOpacity>
               ))}
             </View>
 
-            <IconButton
-              icon="chevron-right"
-              iconColor="#fff"
-              size={24}
-              onPress={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              style={[
-                styles.paginationArrow,
-                currentPage === totalPages && styles.paginationArrowDisabled
-              ]}
-            />
+            {/* 分页器 */}
+            <View style={styles.pagination}>
+              <IconButton
+                icon="chevron-left"
+                iconColor="#fff"
+                size={24}
+                onPress={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                style={[
+                  styles.paginationArrow,
+                  currentPage === 1 && styles.paginationArrowDisabled
+                ]}
+              />
+
+              <View style={styles.pageNumbers}>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <TouchableOpacity
+                    key={page}
+                    style={[
+                      styles.pageNumber,
+                      currentPage === page && styles.pageNumberActive
+                    ]}
+                    onPress={() => setCurrentPage(page)}
+                  >
+                    <Text style={[
+                      styles.pageNumberText,
+                      currentPage === page && styles.pageNumberTextActive
+                    ]}>
+                      {page}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <IconButton
+                icon="chevron-right"
+                iconColor="#fff"
+                size={24}
+                onPress={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                style={[
+                  styles.paginationArrow,
+                  currentPage === totalPages && styles.paginationArrowDisabled
+                ]}
+              />
+            </View>
+          </View>
+
+          {/* 中奖播报区域 */}
+          <View style={styles.luckyRollBroadcast}>
+            <View style={styles.broadcastTitleContainer}>
+              {/* 左侧线 */}
+              <View style={styles.singleLine} />
+              <Text style={styles.broadcastTitle}>中奖播报</Text>
+              {/* 右侧线 */}
+              <View style={styles.singleLine} />
+            </View>
+            {/* 消息滚动区域 */}
+            <View style={styles.broadcastMessagesContainer}>
+              <Animated.View
+                style={{
+                  transform: [
+                    {
+                      translateY: scrollY.interpolate({
+                        inputRange: [0, broadcastMessages.length * 40],
+                        outputRange: [0, -broadcastMessages.length * 40],
+                      }),
+                    },
+                  ],
+                }}
+              >
+                {displayMessages.map((item, index) => (
+                  <View key={`${item._id || 'msg'}-${index}`} style={styles.broadcastMessageItem}>
+                    <View style={styles.broadcastLeftContent}>
+                      <Text style={styles.broadcastEmoji}>🎉</Text>
+                      <Text style={styles.broadcastLabel}>恭喜 </Text>
+                      <Text style={styles.broadcastUsername} numberOfLines={1}>
+                        {item.username}
+                      </Text>
+                      <Text style={styles.broadcastLabel}> 抽中 </Text>
+                      <Text style={styles.broadcastPrizeName} numberOfLines={1}>
+                        {item.prizeName}
+                      </Text>
+                    </View>
+                    <Text style={styles.broadcastDate}>
+                      {new Date(item.createdAt).getFullYear()}-{String(new Date(item.createdAt).getMonth() + 1).padStart(2, '0')}-{String(new Date(item.createdAt).getDate()).padStart(2, '0')}
+                    </Text>
+                  </View>
+                ))}
+              </Animated.View>
+            </View>
           </View>
         </View>
-      </View>
       </ScrollView>
     </ImageBackground>
   );
@@ -782,7 +902,7 @@ const styles = StyleSheet.create({
   recordImage: {
     width: 50,
     height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    // backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -871,5 +991,140 @@ const styles = StyleSheet.create({
   },
   pageNumberTextActive: {
     fontWeight: 'bold',
+  },
+
+  // 中奖播报区域
+  luckyRollBroadcast: {
+    marginTop: 30,
+    width: SCREEN_WIDTH * 0.9,
+    backgroundColor: 'rgba(53, 107, 255, 0.95)',
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: 'rgba(255, 165, 0, 0.8)',
+    padding: 20,
+    paddingBottom: 15,
+    shadowColor: 'rgba(255, 165, 0, 0.5)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 8,
+    height: 200,
+  },
+  // 播报标题容器
+  broadcastTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  // 单条线
+  singleLine: {
+    height: 2,
+    width: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  // 装饰线条包装器
+  decorativeLineWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 1,
+  },
+  // 装饰线条片段
+  decorativeLineSegment: {
+    height: 2,
+    backgroundColor: 'rgba(255, 255, 255, 1)',
+  },
+  // 装饰线条（旧的，保留以防需要）
+  decorativeLine: {
+    height: 2,
+    width: 20,
+    backgroundColor: 'rgba(255, 165, 0, 0.8)',
+    borderRadius: 1,
+    shadowColor: 'rgba(255, 165, 0, 0.6)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  // 播报标题文字
+  broadcastTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'rgb(228, 207, 186)',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+
+  // 消息滚动容器
+  broadcastMessagesContainer: {
+    marginTop: 15,
+    flex: 1,
+    height: 120, // 固定高度，显示3条消息
+    overflow: 'hidden', // 隐藏超出部分
+  },
+  // 单条播报消息项
+  broadcastMessageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 5,
+    height: 40, // 固定每项高度
+  },
+  // 左侧内容容器
+  broadcastLeftContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+  },
+  // 烟花emoji
+  broadcastEmoji: {
+    fontSize: 16,
+    marginRight: 6,
+    flexShrink: 0,
+  },
+  // 标签文字（恭喜、抽中）
+  broadcastLabel: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '400',
+    flexShrink: 0,
+  },
+  // 用户名
+  broadcastUsername: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '600',
+    maxWidth: 50,
+    flexShrink: 0,
+  },
+  // 奖品名称
+  broadcastPrizeName: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
+    maxWidth: 100,
+  },
+  // 日期
+  broadcastDate: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: '400',
+    marginLeft: 8,
+    width: 80,
+    textAlign: 'right',
+    flexShrink: 0,
+  },
+  // 单条播报消息（旧的，保留）
+  broadcastMessage: {
+    marginRight: 30,
+  },
+  // 播报消息文字（旧的，保留）
+  broadcastMessageText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '500',
   },
 });
