@@ -3,6 +3,8 @@
  * 用于配置服务端相关信息
  */
 
+import Constants from 'expo-constants';
+
 // 环境配置
 export const ENV = {
   // 开发环境
@@ -24,8 +26,9 @@ export const ENV = {
 
 // 当前环境 (可根据需要切换: 'development' | 'production' | 'staging')
 // 打包时会自动根据 eas.json 中的 APP_ENV 环境变量切换
+// 从 expo-constants 读取环境变量
 export const CURRENT_ENV: keyof typeof ENV = 
-  (process.env.APP_ENV as keyof typeof ENV) || 'development';
+  (Constants.expoConfig?.extra?.APP_ENV as keyof typeof ENV) || 'development';
 
 // API配置
 export const API_CONFIG = {

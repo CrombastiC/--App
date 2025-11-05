@@ -3,11 +3,14 @@
  * 显示餐厅名称、图标和加载动画
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const SPLASH_SHOWN_KEY = '@splash_shown';
 
 /**
  * 开屏页面组件
@@ -16,43 +19,74 @@ import { SafeAreaView } from 'react-native-safe-area-context';
  * 2. 显示餐厅名称
  * 3. 闪烁的省略号加载动画
  * 4. 自动跳转到主应用
+ * 5. 只在首次启动时显示
  * 
  * @returns JSX.Element 开屏页面的渲染结果
  */
 export default function SplashScreen() {
   const [dotOpacity] = useState(new Animated.Value(0));
+  const hasNavigated = useRef(false); // 防止重复跳转
 
   /**
-   * 省略号闪烁动画效果
+   * 省略号闪烁动画效果和自动跳转
    */
   useEffect(() => {
-    // 创建无限循环的闪烁动画
-    const blinkAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(dotOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(dotOpacity, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ])
-    );
+    let blinkAnimation: Animated.CompositeAnimation | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
-    blinkAnimation.start();
+    const init = async () => {
+      // 检查是否已经显示过 splash
+      const hasShown = await AsyncStorage.getItem(SPLASH_SHOWN_KEY);
+      
+      if (hasShown === 'true') {
+        // 如果已经显示过，直接跳转，不显示动画
+        if (!hasNavigated.current) {
+          hasNavigated.current = true;
+          router.replace('/(tabs)');
+        }
+        return;
+      }
 
-    // 3秒后自动跳转到主应用
-    const timer = setTimeout(() => {
-      router.replace('/(tabs)');
-    }, 3000);
+      // 标记已显示
+      await AsyncStorage.setItem(SPLASH_SHOWN_KEY, 'true');
+
+      // 创建无限循环的闪烁动画
+      blinkAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(dotOpacity, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dotOpacity, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+
+      blinkAnimation.start();
+
+      // 3秒后自动跳转到主应用
+      timer = setTimeout(() => {
+        if (!hasNavigated.current) {
+          hasNavigated.current = true;
+          router.replace('/(tabs)');
+        }
+      }, 3000);
+    };
+
+    init();
 
     // 组件卸载时清理动画和定时器
     return () => {
-      blinkAnimation.stop();
-      clearTimeout(timer);
+      if (blinkAnimation) {
+        blinkAnimation.stop();
+      }
+      if (timer) {
+        clearTimeout(timer);
+      }
     };
   }, [dotOpacity]);
 

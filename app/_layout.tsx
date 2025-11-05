@@ -15,11 +15,11 @@ import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 
 /**
  * Expo Router 的配置选项
- * anchor: 指定默认的锚点路由，这里设置为 'splash' 表示默认显示开屏页面
+ * 注释掉 anchor 配置，避免每次都从 splash 开始
  */
-export const unstable_settings = {
-  anchor: 'splash',
-};
+// export const unstable_settings = {
+//   anchor: 'splash',
+// };
 
 /**
  * 根布局组件
