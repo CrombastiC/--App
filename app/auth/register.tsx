@@ -5,7 +5,7 @@
 import { useRequest } from '@/hooks/use-request';
 import { authService } from '@/services';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Alert,
   ImageBackground,
@@ -20,6 +20,7 @@ import { Button, Icon, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegisterScreen() {
+  const scrollViewRef = useRef<ScrollView>(null);
   const [phone, setPhone] = useState('');//手机号
   const [username, setUsername] = useState('');//用户名
   const [password, setPassword] = useState('');//密码
@@ -131,10 +132,13 @@ export default function RegisterScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.container}
+          keyboardVerticalOffset={0}
         >
           <ScrollView
+            ref={scrollViewRef}
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
             {/* 顶部logo区域 */}
             <View style={styles.headerContainer}>
@@ -229,6 +233,16 @@ export default function RegisterScreen() {
                   setConfirmPassword(text);
                   setConfirmPasswordError('');
                 }}
+                onFocus={() => {
+                  setTimeout(() => {
+                    scrollViewRef.current?.scrollTo({ y: 200, animated: true });
+                  }, 100);
+                }}
+                onBlur={() => {
+                  setTimeout(() => {
+                    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+                  }, 100);
+                }}
                 secureTextEntry={!confirmPasswordVisible}
                 error={!!confirmPasswordError}
                 mode="outlined"
@@ -292,6 +306,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    paddingBottom: 200,
   },
   headerContainer: {
     alignItems: 'center',
@@ -340,7 +355,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 16,
     padding: 24,
-    marginBottom: 20,
+    marginBottom: 100,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
