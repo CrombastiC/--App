@@ -12,18 +12,20 @@ export const ENV = {
   },
   // 生产环境
   production: {
-    baseURL: 'http://192.168.1.136:5000',
+    baseURL: 'http://ashcloud.xin:5000',
     timeout: 15000,
   },
   // 测试环境
   staging: {
-    baseURL: 'http://192.168.1.136:5000',
+    baseURL: 'http://ashcloud.xin:5000',
     timeout: 10000,
   },
 };
 
 // 当前环境 (可根据需要切换: 'development' | 'production' | 'staging')
-export const CURRENT_ENV: keyof typeof ENV = 'development';
+// 打包时会自动根据 eas.json 中的 APP_ENV 环境变量切换
+export const CURRENT_ENV: keyof typeof ENV = 
+  (process.env.APP_ENV as keyof typeof ENV) || 'development';
 
 // API配置
 export const API_CONFIG = {
