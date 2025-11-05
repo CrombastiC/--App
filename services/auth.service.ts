@@ -39,6 +39,7 @@ export interface LoginRequest {
  * 响应格式: { code: 0, token: string, user: User }
  */
 export interface LoginResponse {
+  message: string;
   code: number;
   token: string;
   user: User;

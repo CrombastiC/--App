@@ -35,6 +35,7 @@ export interface LuckyRollData {
   _id: string;
   prizeName: string;
   prizeImage: string;
+  prizeIntegral: number; // 奖品积分值，0表示大奖，非0表示积分奖励
   __v: number;
 }
 
@@ -95,10 +96,17 @@ export const pointsService = {
   },
 
   /**
-   * 兑换奖品
+   * 兑换奖品(单抽)
    */
   exchangePrize: (prizeId: string, integral: number) => {
     return request.post<{ code: number; data: any }>('/api/store/exchangePrize', { prizeId, integral });
+  },
+
+  /**
+   * 兑换奖品(十连抽)
+   */
+  exchangeMultiPrize: (prizeIds: string[], integral: number) => {
+    return request.post<{ code: number; data: any }>('/api/store/tenLuckyDraw', { prizeIds, integral });
   },
 
   /**

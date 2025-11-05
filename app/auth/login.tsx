@@ -2,7 +2,6 @@
  * 登录页面
  */
 
-import { ENV } from '@/config/api.config';
 import { useRequest } from '@/hooks/use-request';
 import { authService, tokenManager } from '@/services';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -81,7 +80,7 @@ export default function LoginScreen() {
       const [error, data] = await runAsync({ phone, password });
       if (error) {
         // Alert.alert('登录失败', '请检查您的手机号和密码');
-        Alert.alert('登录失败', `请检查您的手机号和密码: ${ENV.development.baseURL}`);
+        Alert.alert('登录失败', data?.message || '请检查您的手机号和密码');
       } else if (data) {
         await tokenManager.saveLoginInfo(data);
         Alert.alert('登录成功', '欢迎回来！', [
