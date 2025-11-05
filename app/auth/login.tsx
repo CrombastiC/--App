@@ -2,6 +2,7 @@
  * 登录页面
  */
 
+import { API_CONFIG } from '@/config/api.config';
 import { useRequest } from '@/hooks/use-request';
 import { authService, tokenManager } from '@/services';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -79,8 +80,10 @@ export default function LoginScreen() {
     if (validateForm()) {
       const [error, data] = await runAsync({ phone, password });
       if (error) {
-        // Alert.alert('登录失败', '请检查您的手机号和密码');
-        Alert.alert('登录失败', data?.message || '请检查您的手机号和密码');
+        Alert.alert(
+          '登录失败', 
+          `${data?.message || '请检查您的手机号和密码'}\n\n当前API: ${API_CONFIG.baseURL}`
+        );
       } else if (data) {
         await tokenManager.saveLoginInfo(data);
         Alert.alert('登录成功', '欢迎回来！', [
