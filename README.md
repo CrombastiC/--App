@@ -2,6 +2,102 @@
 
 基于 React Native 和 Expo 构建的餐厅点餐应用。
 
+---
+
+## ⚠️ HTTP 连接问题解决方案
+
+### 问题描述
+使用 EAS Build 打包 Android APK 后，无法连接到 HTTP 服务器（非 HTTPS）。
+
+### 解决方案
+
+#### 1. 安装必要的插件
+```bash
+npm install expo-build-properties
+```
+
+#### 2. 配置 `app.config.js`
+在 `plugins` 数组中添加 `expo-build-properties` 配置：
+
+```javascript
+plugins: [
+  "expo-router",
+  [
+    "expo-build-properties",
+    {
+      android: {
+        usesCleartextTraffic: true,  // 允许 HTTP 明文传输
+        networkInspector: true       // 启用网络调试
+      }
+    }
+  ],
+  // ... 其他插件
+]
+```
+
+同时确保 `android` 配置中包含：
+```javascript
+android: {
+  usesCleartextTraffic: true,
+  // ... 其他配置
+}
+```
+
+#### 3. 重新构建
+```bash
+# 使用 EAS Build 重新构建
+eas build --profile preview --platform android
+# 或构建开发版本用于调试
+eas build --profile development --platform android
+```
+
+### 原因说明
+- Android 9 (API 28) 及以上版本默认阻止 HTTP 明文传输（Cleartext Traffic）
+- 必须通过 `usesCleartextTraffic: true` 显式允许 HTTP 连接
+- 使用 EAS Build 云端构建时，需要通过 `expo-build-properties` 插件配置
+- **不能**直接修改本地 `android/` 文件夹中的原生文件，因为 EAS Build 不会使用这些本地修改
+
+### 调试方法
+
+#### 方法 1：使用 Development 构建（推荐）
+```bash
+# 构建 development 版本
+eas build --profile development --platform android
+
+# 启动开发服务器
+npx expo start --dev-client
+
+# 手机打开应用后，会自动连接到电脑
+# 所有日志会在终端实时显示
+```
+
+#### 方法 2：使用 ADB Logcat
+```bash
+# 连接手机后运行
+adb logcat | Select-String "🌍|🔗|❌|网络"
+
+# 或使用项目中的脚本
+.\view-logs.ps1
+```
+
+### 环境配置说明
+项目支持三种环境（`config/api.config.ts`）：
+- **development**: 开发环境 - 使用本地 IP
+- **staging**: 测试环境 - 使用服务器域名
+- **production**: 生产环境 - 使用服务器域名
+
+根据 `eas.json` 配置：
+- `development` 构建 → `APP_ENV=development`
+- `preview` 构建 → `APP_ENV=staging`
+- `production` 构建 → `APP_ENV=production`
+
+### 最佳实践建议
+- ✅ **开发/测试环境**：可以使用 HTTP（配置 `usesCleartextTraffic`）
+- ⚠️ **生产环境**：强烈建议使用 HTTPS 确保数据安全
+- 💡 可以使用免费的 Let's Encrypt SSL 证书将服务器升级为 HTTPS
+
+---
+
 ## 📑 目录
 
 - [快速开始](#-快速开始)

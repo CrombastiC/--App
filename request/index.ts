@@ -14,6 +14,12 @@ export type Response<T> = Promise<[boolean, T, AxiosResponse<T>]>;
 
 class Request {
   constructor(config?: CreateAxiosDefaults) {
+    // 打印初始化配置
+    console.log('🔧 Request Instance Config:', {
+      baseURL: API_CONFIG.baseURL,
+      timeout: API_CONFIG.timeout,
+    });
+
     this.axiosInstance = axios.create({
       baseURL: API_CONFIG.baseURL,
       timeout: API_CONFIG.timeout,
@@ -175,6 +181,18 @@ class Request {
     }
   
     private async responseErrorInterceptor(error: any): Promise<any> {
+      // 详细的错误日志 - 始终打印，不只在开发环境
+      console.error('❌ 网络请求错误详情:', {
+        完整URL: error.config?.baseURL + error.config?.url,
+        请求URL: error.config?.url,
+        baseURL: error.config?.baseURL,
+        错误信息: error.message,
+        错误代码: error.code,
+        HTTP状态: error.response?.status,
+        状态文本: error.response?.statusText,
+        响应数据: error.response?.data,
+      });
+
       if (__DEV__) {
         console.error('❌ Response Error:', {
           url: error.config?.url,

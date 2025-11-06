@@ -43,6 +43,15 @@ module.exports = {
     plugins: [
       "expo-router",
       [
+        "expo-build-properties",
+        {
+          android: {
+            usesCleartextTraffic: true,
+            networkInspector: true
+          }
+        }
+      ],
+      [
         "expo-camera",
         {
           cameraPermission: "我们需要使用您的相机来扫描二维码"

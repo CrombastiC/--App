@@ -9,7 +9,8 @@ import Constants from 'expo-constants';
 export const ENV = {
   // 开发环境
   development: {
-    baseURL: 'http://192.168.1.136:5000',
+    // baseURL: 'http://192.168.1.136:5000',
+    baseURL: 'http://ashcloud.xin:5000',
     timeout: 10000,
   },
   // 生产环境
@@ -29,6 +30,12 @@ export const ENV = {
 // 从 expo-constants 读取环境变量
 export const CURRENT_ENV: keyof typeof ENV = 
   (Constants.expoConfig?.extra?.APP_ENV as keyof typeof ENV) || 'development';
+
+// 打印当前环境信息（帮助调试）
+console.log('🌍 Current Environment:', CURRENT_ENV);
+console.log('🔗 API Base URL:', ENV[CURRENT_ENV].baseURL);
+console.log('⏱️ Timeout:', ENV[CURRENT_ENV].timeout);
+console.log('📦 App Config Extra:', Constants.expoConfig?.extra);
 
 // API配置
 export const API_CONFIG = {
