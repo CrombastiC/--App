@@ -118,15 +118,15 @@ export default function AccountScreen() {
   };
 
   const handleConfirm = async (selectedDate: Date) => {
-    setDate(selectedDate);
     //调用更新用户信息的接口
     console.log(selectedDate);
+    setShow(false); // 先关闭日期选择器
     const [error] = await userService.updateProfile({ birthday: selectedDate.toISOString() });
     if (error) {
       Alert.alert('提示', '生日更新失败，请重试');
+      return;
     }
-    loadUserInfo();
-    setShow(false);
+    await loadUserInfo(); // 从服务器获取最新数据，包括更新后的生日
     showToast();
   };
 
