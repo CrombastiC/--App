@@ -11,6 +11,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useProfileStore } from '@/stores/profile-store';
+import { ToastProvider } from '@/utils/toast';
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 
 /**
@@ -55,27 +56,30 @@ export default function RootLayout() {
     <PaperProvider theme={paperTheme}>
       {/* React Navigation 主题提供器，为导航组件提供样式 */}
       <ThemeProvider value={navigationTheme}>
-        {/* Expo Router 的堆栈导航器，管理页面间的导航 */}
-        <Stack>
-          {/* 开屏页面路由，隐藏默认头部 */}
-          <Stack.Screen name="splash" options={{ headerShown: false }} />
-          {/* 标签页布局路由，隐藏默认头部 */}
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          {/* 认证相关页面（登录、注册、重置密码），隐藏默认头部 */}
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-          {/* 用户相关页面，具体页面配置在 user/_layout.tsx */}
-          <Stack.Screen name="user" options={{ headerShown: false }} />
-          {/* 会员相关页面，具体页面配置在 (member)/_layout.tsx */}
-          <Stack.Screen name="(member)" options={{ headerShown: false }} />
-          {/* 积分相关页面，具体页面配置在 (points)/_layout.tsx */}
-          <Stack.Screen name="(points)" options={{ headerShown: false }} />
-          {/* 位置相关页面，具体页面配置在 (location)/_layout.tsx */}
-          <Stack.Screen name="(location)" options={{ headerShown: false }} />
-          {/* 点餐相关页面，具体页面配置在 (orderfood)/_layout.tsx */}
-          <Stack.Screen name="(orderfood)" options={{ headerShown: false }} />
-        </Stack>
-        {/* 状态栏组件，自动适配系统主题 */}
-        <StatusBar style="auto" />
+        {/* Toast 全局提供器，为整个应用提供 Toast 功能 */}
+        <ToastProvider>
+          {/* Expo Router 的堆栈导航器，管理页面间的导航 */}
+          <Stack>
+            {/* 开屏页面路由，隐藏默认头部 */}
+            <Stack.Screen name="splash" options={{ headerShown: false }} />
+            {/* 标签页布局路由，隐藏默认头部 */}
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            {/* 认证相关页面（登录、注册、重置密码），隐藏默认头部 */}
+            <Stack.Screen name="auth" options={{ headerShown: false }} />
+            {/* 用户相关页面，具体页面配置在 user/_layout.tsx */}
+            <Stack.Screen name="user" options={{ headerShown: false }} />
+            {/* 会员相关页面，具体页面配置在 (member)/_layout.tsx */}
+            <Stack.Screen name="(member)" options={{ headerShown: false }} />
+            {/* 积分相关页面，具体页面配置在 (points)/_layout.tsx */}
+            <Stack.Screen name="(points)" options={{ headerShown: false }} />
+            {/* 位置相关页面，具体页面配置在 (location)/_layout.tsx */}
+            <Stack.Screen name="(location)" options={{ headerShown: false }} />
+            {/* 点餐相关页面，具体页面配置在 (orderfood)/_layout.tsx */}
+            <Stack.Screen name="(orderfood)" options={{ headerShown: false }} />
+          </Stack>
+          {/* 状态栏组件，自动适配系统主题 */}
+          <StatusBar style="auto" />
+        </ToastProvider>
       </ThemeProvider>
     </PaperProvider>
   );

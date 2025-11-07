@@ -2,13 +2,13 @@ import MenuList, { MenuListItem } from '@/components/ui/MenuList';
 import { tokenManager, userService } from "@/services";
 import { uploadImage } from "@/services/order.service";
 import { StorageUtils } from "@/utils/storage";
+import ToastManager from "@/utils/toast";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Animated,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -39,8 +39,6 @@ export default function AccountScreen() {
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [toastVisible, setToastVisible] = useState(false);
-  const toastOpacity = useRef(new Animated.Value(0)).current;
   const [genderVisible, setGenderVisible] = useState(false);
   const [nicknameVisible, setNicknameVisible] = useState(false);
   const [nicknameInput, setNicknameInput] = useState('');
@@ -127,7 +125,7 @@ export default function AccountScreen() {
       return;
     }
     await loadUserInfo(); // 从服务器获取最新数据，包括更新后的生日
-    showToast();
+    ToastManager.show('修改成功');
   };
 
   const handleCancel = () => {
@@ -142,7 +140,7 @@ export default function AccountScreen() {
       loadUserInfo();
       setGenderVisible(false);
       // 显示Toast提示
-      showToast();
+      ToastManager.show('修改成功');
     }
   };
 
@@ -169,31 +167,10 @@ export default function AccountScreen() {
       await loadUserInfo();
       setNicknameVisible(false);
       Keyboard.dismiss();
-      showToast();
+      ToastManager.show('修改成功');
     } else {
       Alert.alert('提示', '昵称修改失败，请重试');
     }
-  };
-
-  const showToast = () => {
-    setToastVisible(true);
-    // 淡入动画
-    Animated.timing(toastOpacity, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-
-    // 2秒后淡出并隐藏
-    setTimeout(() => {
-      Animated.timing(toastOpacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => {
-        setToastVisible(false);
-      });
-    }, 2000);
   };
 
   const handleAvatarPress = async () => {
@@ -258,7 +235,7 @@ export default function AccountScreen() {
       if (!error) {
         // 重新加载用户信息
         await loadUserInfo();
-        showToast();
+        ToastManager.show('修改成功');
       } else {
         Alert.alert('提示', '头像更新失败，请重试');
       }
@@ -471,20 +448,6 @@ export default function AccountScreen() {
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </Modal>
-
-      {/* Toast 提示 */}
-      {toastVisible && (
-        <Animated.View
-          style={[
-            styles.toast,
-            {
-              opacity: toastOpacity,
-            },
-          ]}
-        >
-          <Text style={styles.toastText}>修改成功</Text>
-        </Animated.View>
-      )}
     </SafeAreaView>
   );
 }
@@ -542,24 +505,6 @@ const styles = StyleSheet.create({
   genderDivider: {
     height: 0.5,
     backgroundColor: '#e5e5e5',
-  },
-  toast: {
-    position: 'absolute',
-    bottom: 100,
-    left: '50%',
-    transform: [{ translateX: -75 }],
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    minWidth: 150,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toastText: {
-    color: '#fff',
-    fontSize: 15,
-    textAlign: 'center',
   },
   nicknameModalContent: {
     backgroundColor: '#fff',

@@ -9,8 +9,8 @@ import Constants from 'expo-constants';
 export const ENV = {
   // 开发环境
   development: {
-    // baseURL: 'http://192.168.1.136:5000',
-    baseURL: 'http://ashcloud.xin:5000',
+    baseURL: 'http://192.168.1.136:5000',//本地环境
+    // baseURL: 'http://ashcloud.xin:5000',//远程环境
     timeout: 10000,
   },
   // 生产环境

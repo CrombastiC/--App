@@ -1,4 +1,5 @@
 import { API_CONFIG } from '@/config/api.config';
+import ToastManager from '@/utils/toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, {
   AxiosInstance,
@@ -7,6 +8,7 @@ import axios, {
   CreateAxiosDefaults,
   InternalAxiosRequestConfig,
 } from 'axios';
+import { router } from 'expo-router';
 
 const refreshTokenUrl = '/api/auth/refresh-token';
   
@@ -192,7 +194,10 @@ class Request {
         状态文本: error.response?.statusText,
         响应数据: error.response?.data,
       });
-
+      //如果错误401，直接跳转登录页面
+      if (error.response?.status === 401) {
+        this.toLoginPage();
+      }
       if (__DEV__) {
         console.error('❌ Response Error:', {
           url: error.config?.url,
@@ -236,22 +241,24 @@ class Request {
       this.requestingCount = 0;
     }
   
-    private async toLoginPage() {
-      this.reset();
-      
-      // 清除存储
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('refreshToken');
-      await AsyncStorage.removeItem('userId');
-      
-      console.warn('Token已失效，请重新登录');
-      
-      // 使用expo-router跳转到登录页
-      // import { router } from 'expo-router';
-      // router.replace('/login');
-    }
-  
-    request<T, D = any>(config: AxiosRequestConfig<D>): Response<T> {
+  private async toLoginPage() {
+    this.reset();
+    
+    // 清除存储
+    await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('refreshToken');
+    await AsyncStorage.removeItem('userId');
+    
+    console.warn('Token已失效，请重新登录');
+    
+    // 显示 Toast 提示
+    ToastManager.show('登录已过期，请重新登录');
+    
+    // 延迟跳转，让用户看到提示
+    setTimeout(() => {
+      router.replace('/auth/login');
+    }, 1500);
+  }    request<T, D = any>(config: AxiosRequestConfig<D>): Response<T> {
       return this.axiosInstance(config);
     }
   

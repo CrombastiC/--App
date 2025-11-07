@@ -1,588 +1,295 @@
-# 🍽️ OrderFoodApp - 餐厅点餐应用# 餐厅 App
+# 餐厅 App
 
-
-
-基于 React Native 和 Expo 构建的现代化餐厅点餐应用，提供完整的点餐、会员、积分等功能。基于 React Native 和 Expo 构建的餐厅点餐应用。
-
-
-
-<div align="center">---
-
-
-
-[![React Native](https://img.shields.io/badge/React%20Native-0.81.5-blue.svg)](https://reactnative.dev/)## ⚠️ HTTP 连接问题解决方案
-
-[![Expo](https://img.shields.io/badge/Expo-54.0.22-black.svg)](https://expo.dev/)
-
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)### 问题描述
-
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)使用 EAS Build 打包 Android APK 后，无法连接到 HTTP 服务器（非 HTTPS）。
-
-
-
-</div>### 解决方案
-
-
-
----#### 1. 安装必要的插件
-
-```bash
-
-## 📱 应用概况npm install expo-build-properties
-
-```
-
-OrderFoodApp 是一个功能完整的餐厅点餐移动应用，包含以下核心功能：
-
-#### 2. 配置 `app.config.js`
-
-- 🏠 **首页** - 菜品浏览、分类筛选在 `plugins` 数组中添加 `expo-build-properties` 配置：
-
-- 📋 **订单** - 订单管理、历史记录
-
-- 🎁 **积分商城** - 积分兑换、抽奖活动```javascript
-
-- 👤 **个人中心** - 用户信息、会员管理plugins: [
-
-- 💳 **会员系统** - 充值、优惠券  "expo-router",
-
-- 📍 **位置选择** - 城市、地址管理  [
-
-- 🔐 **认证系统** - 登录、注册    "expo-build-properties",
-
-    {
-
----      android: {
-
-        usesCleartextTraffic: true,  // 允许 HTTP 明文传输
-
-## ✨ 主要特性        networkInspector: true       // 启用网络调试
-
-      }
-
-### 🎨 用户界面    }
-
-- ✅ Material Design 3 设计语言  ],
-
-- ✅ 深色/浅色主题支持  // ... 其他插件
-
-- ✅ 流畅的动画和交互]
-
-- ✅ 响应式布局设计```
-
-
-
-### 🛠️ 技术亮点同时确保 `android` 配置中包含：
-
-- ✅ TypeScript 类型安全```javascript
-
-- ✅ Expo Router 文件路由android: {
-
-- ✅ Zustand 状态管理  usesCleartextTraffic: true,
-
-- ✅ Axios 网络请求封装  // ... 其他配置
-
-- ✅ 全局 Toast 提示系统}
-
-- ✅ AsyncStorage 本地持久化```
-
-
-
-### 🔧 开发体验#### 3. 重新构建
-
-- ✅ ESLint 代码规范```bash
-
-- ✅ 模块化组件设计# 使用 EAS Build 重新构建
-
-- ✅ 统一的 API 配置eas build --profile preview --platform android
-
-- ✅ 完善的错误处理# 或构建开发版本用于调试
-
-eas build --profile development --platform android
-
----```
-
-
-
-## 📂 项目结构### 原因说明
-
-- Android 9 (API 28) 及以上版本默认阻止 HTTP 明文传输（Cleartext Traffic）
-
-```- 必须通过 `usesCleartextTraffic: true` 显式允许 HTTP 连接
-
-OrderFoodApp/- 使用 EAS Build 云端构建时，需要通过 `expo-build-properties` 插件配置
-
-├── app/                    # 应用页面（Expo Router）- **不能**直接修改本地 `android/` 文件夹中的原生文件，因为 EAS Build 不会使用这些本地修改
-
-│   ├── (tabs)/            # 标签页面（首页、订单、个人中心）
-
-│   ├── (member)/          # 会员相关页面### 调试方法
-
-│   ├── (points)/          # 积分相关页面
-
-│   ├── (orderfood)/       # 点餐相关页面#### 方法 1：使用 Development 构建（推荐）
-
-│   ├── (location)/        # 位置选择页面```bash
-
-│   ├── auth/              # 认证页面（登录、注册）# 构建 development 版本
-
-│   ├── user/              # 用户页面（账户、优惠券）eas build --profile development --platform android
-
-│   └── _layout.tsx        # 根布局
-
-├── components/            # 可复用组件# 启动开发服务器
-
-│   ├── ui/               # UI 组件（菜单、模态框等）npx expo start --dev-client
-
-│   └── points/           # 积分相关组件
-
-├── services/             # API 服务层# 手机打开应用后，会自动连接到电脑
-
-│   ├── auth.service.ts   # 认证服务# 所有日志会在终端实时显示
-
-│   ├── user.service.ts   # 用户服务```
-
-│   ├── order.service.ts  # 订单服务
-
-│   └── points.service.ts # 积分服务#### 方法 2：使用 ADB Logcat
-
-├── request/              # HTTP 请求封装```bash
-
-│   └── index.ts          # Axios 实例配置# 连接手机后运行
-
-├── stores/               # 状态管理（Zustand）adb logcat | Select-String "🌍|🔗|❌|网络"
-
-│   └── profile-store.ts  # 用户配置状态
-
-├── utils/                # 工具函数# 或使用项目中的脚本
-
-│   ├── storage.ts        # 存储工具.\view-logs.ps1
-
-│   └── toast.tsx         # Toast 提示组件```
-
-├── config/               # 配置文件
-
-│   └── api.config.ts     # API 配置### 环境配置说明
-
-├── constants/            # 常量定义项目支持三种环境（`config/api.config.ts`）：
-
-│   └── theme.ts          # 主题配置- **development**: 开发环境 - 使用本地 IP
-
-├── assets/               # 静态资源- **staging**: 测试环境 - 使用服务器域名
-
-├── docs/                 # 📚 项目文档- **production**: 生产环境 - 使用服务器域名
-
-├── examples/             # 示例代码
-
-└── android/              # Android 原生代码根据 `eas.json` 配置：
-
-```- `development` 构建 → `APP_ENV=development`
-
-- `preview` 构建 → `APP_ENV=staging`
-
----- `production` 构建 → `APP_ENV=production`
-
-
-
-## 🚀 快速开始### 最佳实践建议
-
-- ✅ **开发/测试环境**：可以使用 HTTP（配置 `usesCleartextTraffic`）
-
-### 环境要求- ⚠️ **生产环境**：强烈建议使用 HTTPS 确保数据安全
-
-- 💡 可以使用免费的 Let's Encrypt SSL 证书将服务器升级为 HTTPS
-
-- Node.js >= 18.0.0
-
-- npm 或 yarn---
-
-- Expo CLI
-
-- Android Studio（Android 开发）或 Xcode（iOS 开发）## 📑 目录
-
-
-
-### 安装步骤- [快速开始](#-快速开始)
-
-- [主要功能](#-主要功能)
-
-1. **克隆项目**- [项目结构](#-项目结构)
-
-   ```bash- [技术栈](#-技术栈)
-
-   git clone <repository-url>- [核心功能实现](#-核心功能实现)
-
-   cd OrderFoodApp- [认证功能](#-认证功能)
-
-   ```- [API 请求封装](#-api-请求封装)
-
-- [EAS 构建指南](#-eas-构建指南)
-
-2. **安装依赖**- [开发说明](#-开发说明)
-
-   ```bash- [更新日志](#-更新日志)
-
-   npm install
-
-   # 或---
-
-   yarn install
-
-   ```## 🚀 快速开始
-
-
-
-3. **配置 API**```bash
-
-   # 安装依赖
-
-   编辑 `config/api.config.ts`，设置后端 API 地址：npm install
-
-   ```typescript
-
-   export const API_CONFIG = {# 启动开发服务器
-
-     baseURL: 'http://your-api-server.com',npx expo start
-
-     timeout: 10000,
-
-   };# 扫码或选择平台打开
-
-   ```# - 使用 Expo Go (iOS/Android)
-
-# - 按 'a' 打开 Android 模拟器
-
-4. **启动开发服务器**# - 按 'i' 打开 iOS 模拟器
-
-   ```bash```
-
-   npm start
-
-   # 或---
-
-   npx expo start
-
-   ```## ✨ 主要功能
-
-
-
-5. **运行应用**### 📍 智能定位与城市选择
-
-   - 按 `a` 在 Android 模拟器运行- **自动定位** - 应用启动时自动获取当前城市
-
-   - 按 `i` 在 iOS 模拟器运行- **城市搜索** - 支持中文、拼音、首字母三种搜索方式
-
-   - 扫描二维码在真机运行- **字母索引** - 快速跳转到对应城市列表
-
-- **智能缓存** - 记住上次选择的城市，避免重复定位
-
----- **定位状态标识** - 清晰展示数据来源（缓存/定位中/已定位）
-
-
-
-## 📱 构建应用### 🏪 门店选择
-
-- **按城市筛选** - 根据定位或选择的城市显示门店
-
-### 开发构建- **门店详情** - 地址、距离等信息展示
-
-```bash
-
-npm run android    # Android 开发版本### 🍽️ 点餐功能
-
-npm run ios        # iOS 开发版本- **扫码点餐** - 二维码扫描进入点餐流程
-
-```- **选择人数** - 支持选择就餐人数
-
-- **结算功能** - 订单结算和支付
-
-### 生产构建（使用 EAS Build）- **订单管理** - 查看当前订单和历史订单
-
-```bash- **创建订单** - 快速创建新订单
-
-# 首次需要登录并配置
-
-eas login### 👤 会员中心
-
-eas build:configure- **会员卡管理** - 查看会员码、余额
-
-- **在线充值** - 支持多档位充值，实时到账
-
-# 构建 Android APK- **充值记录** - 查看充值历史
-
-eas build --profile preview --platform android- **个人信息** - 管理个人资料
-
-- **优惠券** - 查看和使用优惠券
-
-# 构建 iOS- **账户管理** - 账户信息设置
-
-eas build --profile preview --platform ios
-
-```### 🎁 积分系统
-
-- **积分页面** - 查看积分余额和获取记录
-
----- **积分商城** - 使用积分兑换商品
-
-- **幸运抽奖** - 使用积分参与抽奖活动
-
-## 📚 文档- **积分任务** - 完成任务获得积分
-
-
-
-项目文档位于 `docs/` 目录：### 🔐 用户认证
-
-- **登录功能** - 手机号 + 密码登录
-
-- 📖 [开发指南](docs/development-guide.md) - 详细的开发文档和问题解决方案- **注册功能** - 手机号 + 昵称 + 密码注册
-
-- 🎨 [Toast 使用指南](docs/toast-guide.md) - Toast 提示组件完整文档- **Token 管理** - 自动 Token 注入和刷新
-
-- ⚡ [Toast 快速参考](docs/toast-quick-ref.txt) - Toast 常用代码片段- **第三方登录** - 预留微信、QQ 登录入口
-
-
-
-------
-
-
-
-## 🏗️ 核心模块说明## 📂 项目结构
-
-
-
-### 🔐 认证系统```
-
-- 登录/注册功能app/                          # 应用主目录
-
-- Token 管理和自动刷新├── (tabs)/                   # 底部导航标签页
-
-- 401 自动跳转登录页│   ├── _layout.tsx           # 标签页布局
-
-│   ├── index.tsx             # 首页（点餐入口）
-
-### 🌐 网络请求│   ├── order.tsx             # 当前订单
-
-- 统一的请求拦截器│   ├── orders.tsx            # 历史订单
-
-- 自动添加 Token│   ├── profile.tsx           # 个人中心
-
-- 错误统一处理│   └── icon.tsx              # 图标页
-
-- 请求队列管理├── (location)/               # 定位模块
-
-│   ├── _layout.tsx           # 定位模块布局
-
-### 💾 状态管理│   ├── citySelect.tsx        # 城市选择页
-
-- Zustand 轻量级状态管理│   └── addressSelect.tsx     # 地址选择页
-
-- 用户配置持久化├── (member)/                 # 会员模块
-
-- AsyncStorage 本地缓存│   ├── _layout.tsx           # 会员模块布局
-
-│   ├── memberCode.tsx        # 会员码
-
-### 🎯 Toast 提示系统│   ├── top-up.tsx            # 在线充值
-
-- 全局可用│   └── topUpSuccess.tsx      # 充值成功页
-
-- 支持位置控制（顶部/居中/底部）├── (orderfood)/              # 点餐模块
-
-- 支持自定义样式│   ├── _layout.tsx           # 点餐模块布局
-
-- 预设成功/错误/警告/信息样式│   ├── peopleSelect.tsx      # 选择就餐人数
-
-│   └── settlement.tsx        # 结算页面
-
----├── (points)/                 # 积分模块
-
-│   ├── _layout.tsx           # 积分模块布局
-
-## 🎨 主要页面│   ├── pointPage.tsx         # 积分页面
-
-│   ├── pointsMall.tsx        # 积分商城
-
-### 主 Tab 页面│   └── luckyRoll.tsx         # 幸运抽奖
-
-- **首页（index）** - 菜品展示、分类浏览├── auth/                     # 认证模块
-
-- **订单（orders）** - 订单列表、详情查看│   ├── _layout.tsx           # 认证模块布局
-
-- **个人中心（profile）** - 用户信息、功能入口│   ├── login.tsx             # 登录页面
-
-│   └── register.tsx          # 注册页面
-
-### 功能页面├── user/                     # 用户模块
-
-- **会员系统** - 会员码、充值、充值成功页│   ├── _layout.tsx           # 用户模块布局
-
-- **积分系统** - 积分页、积分商城、幸运转盘│   ├── account.tsx           # 账户信息
-
-- **点餐流程** - 人数选择、结算页面│   ├── coupon.tsx            # 优惠券管理
-
-- **位置选择** - 城市选择、地址选择│   └── createOrder.tsx       # 创建订单
-
-- **用户管理** - 账户设置、优惠券、创建订单├── qrScanner.tsx             # 二维码扫描
-
-├── splash.tsx                # 启动页
-
----└── _layout.tsx               # 根路由配置
-
-
-
-## 🛠️ 技术栈components/                   # 组件目录
-
-├── ui/                       # UI 组件
-
-### 核心框架│   ├── collapsible.tsx       # 折叠组件
-
-- **React Native** - 跨平台移动应用框架│   ├── icon-symbol.tsx       # 图标符号
-
-- **Expo** - React Native 开发平台│   ├── icon-symbol.ios.tsx   # iOS 图标符号
-
-- **TypeScript** - 类型安全的 JavaScript 超集│   ├── MenuItem.tsx          # 菜单项组件
-
-│   ├── MenuList.tsx          # 菜单列表组件
-
-### 导航和路由│   └── TabSwitch.tsx         # 标签切换组件
-
-- **Expo Router** - 基于文件系统的路由├── external-link.tsx         # 外部链接组件
-
-- **React Navigation** - 导航库├── haptic-tab.tsx            # 触感标签组件
-
-├── hello-wave.tsx            # 欢迎动画组件
-
-### UI 组件├── parallax-scroll-view.tsx  # 视差滚动视图
-
-- **React Native Paper** - Material Design 组件库├── themed-text.tsx           # 主题文本组件
-
-- **@expo/vector-icons** - 图标库└── themed-view.tsx           # 主题视图组件
-
-- **react-native-safe-area-context** - 安全区域处理
-
-config/                       # 配置文件
-
-### 状态管理└── api.config.ts             # API 配置
-
-- **Zustand** - 轻量级状态管理
-
-- **AsyncStorage** - 本地存储constants/                    # 常量
-
-└── theme.ts                  # 主题配置
-
-### 网络请求
-
-- **Axios** - HTTP 客户端hooks/                        # 自定义 Hooks
-
-├── use-request/              # 请求 Hook
-
-### 其他工具│   └── index.ts              # useRequest Hook
-
-- **expo-image-picker** - 图片选择├── use-color-scheme.ts       # 颜色方案 Hook
-
-- **expo-camera** - 相机功能├── use-color-scheme.web.ts   # Web 颜色方案 Hook
-
-- **react-native-barcode-svg** - 条码生成└── use-theme-color.ts        # 主题颜色 Hook
-
-- **react-native-modal-datetime-picker** - 日期时间选择
-
-request/                      # 网络请求
-
----└── index.ts                  # Request 请求封装
-
-
-
-## 🤝 贡献指南services/                     # 服务层
-
-├── auth.service.ts           # 认证服务
-
-我们欢迎所有形式的贡献，包括但不限于：├── user.service.ts           # 用户服务
-
-├── order.service.ts          # 订单服务
-
-- 🐛 提交 Bug 报告├── points.service.ts         # 积分服务
-
-- 💡 提出新功能建议└── index.ts                  # 服务导出
-
-- 📝 改进文档
-
-- 🔧 提交代码修复stores/                       # 状态管理
-
-└── profile-store.ts          # Zustand 全局状态管理
-
-### 提交流程
-
-1. Fork 项目utils/                        # 工具函数
-
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)├── storage.ts                # AsyncStorage 封装
-
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)└── topUpStorage.ts           # 充值记录存储
-
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-
-5. 提交 Pull Requestassets/                       # 静态资源
-
-└── images/                   # 图片资源
-
----    ├── icon.png              # 应用图标
-
-    ├── splash-icon.png       # 启动图标
-
-## 📄 许可证    ├── cooker.png            # 厨师背景图
-
-    ├── rollBackground.png    # 抽奖背景图
-
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件    └── ...                   # 其他图片
-
-
-
----json/                         # JSON 数据
-
-└── MaterialCommunityIcons.json  # 图标库数据
-
-## 📞 联系方式
-
-examples/                     # 示例代码
-
-如有问题或建议，请通过以下方式联系：└── request-example.tsx       # 请求使用示例
-
-```
-
-- 📧 Email: your-email@example.com
-
-- 🐛 Issues: [GitHub Issues](https://github.com/your-repo/issues)---
-
-
-
----## 🛠 技术栈
-
-
-
-## 🙏 致谢- **框架**: React Native + Expo Router
-
-- **UI 组件**: React Native Paper
-
-感谢所有为这个项目做出贡献的开发者！- **状态管理**: Zustand
-
-- **本地存储**: AsyncStorage
-
----- **导航**: Expo Router (file-based routing)
-
-- **图标**: MaterialCommunityIcons
-
-<div align="center">- **开发语言**: TypeScript
-
-- **网络请求**: Axios 封装
-
-**⭐ 如果这个项目对你有帮助，请给它一个星标！⭐**
+基于 React Native 和 Expo 构建的餐厅点餐应用。
 
 ---
 
-Made with ❤️ by OrderFoodApp Team
+## ⚠️ HTTP 连接问题解决方案
+
+### 问题描述
+使用 EAS Build 打包 Android APK 后，无法连接到 HTTP 服务器（非 HTTPS）。
+
+### 解决方案
+
+#### 1. 安装必要的插件
+```bash
+npm install expo-build-properties
+```
+
+#### 2. 配置 `app.config.js`
+在 `plugins` 数组中添加 `expo-build-properties` 配置：
+
+```javascript
+plugins: [
+  "expo-router",
+  [
+    "expo-build-properties",
+    {
+      android: {
+        usesCleartextTraffic: true,  // 允许 HTTP 明文传输
+        networkInspector: true       // 启用网络调试
+      }
+    }
+  ],
+  // ... 其他插件
+]
+```
+
+同时确保 `android` 配置中包含：
+```javascript
+android: {
+  usesCleartextTraffic: true,
+  // ... 其他配置
+}
+```
+
+#### 3. 重新构建
+```bash
+# 使用 EAS Build 重新构建
+eas build --profile preview --platform android
+# 或构建开发版本用于调试
+eas build --profile development --platform android
+```
+
+### 原因说明
+- Android 9 (API 28) 及以上版本默认阻止 HTTP 明文传输（Cleartext Traffic）
+- 必须通过 `usesCleartextTraffic: true` 显式允许 HTTP 连接
+- 使用 EAS Build 云端构建时，需要通过 `expo-build-properties` 插件配置
+- **不能**直接修改本地 `android/` 文件夹中的原生文件，因为 EAS Build 不会使用这些本地修改
+
+### 调试方法
+
+#### 方法 1：使用 Development 构建（推荐）
+```bash
+# 构建 development 版本
+eas build --profile development --platform android
+
+# 启动开发服务器
+npx expo start --dev-client
+
+# 手机打开应用后，会自动连接到电脑
+# 所有日志会在终端实时显示
+```
+
+#### 方法 2：使用 ADB Logcat
+```bash
+# 连接手机后运行
+adb logcat | Select-String "🌍|🔗|❌|网络"
+
+# 或使用项目中的脚本
+.\view-logs.ps1
+```
+
+### 环境配置说明
+项目支持三种环境（`config/api.config.ts`）：
+- **development**: 开发环境 - 使用本地 IP
+- **staging**: 测试环境 - 使用服务器域名
+- **production**: 生产环境 - 使用服务器域名
+
+根据 `eas.json` 配置：
+- `development` 构建 → `APP_ENV=development`
+- `preview` 构建 → `APP_ENV=staging`
+- `production` 构建 → `APP_ENV=production`
+
+### 最佳实践建议
+- ✅ **开发/测试环境**：可以使用 HTTP（配置 `usesCleartextTraffic`）
+- ⚠️ **生产环境**：强烈建议使用 HTTPS 确保数据安全
+- 💡 可以使用免费的 Let's Encrypt SSL 证书将服务器升级为 HTTPS
+
+---
+
+## 📑 目录
+
+- [快速开始](#-快速开始)
+- [主要功能](#-主要功能)
+- [项目结构](#-项目结构)
+- [技术栈](#-技术栈)
+- [核心功能实现](#-核心功能实现)
+- [认证功能](#-认证功能)
+- [API 请求封装](#-api-请求封装)
+- [EAS 构建指南](#-eas-构建指南)
+- [开发说明](#-开发说明)
+- [更新日志](#-更新日志)
+
+---
+
+## 🚀 快速开始
+
+```bash
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npx expo start
+
+# 扫码或选择平台打开
+# - 使用 Expo Go (iOS/Android)
+# - 按 'a' 打开 Android 模拟器
+# - 按 'i' 打开 iOS 模拟器
+```
+
+---
+
+## ✨ 主要功能
+
+### 📍 智能定位与城市选择
+- **自动定位** - 应用启动时自动获取当前城市
+- **城市搜索** - 支持中文、拼音、首字母三种搜索方式
+- **字母索引** - 快速跳转到对应城市列表
+- **智能缓存** - 记住上次选择的城市，避免重复定位
+- **定位状态标识** - 清晰展示数据来源（缓存/定位中/已定位）
+
+### 🏪 门店选择
+- **按城市筛选** - 根据定位或选择的城市显示门店
+- **门店详情** - 地址、距离等信息展示
+
+### 🍽️ 点餐功能
+- **扫码点餐** - 二维码扫描进入点餐流程
+- **选择人数** - 支持选择就餐人数
+- **结算功能** - 订单结算和支付
+- **订单管理** - 查看当前订单和历史订单
+- **创建订单** - 快速创建新订单
+
+### 👤 会员中心
+- **会员卡管理** - 查看会员码、余额
+- **在线充值** - 支持多档位充值，实时到账
+- **充值记录** - 查看充值历史
+- **个人信息** - 管理个人资料
+- **优惠券** - 查看和使用优惠券
+- **账户管理** - 账户信息设置
+
+### 🎁 积分系统
+- **积分页面** - 查看积分余额和获取记录
+- **积分商城** - 使用积分兑换商品
+- **幸运抽奖** - 使用积分参与抽奖活动
+- **积分任务** - 完成任务获得积分
+
+### 🔐 用户认证
+- **登录功能** - 手机号 + 密码登录
+- **注册功能** - 手机号 + 昵称 + 密码注册
+- **Token 管理** - 自动 Token 注入和刷新
+- **第三方登录** - 预留微信、QQ 登录入口
+
+---
+
+## 📂 项目结构
+
+```
+app/                          # 应用主目录
+├── (tabs)/                   # 底部导航标签页
+│   ├── _layout.tsx           # 标签页布局
+│   ├── index.tsx             # 首页（点餐入口）
+│   ├── order.tsx             # 当前订单
+│   ├── orders.tsx            # 历史订单
+│   ├── profile.tsx           # 个人中心
+│   └── icon.tsx              # 图标页
+├── (location)/               # 定位模块
+│   ├── _layout.tsx           # 定位模块布局
+│   ├── citySelect.tsx        # 城市选择页
+│   └── addressSelect.tsx     # 地址选择页
+├── (member)/                 # 会员模块
+│   ├── _layout.tsx           # 会员模块布局
+│   ├── memberCode.tsx        # 会员码
+│   ├── top-up.tsx            # 在线充值
+│   └── topUpSuccess.tsx      # 充值成功页
+├── (orderfood)/              # 点餐模块
+│   ├── _layout.tsx           # 点餐模块布局
+│   ├── peopleSelect.tsx      # 选择就餐人数
+│   └── settlement.tsx        # 结算页面
+├── (points)/                 # 积分模块
+│   ├── _layout.tsx           # 积分模块布局
+│   ├── pointPage.tsx         # 积分页面
+│   ├── pointsMall.tsx        # 积分商城
+│   └── luckyRoll.tsx         # 幸运抽奖
+├── auth/                     # 认证模块
+│   ├── _layout.tsx           # 认证模块布局
+│   ├── login.tsx             # 登录页面
+│   └── register.tsx          # 注册页面
+├── user/                     # 用户模块
+│   ├── _layout.tsx           # 用户模块布局
+│   ├── account.tsx           # 账户信息
+│   ├── coupon.tsx            # 优惠券管理
+│   └── createOrder.tsx       # 创建订单
+├── qrScanner.tsx             # 二维码扫描
+├── splash.tsx                # 启动页
+└── _layout.tsx               # 根路由配置
+
+components/                   # 组件目录
+├── ui/                       # UI 组件
+│   ├── collapsible.tsx       # 折叠组件
+│   ├── icon-symbol.tsx       # 图标符号
+│   ├── icon-symbol.ios.tsx   # iOS 图标符号
+│   ├── MenuItem.tsx          # 菜单项组件
+│   ├── MenuList.tsx          # 菜单列表组件
+│   └── TabSwitch.tsx         # 标签切换组件
+├── external-link.tsx         # 外部链接组件
+├── haptic-tab.tsx            # 触感标签组件
+├── hello-wave.tsx            # 欢迎动画组件
+├── parallax-scroll-view.tsx  # 视差滚动视图
+├── themed-text.tsx           # 主题文本组件
+└── themed-view.tsx           # 主题视图组件
+
+config/                       # 配置文件
+└── api.config.ts             # API 配置
+
+constants/                    # 常量
+└── theme.ts                  # 主题配置
+
+hooks/                        # 自定义 Hooks
+├── use-request/              # 请求 Hook
+│   └── index.ts              # useRequest Hook
+├── use-color-scheme.ts       # 颜色方案 Hook
+├── use-color-scheme.web.ts   # Web 颜色方案 Hook
+└── use-theme-color.ts        # 主题颜色 Hook
+
+request/                      # 网络请求
+└── index.ts                  # Request 请求封装
+
+services/                     # 服务层
+├── auth.service.ts           # 认证服务
+├── user.service.ts           # 用户服务
+├── order.service.ts          # 订单服务
+├── points.service.ts         # 积分服务
+└── index.ts                  # 服务导出
+
+stores/                       # 状态管理
+└── profile-store.ts          # Zustand 全局状态管理
+
+utils/                        # 工具函数
+├── storage.ts                # AsyncStorage 封装
+└── topUpStorage.ts           # 充值记录存储
+
+assets/                       # 静态资源
+└── images/                   # 图片资源
+    ├── icon.png              # 应用图标
+    ├── splash-icon.png       # 启动图标
+    ├── cooker.png            # 厨师背景图
+    ├── rollBackground.png    # 抽奖背景图
+    └── ...                   # 其他图片
+
+json/                         # JSON 数据
+└── MaterialCommunityIcons.json  # 图标库数据
+
+examples/                     # 示例代码
+└── request-example.tsx       # 请求使用示例
+```
+
+---
+
+## 🛠 技术栈
+
+- **框架**: React Native + Expo Router
+- **UI 组件**: React Native Paper
+- **状态管理**: Zustand
+- **本地存储**: AsyncStorage
+- **导航**: Expo Router (file-based routing)
+- **图标**: MaterialCommunityIcons
+- **开发语言**: TypeScript
+- **网络请求**: Axios 封装
+
+---
 
 ## 🔧 核心功能实现
-
-</div>
 
 ### 1. 定位功能使用
 
