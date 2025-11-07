@@ -1,8 +1,8 @@
+import { CircleBorder, LotteryButton, LotteryResultModal } from '@/components/points';
 import { LuckyRollData, LuckyRollDataResponse, pointsService, WinningInfo } from '@/services/points.service';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
-import { CircleBorder, LotteryButton, LotteryResultModal } from './_components';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
