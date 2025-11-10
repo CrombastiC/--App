@@ -1,5 +1,6 @@
 import { userService } from "@/services";
 import { pointsService } from "@/services/points.service";
+import { formatDateTime } from "@/utils/dateUtils";
 import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 interface UserInfo {
@@ -10,16 +11,6 @@ interface UserInfo {
   balance?: number;
   integral?: number;
   couponCount?: number;
-}
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 export default function PointPageScreen() {
   const [records, setRecords] = useState([]);
@@ -66,7 +57,7 @@ export default function PointPageScreen() {
       <View style={styles.recordItem}>
         <View>
           <Text style={styles.recordRemark}>{item.remark}</Text>
-          <Text style={styles.recordDate}>{formatDate(item.createdAt)}</Text>
+          <Text style={styles.recordDate}>{formatDateTime(item.createdAt)}</Text>
         </View>
         <View>
           <Text style={{ color: item.isGet ? 'green' : 'red', paddingHorizontal: 10 }}>{item.isGet ? `+${item.integral}` : `-${item.integral}`}</Text>

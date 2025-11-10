@@ -1,5 +1,6 @@
 import TabSwitch from '@/components/ui/TabSwitch';
 import { Coupon, userService } from '@/services/user.service';
+import { formatDate } from '@/utils/dateUtils';
 import { Stack, useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -11,14 +12,6 @@ import {
 } from 'react-native';
 import { Divider, Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 // 定义tabs配置
 const couponTabs = [

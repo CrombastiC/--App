@@ -1,5 +1,6 @@
 import { CircleBorder, LotteryButton, LotteryResultModal } from '@/components/points';
 import { LuckyRollData, LuckyRollDataResponse, pointsService, WinningInfo } from '@/services/points.service';
+import { formatDate } from '@/utils/dateUtils';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
@@ -676,7 +677,7 @@ export default function LuckyRollScreen() {
                       </Text>
                     </View>
                     <Text style={styles.broadcastDate}>
-                      {new Date(item.createdAt).getFullYear()}-{String(new Date(item.createdAt).getMonth() + 1).padStart(2, '0')}-{String(new Date(item.createdAt).getDate()).padStart(2, '0')}
+                      {formatDate(item.createdAt)}
                     </Text>
                   </View>
                 ))}

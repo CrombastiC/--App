@@ -1,6 +1,7 @@
 import MenuList, { MenuListItem } from '@/components/ui/MenuList';
 import { tokenManager, userService } from "@/services";
 import { uploadImage } from "@/services/order.service";
+import { formatDateChinese } from "@/utils/dateUtils";
 import { StorageUtils } from "@/utils/storage";
 import ToastManager from "@/utils/toast";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -87,13 +88,6 @@ export default function AccountScreen() {
     } catch (error) {
       console.error('Failed to load user info:', error);
     }
-  };
-
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}年${month}月${day}日`;
   };
 
   const getGenderText = (gender?: number) => {
@@ -310,7 +304,7 @@ export default function AccountScreen() {
     {
       key: 'birthday',
       label: '生日',
-      value: formatDate(date),
+      value: formatDateChinese(date),
       onPress: () => setShow(true),
     },
   ], [userInfo, date]);
