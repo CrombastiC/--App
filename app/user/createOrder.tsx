@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    maxHeight: '70%',
+    height: 340, // 固定高度: header(56) + 4个分类项(每个56) + 分隔线(3) + 底部间距(16) ≈ 340
   },
   drawerHeader: {
     flexDirection: 'row',
