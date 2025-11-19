@@ -188,7 +188,7 @@ export default function ProfileScreen() {
 
             <View style={styles.userBasicInfo}>
               <View style={styles.nameRow}>
-                <Text style={styles.userName}>{userInfo?.username || 'Daisy'}</Text>
+                <Text style={styles.userName} numberOfLines={1} ellipsizeMode="tail">{`测试${userInfo?.username || 'Daisy'}`}</Text>
                 <View style={styles.memberBadge}>
                   <Text style={styles.memberBadgeText}>普通会员</Text>
                 </View>
@@ -214,7 +214,7 @@ export default function ProfileScreen() {
                   color={signInStatus ? "#999" : "#FF7214"}
                 />
                 <Text style={[styles.signInButtonText, signInStatus && styles.signInButtonTextDisabled]}>
-                  {signInStatus ? '今日已签到' : '点击签到'}
+                  {signInStatus ? '已签到' : '签到'}
                 </Text>
               </TouchableOpacity>
               <View>
@@ -321,10 +321,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
     marginRight: 8,
+    maxWidth: 80, // 限制宽度，约4个汉字
   },
   memberBadge: {
     backgroundColor: '#FF7214',
