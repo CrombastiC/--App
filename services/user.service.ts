@@ -159,8 +159,21 @@ export const userService = {
    */
   getTopUpOptions: () => {
     return request.get('/api/money/getMoneyList');
-  }
+  },
 
+  /**
+   * 获取签到状态 
+   */
+  getSignInStatus: () => {
+    return request.get('/api/users/getCheckInStatus');
+  },
+
+  /**
+   * 签到
+   */
+  signIn: () => {
+    return request.post('/api/users/checkIn');
+  }
 
 };
 

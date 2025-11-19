@@ -4,6 +4,7 @@
 
 import MenuList, { MenuListItem } from '@/components/ui/MenuList';
 import { userService } from '@/services';
+import ToastManager from '@/utils/toast';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -65,15 +66,19 @@ export default function ProfileScreen() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [phone, setPhone] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-
+  const [signInStatus, setSignInStatus] = useState(false);// 是否已签到
+  //连续签到天数
+  const [consecutiveSignInDays, setConsecutiveSignInDays] = useState(0);
   useEffect(() => {
     loadUserInfo();
+    getSignInStatus();
   }, []);
 
   // 页面获得焦点时重新加载用户信息（从充值成功页返回时触发）
   useFocusEffect(
     useCallback(() => {
       loadUserInfo();
+      getSignInStatus();
     }, [])
   );
 
@@ -102,10 +107,37 @@ export default function ProfileScreen() {
       console.error('Failed to load user info:', error);
     }
   };
+  //获取签到状态
+  const getSignInStatus = async () => {
+    try {
+      const [error, result] = await userService.getSignInStatus();
+      if (error) {
+        console.error('Failed to get sign-in status:', error);
+        return;
+      }
+      console.log(result);
+      setSignInStatus((result as any)?.data?.isCheckIn);
+      setConsecutiveSignInDays((result as any)?.data?.streak);
+      console.log('签到状态', signInStatus);
+    } catch (error) {
+      console.error('Failed to get sign-in status:', error);
+    }
+  }
 
-  const handleScanQRCode = () => {
-    // 跳转到扫码页面
-    router.push('/qrScanner');
+  const signFunction = async () => {
+    try {
+      const [error, result] = await userService.signIn();
+      if (error) {
+        console.error('签到失败:', error);
+        ToastManager.show('签到失败');
+        return;
+      }
+      ToastManager.show('签到成功');
+      getSignInStatus();
+
+    } catch (error) {
+      console.error('签到异常:', error);
+    }
   };
 
 
@@ -163,6 +195,37 @@ export default function ProfileScreen() {
               </View>
               <Text style={styles.userPhone}>{phone || '156****3499'}</Text>
             </View>
+            {/* 签到相关 */}
+            <View style={{ alignItems: 'center', gap: 8 }}>
+              {/* 签到按钮 */}
+              <TouchableOpacity
+                style={[styles.signInButton, signInStatus && styles.signInButtonDisabled]}
+                onPress={() => {
+                  if (!signInStatus) {
+                    signFunction();
+                  }
+                }}
+                disabled={signInStatus}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons
+                  name={signInStatus ? "check-circle" : "calendar-check"}
+                  size={16}
+                  color={signInStatus ? "#999" : "#FF7214"}
+                />
+                <Text style={[styles.signInButtonText, signInStatus && styles.signInButtonTextDisabled]}>
+                  {signInStatus ? '今日已签到' : '点击签到'}
+                </Text>
+              </TouchableOpacity>
+              <View>
+                {consecutiveSignInDays > 0 && (
+                  <Text style={{ fontSize: 12, color: '#666' }}>
+                    已连续签到 
+                    <Text style={{color: '#FF7214'}}>{consecutiveSignInDays}</Text>天
+                  </Text>
+                )}
+              </View>
+            </View>
           </View>
 
           {/* 统计信息 */}
@@ -187,10 +250,10 @@ export default function ProfileScreen() {
 
             {/* <View style={styles.statDivider} /> */}
             <TouchableOpacity onPress={() => router.push('/(points)/pointPage')} activeOpacity={0.7} style={[styles.statItem, styles.statItemCenter]}>
-                <View style={[styles.statContent, styles.statContentRight]}>
-                  <Text style={styles.statValue}>{userInfo?.integral || 0}</Text>
-                  <Text style={styles.statLabel}>积分</Text>
-                </View>
+              <View style={[styles.statContent, styles.statContentRight]}>
+                <Text style={styles.statValue}>{userInfo?.integral || 0}</Text>
+                <Text style={styles.statLabel}>积分</Text>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -336,4 +399,28 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
   },
+  signInButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF5F0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FF7214',
+    gap: 4,
+  },
+  signInButtonDisabled: {
+    backgroundColor: '#F5F5F5',
+    borderColor: '#E0E0E0',
+  },
+  signInButtonText: {
+    fontSize: 13,
+    color: '#FF7214',
+    fontWeight: '600',
+  },
+  signInButtonTextDisabled: {
+    color: '#999',
+  },
 });
+
