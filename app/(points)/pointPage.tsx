@@ -124,7 +124,7 @@ export default function PointPageScreen() {
         refreshing={refreshing}
         onRefresh={handleRefresh}
         ListFooterComponent={
-          loading && page > 1 ? <Text style={{ textAlign: 'center', padding: 10 }}>加载中...</Text> : null
+          loading && page > 1 ? <Text style={{ textAlign: 'center', padding: 10 }}>加载中...</Text> : <Text style={{ textAlign: 'center', padding: 10 }}>{!hasMore ? '没有更多记录了' : ''}</Text>
         }
         ListEmptyComponent={!loading ? <Text style={{ textAlign: 'center', marginTop: 20, padding: 20, color: '#999' }}>暂无记录</Text> : null}
       >
