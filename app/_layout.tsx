@@ -3,16 +3,16 @@
  * 负责整个应用的全局配置、主题设置和导航结构
  */
 
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useProfileStore } from '@/stores/profile-store';
+import { ToastProvider } from '@/utils/toast';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useProfileStore } from '@/stores/profile-store';
-import { ToastProvider } from '@/utils/toast';
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
+import 'react-native-reanimated';
+import './../global.css';
 
 /**
  * Expo Router 的配置选项
