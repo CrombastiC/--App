@@ -13,10 +13,16 @@ interface UserInfo {
   couponCount?: number;
 }
 export default function PointPageScreen() {
-  const [records, setRecords] = useState([]);
+  const [records, setRecords] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
   useEffect(() => {
     // 页面加载时获取积分收支记录
-    getPointRecords();
+    getPointRecords(1);
     loadUserInfo();
   }, []);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -42,16 +48,53 @@ export default function PointPageScreen() {
     }
   };
 
-  const getPointRecords = async () => {
+  const getPointRecords = async (pageNum: number) => {
+    setLoading(true);
+
     // 调用服务获取积分收支记录
-    const [error, result] = await pointsService.getPointsList();
+    const [error, result] = await pointsService.getPointsList({
+      page: pageNum,
+      limit
+    });
+
+    setLoading(false);
+    setRefreshing(false);
+
     if (error) {
       console.error('获取积分收支记录失败:', error);
       return;
     }
-    const data = (result as any)?.data;
-    setRecords(data);
+    const data = (result as any)?.data || [];
+    
+    if (pageNum === 1) {
+      setRecords(data);
+    } else {
+      setRecords(prev => [...prev, ...data]);
+    }
+
+    if (data.length < limit) {
+      setHasMore(false);
+    } else {
+      setHasMore(true);
+    }
   };
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      getPointRecords(nextPage);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    setHasMore(true);
+    getPointRecords(1);
+    loadUserInfo();
+  };
+
   const renderRecord = ({ item }: { item: any }) => {
     return (
       <View style={styles.recordItem}>
@@ -76,6 +119,14 @@ export default function PointPageScreen() {
         style={{ borderRadius: 10, overflow: 'hidden', backgroundColor: '#fff' }}
         data={records}
         renderItem={renderRecord}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.1}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        ListFooterComponent={
+          loading && page > 1 ? <Text style={{ textAlign: 'center', padding: 10 }}>加载中...</Text> : null
+        }
+        ListEmptyComponent={!loading ? <Text style={{ textAlign: 'center', marginTop: 20, padding: 20, color: '#999' }}>暂无记录</Text> : null}
       >
 
       </FlatList>

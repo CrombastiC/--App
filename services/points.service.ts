@@ -84,8 +84,8 @@ export const pointsService = {
   /**
  * 获取积分列表
  */
-  getPointsList: () => {
-    return request.get<PointRecord[]>('/api/users/getIntegralRecord');
+  getPointsList: (params: { page: number; limit: number }) => {
+    return request.post<PointRecord[]>('/api/users/getIntegralRecord', params);
   },
 
   /**
