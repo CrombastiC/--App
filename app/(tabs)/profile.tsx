@@ -132,7 +132,7 @@ export default function ProfileScreen() {
         ToastManager.show('签到失败');
         return;
       }
-      ToastManager.show('签到成功');
+      ToastManager.show('签到成功，可免费抽奖一次');
       getSignInStatus();
 
     } catch (error) {
