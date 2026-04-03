@@ -1,6 +1,12 @@
 /**
  * API配置文件
  * 用于配置服务端相关信息
+ * 
+ * 注意: 
+ * - 开发环境使用 192.168.1.118:5000 (真机调试)
+ * - Android 模拟器使用 10.0.2.2:5000
+ * - iOS 模拟器使用 127.0.0.1:5000
+ * - 生产环境使用 ashcloud.xin:5000
  */
 
 import Constants from 'expo-constants';
@@ -9,8 +15,11 @@ import Constants from 'expo-constants';
 export const ENV = {
   // 开发环境
   development: {
-    // baseURL: 'http://192.168.1.136:5000',//本地环境
-    baseURL: 'http://ashcloud.xin:5000',//远程环境
+    // 真机调试使用局域网 IP
+    baseURL: 'http://192.168.1.118:5000',//本地环境 (真机)
+    // baseURL: 'http://10.0.2.2:5000',//本地环境 (Android 模拟器)
+    // baseURL: 'http://127.0.0.1:5000',//本地环境 (Web/ iOS 模拟器)
+    // baseURL: 'http://ashcloud.xin:5000',//远程环境
     timeout: 10000,
   },
   // 生产环境

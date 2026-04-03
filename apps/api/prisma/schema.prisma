@@ -1,0 +1,235 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 用户模块 ====================
+
+model User {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  username  String
+  password  String
+  avatar    String?
+  gender    Int      @default(2) // 0: 男, 1: 女, 2: 保密
+  birthday  DateTime?
+  balance   Float    @default(0)
+  integral  Int      @default(0) // 积分
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  topUpRecords   TopUpRecord[]
+  pointRecords   PointRecord[]
+  lotteryRecords LotteryRecord[]
+  userCoupons    UserCoupon[]
+  orders         Order[]
+  checkInRecords CheckInRecord[]
+
+  @@map("users")
+}
+
+// 充值记录
+model TopUpRecord {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  balance      Float    // 充值金额
+  giveBalance  Float    @default(0) // 赠送金额
+  totalBalance Float    // 充值后余额
+  createdAt    DateTime @default(now())
+
+  @@map("top_up_records")
+}
+
+// 充值选项配置
+model MoneyOption {
+  id        String  @id @default(cuid())
+  money     Float   // 充值金额
+  giveMoney Float   @default(0) // 赠送金额
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("money_options")
+}
+
+// ==================== 菜单模块 ====================
+
+// 菜品分类
+model FoodCategory {
+  id           String   @id @default(cuid())
+  classifyName String
+  icon         String?
+  sortOrder    Int      @default(0)
+  foods        Food[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("food_categories")
+}
+
+// 菜品
+model Food {
+  id         String   @id @default(cuid())
+  classifyId String
+  category   FoodCategory @relation(fields: [classifyId], references: [id])
+  foodName   String
+  foodImage  String?
+  foodPrice  Float
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("foods")
+}
+
+// ==================== 积分/抽奖模块 ====================
+
+// 抽奖奖品配置
+model LotteryPrize {
+  id             String        @id @default(cuid())
+  prizeName      String
+  prizeImage     String
+  prizeIntegral  Int           @default(0) // 0表示实物大奖，>0表示积分
+  prizeValue     Float?        // 奖品价值
+  stock          Int           @default(0) // 库存
+  sortOrder      Int           @default(0)
+  isActive       Boolean       @default(true)
+  lotteryRecords LotteryRecord[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("lottery_prizes")
+}
+
+// 抽奖记录
+model LotteryRecord {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id])
+  prizeId      String
+  prize        LotteryPrize @relation(fields: [prizeId], references: [id])
+  costIntegral Int        // 消耗积分
+  createdAt    DateTime   @default(now())
+
+  @@map("lottery_records")
+}
+
+// 积分商城商品
+model Commodity {
+  id                 String   @id @default(cuid())
+  commodityName      String
+  commodityImage     String
+  commodityIntegral  Int      // 所需积分
+  stock              Int      @default(0)
+  sortOrder          Int      @default(0)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("commodities")
+}
+
+// 积分收支记录
+model PointRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  integral  Int      // 正数表示收入，负数表示支出
+  isGet     Boolean  // true: 收入, false: 支出
+  remark    String
+  createdAt DateTime @default(now())
+
+  @@map("point_records")
+}
+
+// ==================== 优惠券模块 ====================
+
+// 优惠券
+model Coupon {
+  id            String     @id @default(cuid())
+  couponName    String
+  couponAmount  Float      // 优惠券金额
+  consumeMoney  Float      // 使用门槛
+  couponUseTime DateTime   // 有效期
+  totalStock    Int        @default(0)
+  remainStock   Int        @default(0)
+  isActive      Boolean    @default(true)
+  userCoupons   UserCoupon[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("coupons")
+}
+
+// 用户优惠券
+model UserCoupon {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  couponId  String
+  coupon    Coupon   @relation(fields: [couponId], references: [id])
+  status    String   @default("unused") // unused: 未使用, used: 已使用
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@map("user_coupons")
+}
+
+// ==================== 签到模块 ====================
+
+// 签到记录
+model CheckInRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  integral  Int      @default(0) // 签到获得的积分
+  createdAt DateTime @default(now())
+
+  @@map("check_in_records")
+}
+
+// ==================== 订单模块 ====================
+
+// 订单
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  orderType   String      // dine-in: 堂食, takeout: 外卖
+  status      String      @default("pending") // pending, paid, completed, cancelled
+  totalAmount Float
+  payAmount   Float       // 实际支付金额
+  address     String?     // 外卖地址
+  peopleCount Int?        // 就餐人数
+  remark      String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+
+  @@map("orders")
+}
+
+// 订单明细
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  foodId    String
+  foodName  String
+  foodPrice Float
+  quantity  Int
+  subtotal  Float
+
+  @@map("order_items")
+}

@@ -78,35 +78,35 @@ export const pointsService = {
    * 获取商品列表
    */
   getCommodityList: () => {
-    return request.get<CommodityListResponse>('/api/store/getCommodityList');
+    return request.get<CommodityListResponse>('/api/points/getCommodityList');
   },
 
   /**
- * 获取积分列表
- */
+   * 获取积分列表
+   */
   getPointsList: (params: { page: number; limit: number }) => {
-    return request.post<PointRecord[]>('/api/users/getIntegralRecord', params);
+    return request.get<PointRecord[]>('/api/points/getPointsList', params);
   },
 
   /**
    * 获取抽奖数据
    */
   getLuckyRollData: () => {
-    return request.get<LuckyRollDataResponse>('/api/store/getPrizeList');
+    return request.get<LuckyRollDataResponse>('/api/points/getLuckyRollData');
   },
 
   /**
    * 兑换奖品(单抽)
    */
   exchangePrize: (prizeId: string, integral: number) => {
-    return request.post<{ code: number; data: any }>('/api/store/exchangePrize', { prizeId, integral });
+    return request.post<{ code: number; data: any }>('/api/points/exchangePrize', { prizeId, costIntegral: integral });
   },
 
   /**
    * 兑换奖品(十连抽)
    */
   exchangeMultiPrize: (prizeIds: string[], integral: number) => {
-    return request.post<{ code: number; data: any }>('/api/store/tenLuckyDraw', { prizeIds, integral });
+    return request.post<{ code: number; data: any }>('/api/points/exchangeMultiPrize', { prizeIds, costIntegral: integral });
   },
 
   /**
@@ -114,6 +114,6 @@ export const pointsService = {
    * @param isBigPrize 是否为大奖 true表示围观大奖，false表示中奖播报
    */
   getWinningRecords: (isBigPrize: boolean) => {
-    return request.get<BigPrizeDataResponse>(`/api/store/getPrizeRecord?isBigPrize=${isBigPrize}`);
+    return request.get<BigPrizeDataResponse>(`/api/points/getWinningRecords?isBigPrize=${isBigPrize}`);
   }
 };
