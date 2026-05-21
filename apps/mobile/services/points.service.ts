@@ -15,7 +15,7 @@ export interface Commodity {
  */
 export interface PointRecord {
   integral: number;
-  isGet: string;
+  isGet: boolean;
   remark: string;
   createdAt: string;
 }
@@ -32,11 +32,10 @@ export interface CommodityListResponse {
  * 获取抽奖数据接口
  */
 export interface LuckyRollData {
-  _id: string;
+  id: string;
   prizeName: string;
   prizeImage: string;
   prizeIntegral: number; // 奖品积分值，0表示大奖，非0表示积分奖励
-  __v: number;
 }
 
 /**
@@ -55,7 +54,7 @@ export interface LuckyRollDataResponse {
  * 中奖信息
  */
 export interface WinningInfo {
-  _id: string;
+  id: string;
   userAvatar: string;// 用户头像
   username: string;// 用户名
   prizeName: string;// 奖品名称

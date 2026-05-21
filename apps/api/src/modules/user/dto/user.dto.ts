@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber, Min, Max } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsBoolean, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -39,7 +39,16 @@ export class RechargeDto {
   giveBalance: number;
 
   @ApiProperty({ description: '是否充值 true:充值 false:扣除' })
-  @IsNumber()
-  @Type(() => Number)
-  isRecharge: number;
+  @IsBoolean()
+  isRecharge: boolean;
+}
+
+export class ChangePasswordDto {
+  @ApiProperty({ description: '原密码' })
+  @IsString()
+  oldPassword: string;
+
+  @ApiProperty({ description: '新密码' })
+  @IsString()
+  newPassword: string;
 }

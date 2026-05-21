@@ -39,4 +39,11 @@ export class AuthController {
   async verifyToken(@CurrentUser('id') userId: string) {
     return this.authService.verifyToken(userId);
   }
+
+  @Public()
+  @Post('logout')
+  @ApiOperation({ summary: '退出登录' })
+  async logout(@CurrentUser('id') userId: string) {
+    return { message: '退出登录成功' };
+  }
 }

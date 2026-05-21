@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './user.service';
-import { UpdateProfileDto, RechargeDto } from './dto/user.dto';
+import { UpdateProfileDto, RechargeDto, ChangePasswordDto } from './dto/user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -52,5 +52,26 @@ export class UserController {
   @ApiOperation({ summary: '签到' })
   async checkIn(@CurrentUser('id') userId: string) {
     return this.userService.checkIn(userId);
+  }
+
+  @Post('change-password')
+  @ApiOperation({ summary: '修改密码' })
+  async changePassword(
+    @CurrentUser('id') userId: string,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.userService.changePassword(userId, dto.oldPassword, dto.newPassword);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: '获取用户统计信息' })
+  async getStats(@CurrentUser('id') userId: string) {
+    return this.userService.getStats(userId);
+  }
+
+  @Delete('account')
+  @ApiOperation({ summary: '注销账户' })
+  async deleteAccount(@CurrentUser('id') userId: string) {
+    return this.userService.deleteAccount(userId);
   }
 }

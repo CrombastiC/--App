@@ -114,10 +114,18 @@ export class PointsService {
 
   // 获取积分商城商品
   async getCommodityList() {
-    return this.prisma.commodity.findMany({
+    const commodities = await this.prisma.commodity.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
+
+    // 映射为前端期望的字段名
+    return commodities.map((item) => ({
+      commodityId: item.id,
+      commodityName: item.commodityName,
+      commodityImage: item.commodityImage,
+      commodityIntegral: item.commodityIntegral,
+    }));
   }
 
   // 获取积分收支记录

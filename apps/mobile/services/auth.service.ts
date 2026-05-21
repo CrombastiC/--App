@@ -24,7 +24,7 @@ export interface User {
  */
 export interface UserProfile extends User {
   birthday?: string;
-  gender?: string;
+  gender?: number; // 0: 男, 1: 女, 2: 保密
 }
 /**
  * 登录请求参数
@@ -42,6 +42,7 @@ export interface LoginResponse {
   message: string;
   code: number;
   token: string;
+  refreshToken: string;
   user: User;
 }
 
@@ -159,8 +160,9 @@ export const tokenManager = {
    */
   async saveLoginInfo(data: LoginResponse) {
     try {
-      // 登录响应: { code: 0, token: string, user: User }
+      // 登录响应: { code: 0, token: string, refreshToken: string, user: User }
       await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('refreshToken', data.refreshToken);
       await AsyncStorage.setItem('userId', data.user.id);
       await AsyncStorage.setItem('userInfo', JSON.stringify(data.user));
       return true;

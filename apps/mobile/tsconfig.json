@@ -5,6 +5,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@orderfood/common": [
+        "../../packages/common/src"
       ]
     }
   },

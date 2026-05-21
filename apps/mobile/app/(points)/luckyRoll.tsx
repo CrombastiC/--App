@@ -243,7 +243,7 @@ export default function LuckyRollScreen() {
 
         // 调用接口兑换奖品,根据是否免费抽奖传入不同的积分值
         const finalIndex = LOTTERY_PATH[targetIndex];
-        const [error, result] = await pointsService.exchangePrize(luckyRollData[finalIndex]._id, costIntegral);
+        const [error, result] = await pointsService.exchangePrize(luckyRollData[finalIndex].id, costIntegral);
 
         setTimeout(() => {
           setIsRolling(false);
@@ -337,7 +337,7 @@ export default function LuckyRollScreen() {
           }
         }
         
-        prizeIds.push(selectedPrize._id);
+        prizeIds.push(selectedPrize.id);
         selectedPrizes.push(selectedPrize);
       }
 
@@ -561,7 +561,7 @@ export default function LuckyRollScreen() {
             {/* 中奖记录列表 */}
             <View style={styles.recordsList}>
               {getCurrentPageRecords().map((record) => (
-                <View key={record._id} style={styles.recordItem}>
+                <View key={record.id} style={styles.recordItem}>
                   <View style={styles.recordLeft}>
                     {/* 奖品图片 */}
                     <View style={styles.recordImage}>
@@ -664,7 +664,7 @@ export default function LuckyRollScreen() {
                 }}
               >
                 {displayMessages.map((item, index) => (
-                  <View key={`${item._id || 'msg'}-${index}`} style={styles.broadcastMessageItem}>
+                  <View key={`${item.id || 'msg'}-${index}`} style={styles.broadcastMessageItem}>
                     <View style={styles.broadcastLeftContent}>
                       <Text style={styles.broadcastEmoji}>🎉</Text>
                       <Text style={styles.broadcastLabel}>恭喜 </Text>

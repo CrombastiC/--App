@@ -20,12 +20,22 @@ export class CouponService {
       where.coupon = { couponUseTime: { gte: now } };
     }
 
-    return this.prisma.userCoupon.findMany({
+    const records = await this.prisma.userCoupon.findMany({
       where,
       include: {
         coupon: true,
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // 平铺为前端期望的结构
+    return records.map((record) => ({
+      couponId: record.coupon.id,
+      couponName: record.coupon.couponName,
+      couponAmount: record.coupon.couponAmount,
+      consumeMoney: record.coupon.consumeMoney,
+      couponUseTime: record.coupon.couponUseTime.toISOString(),
+      status: record.status as 'unused' | 'used',
+    }));
   }
 }

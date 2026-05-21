@@ -65,8 +65,8 @@ export interface TopUpRecordsResponse {
 export interface Coupon {
   couponId: string;
   couponName: string;
-  couponAmount: string;
-  consumeMoney: string;
+  couponAmount: number;
+  consumeMoney: number;
   couponUseTime: string;
   status: 'unused' | 'used'; // unused: 未使用, used: 已使用
 }

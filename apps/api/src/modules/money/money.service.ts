@@ -7,9 +7,16 @@ export class MoneyService {
 
   // 获取充值选项列表
   async getMoneyList() {
-    return this.prisma.moneyOption.findMany({
+    const options = await this.prisma.moneyOption.findMany({
       where: { isActive: true },
       orderBy: { money: 'asc' },
     });
+
+    // 映射为前端期望的 moneyId 字段
+    return options.map((opt) => ({
+      moneyId: opt.id,
+      money: opt.money,
+      giveMoney: opt.giveMoney,
+    }));
   }
 }

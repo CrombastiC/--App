@@ -18,7 +18,7 @@ interface Category {
 
 // 商品数据类型
 interface Product {
-  _id: string; // 商品ID
+  id: string; // 商品ID
   classifyId: string; // 分类ID
   foodName: string; // 商品名称
   foodImage: string; // 商品图片
@@ -29,9 +29,9 @@ interface Product {
 // API返回的分类数据
 interface CategoryData {
   classifyId: string; // 分类ID
-  classifyName: string; // 分类名称 
+  classifyName: string; // 分类名称
   foods: {
-    _id: string; // 商品ID
+    id: string; // 商品ID
     classifyId: string; // 分类ID
     foodName: string; // 商品名称
     foodImage: string; // 商品图片
@@ -162,14 +162,14 @@ export default function OrderScreen() {
   // 增加商品数量
   const increaseQuantity = (productId: string) => {
     setProducts(products.map(item =>
-      item._id === productId ? { ...item, quantity: item.quantity + 1 } : item
+      item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
     ));
   };
 
   // 减少商品数量
   const decreaseQuantity = (productId: string) => {
     setProducts(products.map(item =>
-      item._id === productId && item.quantity > 0 ? { ...item, quantity: item.quantity - 1 } : item
+      item.id === productId && item.quantity > 0 ? { ...item, quantity: item.quantity - 1 } : item
     ));
   };
 
@@ -329,7 +329,7 @@ export default function OrderScreen() {
           <FlatList
             ref={flatListRef}
             data={products}
-            keyExtractor={(item) => item._id}
+            keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={viewabilityConfig}
@@ -371,7 +371,7 @@ export default function OrderScreen() {
                           <>
                             <TouchableOpacity
                               style={styles.quantityButton}
-                              onPress={() => decreaseQuantity(item._id)}
+                              onPress={() => decreaseQuantity(item.id)}
                             >
                               <Icon source="minus-circle" size={24} color="#FF7214" />
                             </TouchableOpacity>
@@ -382,7 +382,7 @@ export default function OrderScreen() {
                         ) : null}
                         <TouchableOpacity
                           style={styles.quantityButton}
-                          onPress={() => increaseQuantity(item._id)}
+                          onPress={() => increaseQuantity(item.id)}
                         >
                           <Icon source="plus-circle" size={24} color="#FF7214" />
                         </TouchableOpacity>
@@ -436,7 +436,7 @@ export default function OrderScreen() {
             {/* 购物车商品列表 */}
             <ScrollView style={styles.cartListScroll} showsVerticalScrollIndicator={false}>
               {cartItems.map((item) => (
-                <View key={item._id} style={styles.cartListItem}>
+                <View key={item.id} style={styles.cartListItem}>
                   <View style={styles.cartItemInfo}>
                     <Text style={styles.cartItemName} numberOfLines={1}>{item.foodName}</Text>
                     <Text style={styles.cartItemPrice}>¥{item.foodPrice.toFixed(2)}</Text>
@@ -446,14 +446,14 @@ export default function OrderScreen() {
                   <View style={styles.cartItemControl}>
                     <TouchableOpacity
                       style={styles.cartQuantityButton}
-                      onPress={() => decreaseQuantity(item._id)}
+                      onPress={() => decreaseQuantity(item.id)}
                     >
                       <Icon source="minus-circle" size={22} color="#FF7214" />
                     </TouchableOpacity>
                     <Text style={styles.cartQuantityText}>{item.quantity}</Text>
                     <TouchableOpacity
                       style={styles.cartQuantityButton}
-                      onPress={() => increaseQuantity(item._id)}
+                      onPress={() => increaseQuantity(item.id)}
                     >
                       <Icon source="plus-circle" size={22} color="#FF7214" />
                     </TouchableOpacity>
