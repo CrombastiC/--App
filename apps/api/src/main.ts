@@ -50,7 +50,7 @@ async function bootstrap() {
   const port = configService.get('PORT', 5000);
   // Listen on all network interfaces (0.0.0.0) to allow access from Android emulator
   await app.listen(port, '0.0.0.0');
-  console.log(`🚀 Server running on http://0.0.0.0:${port}`);
-  console.log(`📚 API Docs: http://0.0.0.0:${port}/api-docs`);
+  console.log(`🚀 Server running on http://127.0.0.1:${port}`);
+  console.log(`📚 API Docs: http://127.0.0.1:${port}/api-docs`);
 }
 bootstrap();

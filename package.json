@@ -14,7 +14,8 @@
     "test": "pnpm -r test",
     "prisma:generate": "pnpm --filter api prisma generate",
     "prisma:migrate": "pnpm --filter api prisma migrate dev",
-    "prisma:studio": "pnpm --filter api prisma studio"
+    "prisma:studio": "pnpm --filter api prisma studio",
+    "runall": "pnpm dev:mobile & pnpm dev:api"
   },
   "engines": {
     "node": ">=18.0.0",

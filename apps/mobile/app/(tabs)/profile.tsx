@@ -188,7 +188,7 @@ export default function ProfileScreen() {
 
             <View style={styles.userBasicInfo}>
               <View style={styles.nameRow}>
-                <Text style={styles.userName} numberOfLines={1} ellipsizeMode="tail">{`测试${userInfo?.username || 'Daisy'}`}</Text>
+                <Text style={styles.userName} numberOfLines={1} ellipsizeMode="tail">{userInfo?.username || 'Daisy'}</Text>
                 <View style={styles.memberBadge}>
                   <Text style={styles.memberBadgeText}>普通会员</Text>
                 </View>

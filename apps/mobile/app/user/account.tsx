@@ -37,7 +37,7 @@ interface UserInfo {
 }
 
 export default function AccountScreen() {
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState<Date | null>(null);
   const [show, setShow] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [genderVisible, setGenderVisible] = useState(false);
@@ -68,9 +68,9 @@ export default function AccountScreen() {
       // result 是包含 code 和 data 的对象，真正的用户数据在 result.data 中
       const data = (result as any)?.data;
       if (data) {
-        const { avatar, username, phone, gender, birthday, balance, integral, _id } = data;
+        const { avatar, username, phone, gender, birthday, balance, integral, id } = data;
         setUserInfo({
-          id: _id || '',
+          id: id || '',
           avatar,
           username,
           phone,
@@ -83,6 +83,8 @@ export default function AccountScreen() {
         // 如果有生日数据，设置日期
         if (birthday) {
           setDate(new Date(birthday));
+        } else {
+          setDate(null);
         }
       }
     } catch (error) {
@@ -304,7 +306,7 @@ export default function AccountScreen() {
     {
       key: 'birthday',
       label: '生日',
-      value: formatDateChinese(date),
+      value: date ? formatDateChinese(date) : '未设置',
       onPress: () => setShow(true),
     },
   ], [userInfo, date]);
@@ -319,7 +321,7 @@ export default function AccountScreen() {
         <DateTimePickerModal
           isVisible={show}
           mode="date"
-          date={date}
+          date={date || new Date()}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
           locale="zh_CN"
