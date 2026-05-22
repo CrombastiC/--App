@@ -23,10 +23,8 @@ export interface PointRecord {
 /**
  * 获取商品列表响应接口
  */
-export interface CommodityListResponse {
-  code: number;
-  data: Commodity[];
-}
+// axios 拦截器解包后，result 直接就是 Commodity[]
+export type CommodityListResponse = Commodity[];
 
 /**
  * 获取抽奖数据接口
@@ -42,12 +40,9 @@ export interface LuckyRollData {
  * 获取抽奖数据响应接口
  */
 export interface LuckyRollDataResponse {
-  code: number;
-  data: {
-    luckyDrawCount: number;
-    userIntegral: number;
-    prizeList: LuckyRollData[];
-  };
+  luckyDrawCount: number;
+  userIntegral: number;
+  prizeList: LuckyRollData[];
 }
 
 /**
@@ -68,6 +63,9 @@ export interface BigPrizeDataResponse {
   code: number;
   data: WinningInfo[];
 }
+
+// axios 拦截器解包后实际类型
+export type WinningRecordsResult = WinningInfo[];
 
 /**
  * 积分商城服务
@@ -98,14 +96,14 @@ export const pointsService = {
    * 兑换奖品(单抽)
    */
   exchangePrize: (prizeId: string, integral: number) => {
-    return request.post<{ code: number; data: any }>('/api/points/exchangePrize', { prizeId, costIntegral: integral });
+    return request.post<any>('/api/points/exchangePrize', { prizeId, costIntegral: integral });
   },
 
   /**
    * 兑换奖品(十连抽)
    */
   exchangeMultiPrize: (prizeIds: string[], integral: number) => {
-    return request.post<{ code: number; data: any }>('/api/points/exchangeMultiPrize', { prizeIds, costIntegral: integral });
+    return request.post<any>('/api/points/exchangeMultiPrize', { prizeIds, costIntegral: integral });
   },
 
   /**

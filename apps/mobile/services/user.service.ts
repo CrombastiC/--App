@@ -48,10 +48,8 @@ export interface TopUpRecord {
 /**
  * 充值记录响应
  */
-export interface TopUpRecordsResponse {
-  code: number;
-  data: TopUpRecord[];
-}
+// axios 拦截器解包后，result 直接就是 TopUpRecord[]
+export type TopUpRecordsResponse = TopUpRecord[];
 
 /**
  * 优惠券
@@ -135,7 +133,7 @@ export const userService = {
    * @param giveBalance 赠送金额
    */
   rechargeBalance: (balance: number, giveBalance: number, isRecharge: boolean) => {
-    return request.post<{ code: number; data: User }>('/api/users/rechargeAndDeduct', { balance, giveBalance, isRecharge });
+    return request.post<User>('/api/users/rechargeAndDeduct', { balance, giveBalance, isRecharge });
   },
 
   /**

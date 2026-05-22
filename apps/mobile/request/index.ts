@@ -133,7 +133,10 @@ class Request {
       });
     }
 
-    return Promise.resolve([false, response.data, response]);
+    // 后端统一返回 { code, message, data }，这里解包取出真正的数据
+    const body = response.data;
+    const unwrapped = body && body.data !== undefined ? body.data : body;
+    return Promise.resolve([false, unwrapped, response]);
   }
 
   private async responseErrorInterceptor(error: any): Promise<any> {
