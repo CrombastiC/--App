@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,6 +21,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // 全局响应拦截器 - 统一返回格式 { code, message, data }
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   // CORS 配置
   app.enableCors({

@@ -143,4 +143,56 @@ export class PointsService {
 
     return { data, total, page, limit };
   }
+
+  // ==================== 奖品管理 ====================
+
+  // 获取所有奖品（含已禁用）
+  async getPrizeList() {
+    return this.prisma.lotteryPrize.findMany({
+      orderBy: { sortOrder: 'asc' },
+    });
+  }
+
+  // 创建奖品
+  async createPrize(data: {
+    prizeName: string;
+    prizeImage: string;
+    prizeIntegral: number;
+    prizeValue?: number;
+    stock?: number;
+    sortOrder?: number;
+  }) {
+    return this.prisma.lotteryPrize.create({ data });
+  }
+
+  // 更新奖品
+  async updatePrize(id: string, data: {
+    prizeName?: string;
+    prizeImage?: string;
+    prizeIntegral?: number;
+    prizeValue?: number;
+    stock?: number;
+    sortOrder?: number;
+    isActive?: boolean;
+  }) {
+    return this.prisma.lotteryPrize.update({
+      where: { id },
+      data,
+    });
+  }
+
+  // 删除奖品
+  async deletePrize(id: string) {
+    return this.prisma.lotteryPrize.delete({ where: { id } });
+  }
+
+  // 切换启用/禁用状态
+  async togglePrize(id: string) {
+    const prize = await this.prisma.lotteryPrize.findUnique({ where: { id } });
+    if (!prize) throw new BadRequestException('奖品不存在');
+    return this.prisma.lotteryPrize.update({
+      where: { id },
+      data: { isActive: !prize.isActive },
+    });
+  }
 }

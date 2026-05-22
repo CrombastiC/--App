@@ -230,7 +230,7 @@ export class UserService {
     });
 
     if (existingRecord) {
-      throw new Error('今天已经签到过了');
+      throw new BadRequestException('今天已经签到过了');
     }
 
     // 签到奖励积分
