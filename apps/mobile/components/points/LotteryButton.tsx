@@ -67,9 +67,9 @@ const LotteryButton: React.FC<LotteryButtonProps> = ({
         ) : (
           // 积分消耗模式
           <View style={styles.costRow}>
-            <Image 
-              source={require('@/assets/images/积分.png')} 
-              style={styles.costIcon} 
+            <Image
+              source={require('../../assets/images/积分.png')}
+              style={styles.costIcon}
             />
             <Text style={styles.buttonSubText}>{cost}</Text>
           </View>

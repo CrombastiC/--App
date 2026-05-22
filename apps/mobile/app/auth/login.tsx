@@ -99,7 +99,7 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ImageBackground
-        source={require('@/assets/images/cooker.png')}
+        source={require('../../assets/images/cooker.png')}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
