@@ -3,9 +3,10 @@
  */
 
 import { tokenManager, userService } from '@/services';
+import { useLocationStore } from '@/stores/location-store';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Image, ImageBackground, StyleSheet, View } from 'react-native';
+import { Image, ImageBackground, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Card, Icon, IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,6 +16,22 @@ export default function HomeScreen() {
   const [balance, setBalance] = useState<number>(0);
   const [points, setPoints] = useState<number>(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 当前城市
+  const city = useLocationStore((s) => s.city);
+  const initialized = useLocationStore((s) => s.initialized);
+  const loadFromCache = useLocationStore((s) => s.loadFromCache);
+  const locate = useLocationStore((s) => s.locate);
+
+  // 初始化定位（首次进入 App 时）
+  React.useEffect(() => {
+    if (!initialized) {
+      (async () => {
+        const cached = await loadFromCache();
+        if (!cached) await locate();
+      })();
+    }
+  }, [initialized, loadFromCache, locate]);
 
   const loadData = async () => {
     // 检查是否已登录
@@ -28,7 +45,7 @@ export default function HomeScreen() {
         console.error('Failed to load user info:', error);
         return;
       }
-      const data = (userInfo as any)?.data;
+      const data = (userInfo as any);
       if (data) {
         const { username, avatar, balance, integral } = data;
         setUserName(username || '用户名');
@@ -50,8 +67,19 @@ export default function HomeScreen() {
       <View style={styles.container}>
         {/* 上半部分 - 带背景色的区域 */}
         <View style={styles.topSection}>
+          {/* 城市选择 */}
+          <TouchableOpacity
+            style={styles.citySelector}
+            onPress={() => router.push('/(location)/citySelect')}
+            activeOpacity={0.7}
+          >
+            <Icon source="map-marker-outline" size={18} color="#FF7214" />
+            <Text style={styles.cityText}>{city}</Text>
+            <Icon source="chevron-down" size={16} color="#999" />
+          </TouchableOpacity>
+
           <ImageBackground
-            source={require('@/assets/images/cooker.png')}
+            source={require('../../assets/images/cooker.png')}
             style={styles.imageBackground}
             resizeMode="contain"
           />
@@ -178,6 +206,31 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgb(246, 234, 227)', // 浅棕色背景
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 12,
+  },
+  citySelector: {
+    position: 'absolute',
+    top: 12,
+    left: 16,
+    zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  cityText: {
+    fontSize: 13,
+    color: '#333',
+    fontWeight: '500',
+    maxWidth: 80,
   },
   imageBackground: {
     width: '100%',

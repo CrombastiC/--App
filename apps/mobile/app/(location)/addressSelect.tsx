@@ -1,10 +1,10 @@
-import { STORAGE_KEYS, StorageUtils } from "@/utils/storage";
-import { useFocusEffect } from "@react-navigation/native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FlatList, Linking, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Button, Card, Dialog, Icon, Portal, Searchbar, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { useLocationStore } from "@/stores/location-store";
 
 // 门店数据类型
 interface Store {
@@ -72,7 +72,9 @@ export default function AddressSelectScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [phoneDialogVisible, setPhoneDialogVisible] = useState(false);
   const [selectedPhone, setSelectedPhone] = useState('');
-  const [currentCity, setCurrentCity] = useState('上海市');
+
+  // 从全局 store 读取城市
+  const city = useLocationStore((s) => s.city);
 
   // 根据 type 参数设置标题
   const getTitle = () => {
@@ -86,28 +88,6 @@ export default function AddressSelectScreen() {
     }
   };
   const title = getTitle();
-
-  // 加载保存的城市
-  useEffect(() => {
-    loadCity();
-  }, []);
-
-  // 每次页面获得焦点时重新加载城市
-  useFocusEffect(() => {
-    loadCity();
-  });
-
-  // 加载城市函数
-  const loadCity = async () => {
-    try {
-      const savedCity = await StorageUtils.getString(STORAGE_KEYS.SELECTED_CITY);
-      if (savedCity) {
-        setCurrentCity(savedCity);
-      }
-    } catch (error) {
-      console.error('加载城市失败:', error);
-    }
-  };
 
   // 显示电话对话框
   const showPhoneDialog = (phone: string) => {
@@ -135,7 +115,7 @@ export default function AddressSelectScreen() {
           {/* 城市选择按钮 */}
           <TouchableOpacity style={styles.citySelector} onPress={()=>router.push('/(location)/citySelect')}>
             <Icon source="map-marker-outline" size={20} color="#666" />
-            <Text style={styles.cityText}>{currentCity}</Text>
+            <Text style={styles.cityText}>{city}</Text>
             <Icon source="chevron-right" size={20} color="#999" />
           </TouchableOpacity>
 

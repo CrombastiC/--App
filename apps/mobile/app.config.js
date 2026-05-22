@@ -87,7 +87,9 @@ module.exports = {
         projectId: "1b11bc14-a537-46cc-9ad7-168baaf50ffa"
       },
       // 将环境变量暴露给应用
-      APP_ENV: process.env.APP_ENV || 'development'
+      APP_ENV: process.env.APP_ENV || 'development',
+      // 高德地图 Key：开发环境使用默认值，生产环境通过 EAS Secrets 注入 AMAP_KEY
+      AMAP_KEY: process.env.AMAP_KEY || (process.env.APP_ENV !== 'production' ? 'f619fad5bbb623bc56e5ec243a575dfe' : '')
     }
   }
 };

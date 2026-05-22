@@ -87,11 +87,9 @@ export default function OrderScreen() {
       const [isError, data] = await getProductInfo();
 
       if (!isError && data) {
-        const responseData = data as any;
+        const categoryData: CategoryData[] = data as CategoryData[];
 
-        if (responseData.code === 0 && responseData.data) {
-          const categoryData: CategoryData[] = responseData.data;
-
+        if (Array.isArray(categoryData)) {
           // 处理分类数据
           const categoryList: Category[] = categoryData.map(cat => ({
             classifyId: cat.classifyId,
