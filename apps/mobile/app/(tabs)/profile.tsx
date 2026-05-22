@@ -91,8 +91,8 @@ export default function ProfileScreen() {
         return;
       }
 
-      // result 是包含 code 和 data 的对象，真正的用户数据在 result.data 中
-      const data = (result as any)?.data;
+      // axios 拦截器已解包，result 直接就是用户数据
+      const data = result as any;
       if (data) {
         const user = data as UserInfo;
         setUserInfo(user);
@@ -116,9 +116,9 @@ export default function ProfileScreen() {
         return;
       }
       console.log(result);
-      setSignInStatus((result as any)?.data?.isCheckIn);
-      setConsecutiveSignInDays((result as any)?.data?.streak);
-      console.log('签到状态', signInStatus);
+      setSignInStatus((result as any)?.isCheckIn);
+      setConsecutiveSignInDays((result as any)?.streak);
+      console.log('签到状态', (result as any)?.isCheckIn);
     } catch (error) {
       console.error('Failed to get sign-in status:', error);
     }
@@ -129,12 +129,16 @@ export default function ProfileScreen() {
       const [error, result] = await userService.signIn();
       if (error) {
         console.error('签到失败:', error);
-        ToastManager.show('签到失败');
+        const errorMsg = (error as any)?.message || '签到失败';
+        ToastManager.show(errorMsg);
         return;
       }
       ToastManager.show('签到成功，可免费抽奖一次');
-      getSignInStatus();
-
+      // 签到成功后立即更新本地状态，无需等待接口返回
+      setSignInStatus(true);
+      setConsecutiveSignInDays(prev => prev + 1);
+      // 同时异步刷新确保数据一致性
+      await getSignInStatus();
     } catch (error) {
       console.error('签到异常:', error);
     }
@@ -150,7 +154,7 @@ export default function ProfileScreen() {
   // 下拉刷新
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadUserInfo();
+    await Promise.all([loadUserInfo(), getSignInStatus()]);
     setRefreshing(false);
   }, []);
 

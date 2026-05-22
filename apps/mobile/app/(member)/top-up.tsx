@@ -85,8 +85,8 @@ export default function TopUpScreen() {
         return;
       }
 
-      // result 是包含 code 和 data 的对象，真正的用户数据在 result.data 中
-      const data = (result as any)?.data;
+      // axios 拦截器已解包，result 直接就是用户数据
+      const data = result as any;
       if (data && data.balance !== undefined) {
         setBalance(data.balance);
       }

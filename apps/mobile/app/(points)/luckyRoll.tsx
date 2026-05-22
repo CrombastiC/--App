@@ -129,9 +129,9 @@ export default function LuckyRollScreen() {
       console.error('获取抽奖数据失败:', error);
       return;
     }
-    const data = (result as LuckyRollDataResponse)?.data?.prizeList;
-    setCurrentPoints(result?.data?.userIntegral || 0);
-    setFreeDrawCount(result?.data?.luckyDrawCount || 0);
+    const data = (result as LuckyRollDataResponse)?.prizeList;
+    setCurrentPoints((result as LuckyRollDataResponse)?.userIntegral || 0);
+    setFreeDrawCount((result as LuckyRollDataResponse)?.luckyDrawCount || 0);
     if (data && Array.isArray(data)) {
       setLuckyRollData(data);
       console.log('抽奖数据:', data);
@@ -374,7 +374,7 @@ export default function LuckyRollScreen() {
             setCurrentIndex(-1);
 
             // 展示十连抽结果 - 使用弹窗展示
-            setResultPrizes(result.data);
+            setResultPrizes(result as any);
             setIsMultiResult(true);
             setShowResultModal(true);
 
@@ -451,8 +451,8 @@ export default function LuckyRollScreen() {
       console.error('获取围观大奖数据失败:', error);
       return;
     }
-    console.log('获取围观大奖数据成功:', result.data);
-    setBigPrizeData(result.data);
+    console.log('获取围观大奖数据成功:', result);
+    setBigPrizeData((result as any) || []);
   };
 
   // 获取中奖播报数据
@@ -462,12 +462,12 @@ export default function LuckyRollScreen() {
       console.error('获取中奖播报数据失败:', error);
       return;
     }
-    console.log('获取中奖播报数据成功:', result.data);
-    setBroadcastMessages(result.data);
+    console.log('获取中奖播报数据成功:', result);
+    setBroadcastMessages((result as any) || []);
   };
   return (
     <ImageBackground
-      source={require('@/assets/images/rollBackground.png')}
+      source={require('../../assets/images/rollBackground.png')}
       style={styles.container}
       resizeMode="stretch"
       imageStyle={styles.backgroundImage}
@@ -566,7 +566,7 @@ export default function LuckyRollScreen() {
                     {/* 奖品图片 */}
                     <View style={styles.recordImage}>
                       <Image
-                        source={record.prizeImage ? { uri: record.prizeImage } : require('@/assets/images/积分.png')}
+                        source={record.prizeImage ? { uri: record.prizeImage } : require('../../assets/images/积分.png')}
                         style={styles.prizeImage}
                         resizeMode="contain"
                       />
