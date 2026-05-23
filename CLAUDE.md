@@ -61,7 +61,7 @@ pnpm prisma:seed      # 种子数据
 `apps/mobile/request/index.ts` 封装 Axios，返回 `[error, data, response]` 元组：
 
 ```ts
-const [error, data] = await request.get<User[]>('/api/users', { page: 1 });
+const [error, data] = await request.get<User[]>('/api/user', { page: 1 });
 if (!error) { /* 使用 data */ }
 ```
 

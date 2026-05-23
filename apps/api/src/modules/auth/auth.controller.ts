@@ -7,7 +7,7 @@ import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('认证')
-@Controller('users')
+@Controller('user')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

@@ -16,29 +16,29 @@ OrderFoodApp/
 
 ## 2. 后端已实现接口（Controller）
 
-### 2.1 认证模块 — `AuthController` (`/api/users`)
+### 2.1 认证模块 — `AuthController` (`/api/user`)
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| POST | `/api/users/login` | 登录 | 公开 |
-| POST | `/api/users/register` | 注册 | 公开 |
-| POST | `/api/users/refresh-token` | 刷新 Token | 公开 |
-| GET | `/api/users/verify` | 验证 Token | 需 JWT |
-| POST | `/api/users/logout` | 退出登录 | 需 JWT |
+| POST | `/api/user/login` | 登录 | 公开 |
+| POST | `/api/user/register` | 注册 | 公开 |
+| POST | `/api/user/refresh-token` | 刷新 Token | 公开 |
+| GET | `/api/user/verify` | 验证 Token | 需 JWT |
+| POST | `/api/user/logout` | 退出登录 | 需 JWT |
 
-### 2.2 用户模块 — `UserController` (`/api/users`)
+### 2.2 用户模块 — `UserController` (`/api/user`)
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| GET | `/api/users/getUserInfo` | 获取用户信息 | 需 JWT |
-| PUT | `/api/users/update` | 更新用户信息 | 需 JWT |
-| POST | `/api/users/rechargeAndDeduct` | 余额充值/扣除 | 需 JWT |
-| GET | `/api/users/getRechargeRecord` | 获取充值记录 | 需 JWT |
-| GET | `/api/users/getCheckInStatus` | 获取签到状态 | 需 JWT |
-| POST | `/api/users/checkIn` | 签到 | 需 JWT |
-| POST | `/api/users/change-password` | 修改密码 | 需 JWT |
-| GET | `/api/users/stats` | 用户统计 | 需 JWT |
-| DELETE | `/api/users/account` | 注销账户 | 需 JWT |
+| GET | `/api/user/getUserInfo` | 获取用户信息 | 需 JWT |
+| PUT | `/api/user/update` | 更新用户信息 | 需 JWT |
+| POST | `/api/user/rechargeAndDeduct` | 余额充值/扣除 | 需 JWT |
+| GET | `/api/user/getRechargeRecord` | 获取充值记录 | 需 JWT |
+| GET | `/api/user/getCheckInStatus` | 获取签到状态 | 需 JWT |
+| POST | `/api/user/checkIn` | 签到 | 需 JWT |
+| POST | `/api/user/change-password` | 修改密码 | 需 JWT |
+| GET | `/api/user/stats` | 用户统计 | 需 JWT |
+| DELETE | `/api/user/account` | 注销账户 | 需 JWT |
 
 ### 2.3 菜单模块 — `MenuController` (`/api/menu`)
 
@@ -102,25 +102,25 @@ OrderFoodApp/
 
 | 调用路径 | 对应后端 | 状态 |
 |----------|----------|------|
-| `POST /api/users/login` | `/api/users/login` | 一致 |
-| `POST /api/users/register` | `/api/users/register` | 一致 |
-| `POST /api/auth/logout` | `/api/users/logout` | **路径不一致** |
-| `POST /api/auth/refresh-token` | `/api/users/refresh-token` | **路径不一致** |
-| `GET /api/auth/verify` | `/api/users/verify` | **路径不一致** |
+| `POST /api/user/login` | `/api/user/login` | 一致 |
+| `POST /api/user/register` | `/api/user/register` | 一致 |
+| `POST /api/auth/logout` | `/api/user/logout` | **路径不一致** |
+| `POST /api/auth/refresh-token` | `/api/user/refresh-token` | **路径不一致** |
+| `GET /api/auth/verify` | `/api/user/verify` | **路径不一致** |
 
 ### 3.2 `user.service.ts`
 
 | 调用路径 | 对应后端 | 状态 |
 |----------|----------|------|
-| `GET /api/users/getUserInfo` | `/api/users/getUserInfo` | 一致 |
-| `PUT /api/users/update` | `/api/users/update` | 一致 |
-| `POST /api/users/rechargeAndDeduct` | `/api/users/rechargeAndDeduct` | 一致 |
-| `GET /api/users/getRechargeRecord` | `/api/users/getRechargeRecord` | 一致 |
-| `GET /api/users/getCheckInStatus` | `/api/users/getCheckInStatus` | 一致 |
-| `POST /api/users/checkIn` | `/api/users/checkIn` | 一致 |
-| `POST /api/user/change-password` | `/api/users/change-password` | **路径不一致** |
-| `GET /api/user/stats` | `/api/users/stats` | **路径不一致** |
-| `DELETE /api/user/account` | `/api/users/account` | **路径不一致** |
+| `GET /api/user/getUserInfo` | `/api/user/getUserInfo` | 一致 |
+| `PUT /api/user/update` | `/api/user/update` | 一致 |
+| `POST /api/user/rechargeAndDeduct` | `/api/user/rechargeAndDeduct` | 一致 |
+| `GET /api/user/getRechargeRecord` | `/api/user/getRechargeRecord` | 一致 |
+| `GET /api/user/getCheckInStatus` | `/api/user/getCheckInStatus` | 一致 |
+| `POST /api/user/checkIn` | `/api/user/checkIn` | 一致 |
+| `POST /api/user/change-password` | `/api/user/change-password` | **路径不一致** |
+| `GET /api/user/stats` | `/api/user/stats` | **路径不一致** |
+| `DELETE /api/user/account` | `/api/user/account` | **路径不一致** |
 | `POST /api/user/avatar` | — | **后端不存在此接口** |
 | `POST /api/coupon/getCouponList` | `/api/coupon/getCouponList` | 一致 |
 | `GET /api/money/getMoneyList` | `/api/money/getMoneyList` | 一致 |
@@ -151,16 +151,18 @@ OrderFoodApp/
 
 ## 4. 问题汇总
 
+> **接口路径约定**：若前后端接口路径不一致，且前端已在 `services/*.service.ts` 中定义并调用，**一律以前端调用路径为准，修改后端路由匹配前端**。避免前端已写好的调用逻辑被无故改动。
+
 ### 4.1 路径不一致（需修复前端调用路径）
 
 | # | 前端调用路径 | 应改为 | 所在文件 |
 |---|-------------|--------|----------|
-| 1 | `POST /api/auth/logout` | `POST /api/users/logout` | `auth.service.ts` |
-| 2 | `POST /api/auth/refresh-token` | `POST /api/users/refresh-token` | `auth.service.ts` |
-| 3 | `GET /api/auth/verify` | `GET /api/users/verify` | `auth.service.ts` |
-| 4 | `POST /api/user/change-password` | `POST /api/users/change-password` | `user.service.ts` |
-| 5 | `GET /api/user/stats` | `GET /api/users/stats` | `user.service.ts` |
-| 6 | `DELETE /api/user/account` | `DELETE /api/users/account` | `user.service.ts` |
+| 1 | `POST /api/auth/logout` | `POST /api/user/logout` | `auth.service.ts` |
+| 2 | `POST /api/auth/refresh-token` | `POST /api/user/refresh-token` | `auth.service.ts` |
+| 3 | `GET /api/auth/verify` | `GET /api/user/verify` | `auth.service.ts` |
+| 4 | `POST /api/user/change-password` | `POST /api/user/change-password` | `user.service.ts` |
+| 5 | `GET /api/user/stats` | `GET /api/user/stats` | `user.service.ts` |
+| 6 | `DELETE /api/user/account` | `DELETE /api/user/account` | `user.service.ts` |
 
 ### 4.2 前端调用不存在的接口
 
@@ -232,9 +234,9 @@ OrderFoodApp/
 | 模块 | 需新增接口 | 说明 |
 |------|-----------|------|
 | 认证 | `POST /api/auth/admin-login` | 管理员独立登录（或登录后返回角色） |
-| 用户 | `GET /api/users/list` | 用户列表（分页、筛选） |
-| 用户 | `GET /api/users/:id` | 用户详情 |
-| 用户 | `PUT /api/users/:id/balance` | 调整用户余额 |
+| 用户 | `GET /api/user/list` | 用户列表（分页、筛选） |
+| 用户 | `GET /api/user/:id` | 用户详情 |
+| 用户 | `PUT /api/user/:id/balance` | 调整用户余额 |
 | 订单 | `PUT /api/order/:id/status` | 修改订单状态 |
 | 菜单 | `POST /api/menu/category` | 创建分类 |
 | 菜单 | `PUT /api/menu/category/:id` | 更新分类 |

@@ -79,7 +79,7 @@ export const userService = {
    * @returns [error, user]
    */
   getProfile: () => {
-    return request.get<UserProfile>('/api/users/getUserInfo');
+    return request.get<UserProfile>('/api/user/getUserInfo');
   },
 
   /**
@@ -88,7 +88,7 @@ export const userService = {
    * @returns [error, user]
    */
   updateProfile: (data: UpdateProfileRequest) => {
-    return request.put<User>('/api/users/update', data);
+    return request.put<User>('/api/user/update', data);
   },
 
   /**
@@ -97,7 +97,7 @@ export const userService = {
    * @returns [error, response]
    */
   changePassword: (data: ChangePasswordRequest) => {
-    return request.post<{ message: string }>('/api/users/change-password', data);
+    return request.post<{ message: string }>('/api/user/change-password', data);
   },
 
   /**
@@ -114,7 +114,7 @@ export const userService = {
    * @returns [error, stats]
    */
   getStats: () => {
-    return request.get<UserStats>('/api/users/stats');
+    return request.get<UserStats>('/api/user/stats');
   },
 
   /**
@@ -122,7 +122,7 @@ export const userService = {
    * @returns [error, response]
    */
   deleteAccount: () => {
-    return request.delete<{ message: string }>('/api/users/account');
+    return request.delete<{ message: string }>('/api/user/account');
   },
 
   /**
@@ -133,7 +133,7 @@ export const userService = {
    * @param giveBalance 赠送金额
    */
   rechargeBalance: (balance: number, giveBalance: number, isRecharge: boolean) => {
-    return request.post<User>('/api/users/rechargeAndDeduct', { balance, giveBalance, isRecharge });
+    return request.post<User>('/api/user/rechargeAndDeduct', { balance, giveBalance, isRecharge });
   },
 
   /**
@@ -141,7 +141,7 @@ export const userService = {
    * 响应格式: { code: 0, data: TopUpRecord[] }
    */
   getTopUpRecords: () => {
-    return request.get<TopUpRecordsResponse>('/api/users/getRechargeRecord');
+    return request.get<TopUpRecordsResponse>('/api/user/getRechargeRecord');
   },
 
   /**
@@ -163,14 +163,14 @@ export const userService = {
    * 获取签到状态 
    */
   getSignInStatus: () => {
-    return request.get('/api/users/getCheckInStatus');
+    return request.get('/api/user/getCheckInStatus');
   },
 
   /**
    * 签到
    */
   signIn: () => {
-    return request.post('/api/users/checkIn');
+    return request.post('/api/user/checkIn');
   }
 
 };

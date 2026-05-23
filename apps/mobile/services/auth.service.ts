@@ -92,7 +92,7 @@ export const authService = {
    * @returns [error, response]
    */
   login: (data: LoginRequest) => {
-    return request.post<LoginResponse>('/api/users/login', data);
+    return request.post<LoginResponse>('/api/user/login', data);
   },
 
   /**
@@ -101,7 +101,7 @@ export const authService = {
    * @returns [error, response]
    */
   register: (data: RegisterRequest) => {
-    return request.post<RegisterResponse>('/api/users/register', data);
+    return request.post<RegisterResponse>('/api/user/register', data);
   },
 
   // 以下接口暂时不可用，需要接入短信平台后启用
@@ -128,7 +128,7 @@ export const authService = {
    * @returns [error, response]
    */
   logout: () => {
-    return request.post<{ message: string }>('/api/users/logout');
+    return request.post<{ message: string }>('/api/user/logout');
   },
 
   /**
@@ -138,7 +138,7 @@ export const authService = {
    */
   refreshToken: (refreshToken: string) => {
     return request.post<{ token: string; refreshToken: string }>(
-      '/api/users/refresh-token',
+      '/api/user/refresh-token',
       { refreshToken }
     );
   },
@@ -148,7 +148,7 @@ export const authService = {
    * @returns [error, response]
    */
   verifyToken: () => {
-    return request.get<{ valid: boolean }>('/api/users/verify');
+    return request.get<{ valid: boolean }>('/api/user/verify');
   },
 };
 
