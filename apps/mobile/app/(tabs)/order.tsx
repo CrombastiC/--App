@@ -3,6 +3,7 @@
  */
 
 import { getProductInfo } from '@/services/order.service';
+import { useCartStore } from '@/stores/cart-store';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View, ViewToken } from 'react-native';
@@ -69,6 +70,8 @@ export default function OrderScreen() {
   const distance = '1.2km';
   const flatListRef = useRef<FlatList>(null);
   const isScrollingRef = useRef(false);
+
+  const { setItems, setOrderType: setCartOrderType, setStoreName, setPeopleCount } = useCartStore();
 
   // 根据订餐类型获取标题
   const title = orderType === 'dine-in' ? '堂食点餐' : '外送点餐';
@@ -493,6 +496,20 @@ export default function OrderScreen() {
             disabled={cartTotal === 0}
             onPress={(e) => {
               e.stopPropagation();
+              // 同步购物车数据到 store
+              const cartItems = products
+                .filter((p) => p.quantity > 0)
+                .map((p) => ({
+                  foodId: p.id,
+                  foodName: p.foodName,
+                  foodPrice: p.foodPrice,
+                  quantity: p.quantity,
+                  foodImage: p.foodImage,
+                }));
+              setItems(cartItems);
+              setCartOrderType(orderType);
+              setStoreName(storeName);
+              setPeopleCount(1);
               // 跳转结算页面
               router.push('/(orderfood)/settlement');
             }}
