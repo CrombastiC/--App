@@ -97,7 +97,7 @@ export const userService = {
    * @returns [error, response]
    */
   changePassword: (data: ChangePasswordRequest) => {
-    return request.post<{ message: string }>('/api/user/change-password', data);
+    return request.post<{ message: string }>('/api/users/change-password', data);
   },
 
   /**
@@ -106,7 +106,7 @@ export const userService = {
    * @returns [error, response]
    */
   uploadAvatar: (file: any) => {
-    return request.upload<{ url: string }>('/api/user/avatar', file);
+    return request.upload<{ url: string }>('/api/upload/uploadImg', file);
   },
 
   /**
@@ -114,7 +114,7 @@ export const userService = {
    * @returns [error, stats]
    */
   getStats: () => {
-    return request.get<UserStats>('/api/user/stats');
+    return request.get<UserStats>('/api/users/stats');
   },
 
   /**
@@ -122,7 +122,7 @@ export const userService = {
    * @returns [error, response]
    */
   deleteAccount: () => {
-    return request.delete<{ message: string }>('/api/user/account');
+    return request.delete<{ message: string }>('/api/users/account');
   },
 
   /**

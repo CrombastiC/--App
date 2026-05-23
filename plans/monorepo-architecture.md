@@ -1,419 +1,285 @@
-# OrderFoodApp Monorepo 架构设计
+# OrderFoodApp 架构与接口对照
 
 ## 1. 项目结构
 
 ```
 OrderFoodApp/
 ├── apps/
-│   ├── mobile/                 # 现有的 React Native 前端 (Expo)
-│   │   ├── app/
-│   │   ├── components/
-│   │   ├── services/
-│   │   ├── hooks/
-│   │   ├── utils/
-│   │   └── package.json
-│   └── api/                    # NestJS 后端
-│       ├── src/
-│       │   ├── main.ts
-│       │   ├── app.module.ts
-│       │   ├── common/         # 公共模块
-│       │   │   ├── decorators/
-│       │   │   ├── filters/
-│       │   │   ├── guards/
-│       │   │   ├── interceptors/
-│       │   │   └── pipes/
-│       │   ├── modules/
-│       │   │   ├── auth/       # 认证模块
-│       │   │   ├── user/       # 用户模块
-│       │   │   ├── menu/       # 菜单/菜品模块
-│       │   │   ├── order/      # 订单模块
-│       │   │   ├── points/     # 积分/抽奖模块
-│       │   │   ├── coupon/     # 优惠券模块
-│       │   │   ├── money/      # 充值模块
-│       │   │   └── upload/     # 文件上传模块
-│       │   └── prisma/
-│       │       └── prisma.service.ts
-│       ├── prisma/
-│       │   └── schema.prisma
-│       ├── test/
-│       └── package.json
+│   ├── mobile/                 # Expo React Native 前端
+│   └── api/                    # NestJS + Prisma 后端
 ├── packages/
-│   ├── shared-types/           # 前后端共享类型定义
-│   │   ├── src/
-│   │   │   ├── user.ts
-│   │   │   ├── order.ts
-│   │   │   ├── menu.ts
-│   │   │   ├── points.ts
-│   │   │   └── coupon.ts
-│   │   └── package.json
-│   └── config/                 # 共享配置
-│       ├── eslint/
-│       ├── typescript/
+│   ├── common/                 # 共享代码
+│   └── shared-types/           # 共享类型
+├── package.json
+└── pnpm-workspace.yaml
+```
+
+## 2. 后端已实现接口（Controller）
+
+### 2.1 认证模块 — `AuthController` (`/api/users`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | `/api/users/login` | 登录 | 公开 |
+| POST | `/api/users/register` | 注册 | 公开 |
+| POST | `/api/users/refresh-token` | 刷新 Token | 公开 |
+| GET | `/api/users/verify` | 验证 Token | 需 JWT |
+| POST | `/api/users/logout` | 退出登录 | 需 JWT |
+
+### 2.2 用户模块 — `UserController` (`/api/users`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | `/api/users/getUserInfo` | 获取用户信息 | 需 JWT |
+| PUT | `/api/users/update` | 更新用户信息 | 需 JWT |
+| POST | `/api/users/rechargeAndDeduct` | 余额充值/扣除 | 需 JWT |
+| GET | `/api/users/getRechargeRecord` | 获取充值记录 | 需 JWT |
+| GET | `/api/users/getCheckInStatus` | 获取签到状态 | 需 JWT |
+| POST | `/api/users/checkIn` | 签到 | 需 JWT |
+| POST | `/api/users/change-password` | 修改密码 | 需 JWT |
+| GET | `/api/users/stats` | 用户统计 | 需 JWT |
+| DELETE | `/api/users/account` | 注销账户 | 需 JWT |
+
+### 2.3 菜单模块 — `MenuController` (`/api/menu`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | `/api/menu/getMenuList/:id?` | 获取菜单列表 | 公开 |
+| POST | `/api/menu/createFood` | 创建菜品 | 公开 |
+
+### 2.4 优惠券模块 — `CouponController` (`/api/coupon`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | `/api/coupon/getCouponList` | 获取优惠券列表 | 需 JWT |
+
+### 2.5 充值金额模块 — `MoneyController` (`/api/money`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | `/api/money/getMoneyList` | 获取充值选项 | 需 JWT |
+
+### 2.6 订单模块 — `OrderController` (`/api/order`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | `/api/order/create` | 创建订单 | 需 JWT |
+| GET | `/api/order/list` | 获取订单列表 | 需 JWT |
+| GET | `/api/order/detail/:id` | 获取订单详情 | 需 JWT |
+
+### 2.7 积分模块 — `PointsController` (`/api/points`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | `/api/points/getLuckyRollData` | 获取抽奖数据 | 需 JWT |
+| POST | `/api/points/exchangePrize` | 兑换奖品（单抽） | 需 JWT |
+| POST | `/api/points/exchangeMultiPrize` | 十连抽 | 需 JWT |
+| GET | `/api/points/getWinningRecords` | 中奖记录 | 需 JWT |
+| GET | `/api/points/getCommodityList` | 积分商城商品 | 需 JWT |
+| GET | `/api/points/getPointsList` | 积分收支记录 | 需 JWT |
+
+### 2.8 奖品管理模块 — `PrizeController` (`/api/points/prize`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | `/api/points/prize/list` | 奖品列表 | 需 JWT |
+| POST | `/api/points/prize/create` | 创建奖品 | 需 JWT |
+| PUT | `/api/points/prize/update/:id` | 更新奖品 | 需 JWT |
+| DELETE | `/api/points/prize/delete/:id` | 删除奖品 | 需 JWT |
+| PUT | `/api/points/prize/toggle/:id` | 启用/禁用奖品 | 需 JWT |
+
+### 2.9 文件上传模块 — `UploadController` (`/api/upload`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | `/api/upload/uploadImg` | 上传图片 | 需 JWT |
+
+---
+
+## 3. 前端 Service 调用清单
+
+### 3.1 `auth.service.ts`
+
+| 调用路径 | 对应后端 | 状态 |
+|----------|----------|------|
+| `POST /api/users/login` | `/api/users/login` | 一致 |
+| `POST /api/users/register` | `/api/users/register` | 一致 |
+| `POST /api/auth/logout` | `/api/users/logout` | **路径不一致** |
+| `POST /api/auth/refresh-token` | `/api/users/refresh-token` | **路径不一致** |
+| `GET /api/auth/verify` | `/api/users/verify` | **路径不一致** |
+
+### 3.2 `user.service.ts`
+
+| 调用路径 | 对应后端 | 状态 |
+|----------|----------|------|
+| `GET /api/users/getUserInfo` | `/api/users/getUserInfo` | 一致 |
+| `PUT /api/users/update` | `/api/users/update` | 一致 |
+| `POST /api/users/rechargeAndDeduct` | `/api/users/rechargeAndDeduct` | 一致 |
+| `GET /api/users/getRechargeRecord` | `/api/users/getRechargeRecord` | 一致 |
+| `GET /api/users/getCheckInStatus` | `/api/users/getCheckInStatus` | 一致 |
+| `POST /api/users/checkIn` | `/api/users/checkIn` | 一致 |
+| `POST /api/user/change-password` | `/api/users/change-password` | **路径不一致** |
+| `GET /api/user/stats` | `/api/users/stats` | **路径不一致** |
+| `DELETE /api/user/account` | `/api/users/account` | **路径不一致** |
+| `POST /api/user/avatar` | — | **后端不存在此接口** |
+| `POST /api/coupon/getCouponList` | `/api/coupon/getCouponList` | 一致 |
+| `GET /api/money/getMoneyList` | `/api/money/getMoneyList` | 一致 |
+
+### 3.3 `order.service.ts`
+
+| 调用路径 | 对应后端 | 状态 |
+|----------|----------|------|
+| `GET /api/menu/getMenuList/:id` | `/api/menu/getMenuList/:id` | 一致 |
+| `POST /api/menu/createFood` | `/api/menu/createFood` | 一致 |
+| `POST /api/upload/uploadImg` | `/api/upload/uploadImg` | 一致 |
+| `POST /api/order/create` | `/api/order/create` | **前端未封装** |
+| `GET /api/order/list` | `/api/order/list` | **前端未封装** |
+| `GET /api/order/detail/:id` | `/api/order/detail/:id` | **前端未封装** |
+
+### 3.4 `points.service.ts`
+
+| 调用路径 | 对应后端 | 状态 |
+|----------|----------|------|
+| `GET /api/points/getCommodityList` | `/api/points/getCommodityList` | 一致 |
+| `GET /api/points/getPointsList` | `/api/points/getPointsList` | 一致 |
+| `GET /api/points/getLuckyRollData` | `/api/points/getLuckyRollData` | 一致 |
+| `POST /api/points/exchangePrize` | `/api/points/exchangePrize` | 一致 |
+| `POST /api/points/exchangeMultiPrize` | `/api/points/exchangeMultiPrize` | 一致 |
+| `GET /api/points/getWinningRecords` | `/api/points/getWinningRecords` | 一致 |
+
+---
+
+## 4. 问题汇总
+
+### 4.1 路径不一致（需修复前端调用路径）
+
+| # | 前端调用路径 | 应改为 | 所在文件 |
+|---|-------------|--------|----------|
+| 1 | `POST /api/auth/logout` | `POST /api/users/logout` | `auth.service.ts` |
+| 2 | `POST /api/auth/refresh-token` | `POST /api/users/refresh-token` | `auth.service.ts` |
+| 3 | `GET /api/auth/verify` | `GET /api/users/verify` | `auth.service.ts` |
+| 4 | `POST /api/user/change-password` | `POST /api/users/change-password` | `user.service.ts` |
+| 5 | `GET /api/user/stats` | `GET /api/users/stats` | `user.service.ts` |
+| 6 | `DELETE /api/user/account` | `DELETE /api/users/account` | `user.service.ts` |
+
+### 4.2 前端调用不存在的接口
+
+| # | 前端调用路径 | 说明 | 建议 |
+|---|-------------|------|------|
+| 1 | `POST /api/user/avatar` | 后端无此路由 | 改为调用 `/api/upload/uploadImg`，或后端新增头像上传接口 |
+
+### 4.3 后端已实现但前端未封装
+
+| # | 后端接口 | 说明 | 优先级 |
+|---|---------|------|--------|
+| 1 | `POST /api/order/create` | 创建订单 | 高 |
+| 2 | `GET /api/order/list` | 订单列表 | 高 |
+| 3 | `GET /api/order/detail/:id` | 订单详情 | 高 |
+
+### 4.4 后台管理接口（前端暂不需要）
+
+| 路径前缀 | 说明 |
+|---------|------|
+| `/api/points/prize/*` | 奖品 CRUD，供管理后台使用 |
+
+---
+
+## 5. 后台管理系统规划（admin）
+
+利用 monorepo 架构，在同一仓库中新增管理后台应用 `apps/admin/`，共享后端 API。
+
+### 5.1 技术选型
+
+| 分类 | 技术 |
+|------|------|
+| 框架 | Next.js 14 (App Router) |
+| UI 库 | Ant Design 5 |
+| 状态/请求 | TanStack Query |
+| 样式 | CSS Modules / TailwindCSS |
+| 图表 | Ant Design Charts |
+| 共享 | 复用 `apps/api` 全部接口 |
+
+### 5.2 项目结构更新
+
+```
+OrderFoodApp/
+├── apps/
+│   ├── mobile/          # 移动端
+│   ├── api/             # NestJS 后端
+│   └── admin/           # 管理后台（新增）
+│       ├── app/         # Next.js App Router
+│       ├── components/  # 业务组件
+│       ├── lib/         # 工具、API 封装
 │       └── package.json
-├── package.json                # Root package.json (workspaces)
-├── pnpm-workspace.yaml         # pnpm workspaces 配置
-├── tsconfig.json
-└── README.md
 ```
 
-## 2. API 接口分析
+### 5.3 功能模块
 
-根据前端代码分析，后端需要实现以下 API 接口：
+| 模块 | 功能 | 依赖后端接口 |
+|------|------|-------------|
+| 仪表盘 | 订单统计、用户增长、销售额 | 新增聚合接口 |
+| 菜单管理 | 菜品分类 CRUD、菜品 CRUD | `menu/*` + 新增分类管理 |
+| 奖品管理 | 抽奖奖品 CRUD、启用/禁用 | `points/prize/*`（已有） |
+| 积分商城 | 商品 CRUD、库存管理 | 新增 `commodity/*` |
+| 用户管理 | 用户列表、余额调整、冻结 | 新增 `users/list`、`users/:id` |
+| 订单管理 | 订单列表、详情、状态流转 | `order/*` + 新增状态更新 |
+| 优惠券 | 优惠券创建、发放、核销 | 新增 `coupon/*` CRUD |
+| 充值配置 | 充值金额档位、赠送比例 | `money/*` + 新增 CRUD |
+| 系统设置 | 轮播图、公告、基本配置 | 新增 `settings/*` |
 
-### 2.1 认证模块 (`/api/users`, `/api/auth`)
+### 5.4 后端需补充的接口
 
-| 方法 | 路径 | 描述 | 请求体 | 响应体 |
-|------|------|------|--------|--------|
-| POST | `/api/users/login` | 用户登录 | `{ phone, password }` | `{ code, token, user }` |
-| POST | `/api/users/register` | 用户注册 | `{ phone, password, username }` | `{ code, token, user }` |
-| POST | `/api/auth/logout` | 退出登录 | - | `{ message }` |
-| POST | `/api/auth/refresh-token` | 刷新Token | `{ refreshToken }` | `{ token, refreshToken }` |
-| GET | `/api/auth/verify` | 验证Token | - | `{ valid }` |
+| 模块 | 需新增接口 | 说明 |
+|------|-----------|------|
+| 认证 | `POST /api/auth/admin-login` | 管理员独立登录（或登录后返回角色） |
+| 用户 | `GET /api/users/list` | 用户列表（分页、筛选） |
+| 用户 | `GET /api/users/:id` | 用户详情 |
+| 用户 | `PUT /api/users/:id/balance` | 调整用户余额 |
+| 订单 | `PUT /api/order/:id/status` | 修改订单状态 |
+| 菜单 | `POST /api/menu/category` | 创建分类 |
+| 菜单 | `PUT /api/menu/category/:id` | 更新分类 |
+| 菜单 | `DELETE /api/menu/category/:id` | 删除分类 |
+| 积分商城 | `POST /api/commodity` | 创建商品 |
+| 积分商城 | `PUT /api/commodity/:id` | 更新商品 |
+| 积分商城 | `DELETE /api/commodity/:id` | 删除商品 |
+| 优惠券 | `POST /api/coupon` | 创建优惠券 |
+| 优惠券 | `PUT /api/coupon/:id` | 更新优惠券 |
+| 优惠券 | `DELETE /api/coupon/:id` | 删除优惠券 |
+| 充值 | `POST /api/money` | 创建充值档位 |
+| 充值 | `PUT /api/money/:id` | 更新充值档位 |
+| 充值 | `DELETE /api/money/:id` | 删除充值档位 |
+| 统计 | `GET /api/dashboard/stats` | 仪表盘聚合数据 |
 
-### 2.2 用户模块 (`/api/users`)
+### 5.5 权限控制
 
-| 方法 | 路径 | 描述 | 请求体 | 响应体 |
-|------|------|------|--------|--------|
-| GET | `/api/users/getUserInfo` | 获取用户信息 | - | `{ code, data: User }` |
-| PUT | `/api/users/update` | 更新用户信息 | `{ username?, avatar?, gender?, birthday? }` | `{ code, data: User }` |
-| POST | `/api/users/rechargeAndDeduct` | 余额充值/扣除 | `{ balance, giveBalance, isRecharge }` | `{ code, data: User }` |
-| GET | `/api/users/getRechargeRecord` | 获取充值记录 | - | `{ code, data: TopUpRecord[] }` |
-| GET | `/api/users/getCheckInStatus` | 获取签到状态 | - | `{ code, data }` |
-| POST | `/api/users/checkIn` | 签到 | - | `{ code, data }` |
+- 用户表增加 `role` 字段：`user`（默认）/ `admin`
+- JWT payload 携带 `role`
+- 新增 `AdminGuard`：验证 `role === 'admin'`，否则返回 403
+- 管理后台路由统一加 `@UseGuards(JwtAuthGuard, AdminGuard)`
 
-### 2.3 菜单/菜品模块 (`/api/menu`)
+### 5.6 实施优先级
 
-| 方法 | 路径 | 描述 | 请求体 | 响应体 |
-|------|------|------|--------|--------|
-| GET | `/api/menu/getMenuList/:id?` | 获取菜单列表 | - | `{ code, data: CategoryData[] }` |
-| POST | `/api/menu/createFood` | 创建菜品 | `{ classifyId, foodName, foodPrice, foodImage }` | `{ code, data }` |
+| 阶段 | 内容 | 预计工作量 |
+|------|------|-----------|
+| Phase 1 | 后端：role 字段 + AdminGuard + 用户列表/详情 | 1 天 |
+| Phase 2 | 后端：菜单分类 CRUD + 订单状态更新 | 1 天 |
+| Phase 3 | 后端：优惠券 CRUD + 积分商品 CRUD + 充值档位 CRUD | 1 天 |
+| Phase 4 | 前端 admin：脚手架 + 登录 + 布局框架 | 1 天 |
+| Phase 5 | 前端 admin：菜单管理 + 奖品管理 + 订单管理 | 2 天 |
+| Phase 6 | 前端 admin：用户管理 + 优惠券 + 积分商城 + 仪表盘 | 2 天 |
 
-### 2.4 文件上传模块 (`/api/upload`)
+---
 
-| 方法 | 路径 | 描述 | 请求体 | 响应体 |
-|------|------|------|--------|--------|
-| POST | `/api/upload/uploadImg` | 上传图片 | `FormData { file }` | `{ code, data: { url } }` |
-
-### 2.5 优惠券模块 (`/api/coupon`)
-
-| 方法 | 路径 | 描述 | 请求体 | 响应体 |
-|------|------|------|--------|--------|
-| POST | `/api/coupon/getCouponList` | 获取优惠券列表 | `{ isExpired? }` | `{ code, data: Coupon[] }` |
-
-### 2.6 充值金额模块 (`/api/money`)
-
-| 方法 | 路径 | 描述 | 请求体 | 响应体 |
-|------|------|------|--------|--------|
-| GET | `/api/money/getMoneyList` | 获取充值选项 | - | `{ code, data: MoneyOption[] }` |
-
-### 2.7 积分/抽奖模块 (`/api/points`)
-
-| 方法 | 路径 | 描述 | 请求体 | 响应体 |
-|------|------|------|--------|--------|
-| GET | `/api/points/getLuckyRollData` | 获取抽奖数据 | - | `{ code, data: { prizeList, userIntegral, luckyDrawCount } }` |
-| POST | `/api/points/exchangePrize` | 兑换奖品(单抽) | `{ prizeId, costIntegral }` | `{ code, data }` |
-| POST | `/api/points/exchangeMultiPrize` | 十连抽 | `{ prizeIds, costIntegral }` | `{ code, data }` |
-| GET | `/api/points/getWinningRecords` | 获取中奖记录 | `{ isBigPrize? }` | `{ code, data: WinningInfo[] }` |
-| GET | `/api/points/getCommodityList` | 获取积分商城商品 | - | `{ code, data: Commodity[] }` |
-| GET | `/api/points/getPointsList` | 获取积分收支记录 | `{ page, limit }` | `{ code, data: PointRecord[] }` |
-
-## 3. 数据库设计 (Prisma Schema)
-
-```prisma
-// 用户模型
-model User {
-  id        String   @id @default(cuid())
-  phone     String   @unique
-  username  String
-  password  String
-  avatar    String?
-  gender    Int      @default(2) // 0: 男, 1: 女, 2: 保密
-  birthday  DateTime?
-  balance   Float    @default(0)
-  integral  Int      @default(0) // 积分
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // 关联
-  topUpRecords    TopUpRecord[]
-  pointRecords    PointRecord[]
-  lotteryRecords  LotteryRecord[]
-  coupons         UserCoupon[]
-  orders          Order[]
-  checkInRecords  CheckInRecord[]
-}
-
-// 充值记录
-model TopUpRecord {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  balance     Float    // 充值金额
-  giveBalance Float    @default(0) // 赠送金额
-  totalBalance Float  // 充值后余额
-  createdAt   DateTime @default(now())
-}
-
-// 充值选项配置
-model MoneyOption {
-  id        String  @id @default(cuid())
-  money     Float   // 充值金额
-  giveMoney Float   @default(0) // 赠送金额
-  sortOrder Int     @default(0)
-  isActive  Boolean @default(true)
-}
-
-// 菜品分类
-model FoodCategory {
-  id           String   @id @default(cuid())
-  classifyName String
-  icon         String?
-  sortOrder    Int      @default(0)
-  foods        Food[]
-}
-
-// 菜品
-model Food {
-  id           String   @id @default(cuid())
-  classifyId   String
-  category     FoodCategory @relation(fields: [classifyId], references: [id])
-  foodName     String
-  foodImage    String?
-  foodPrice    Float
-  sortOrder    Int      @default(0)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-// 抽奖奖品配置
-model LotteryPrize {
-  id             String   @id @default(cuid())
-  prizeName      String
-  prizeImage     String
-  prizeIntegral  Int      @default(0) // 0表示实物大奖，>0表示积分
-  prizeValue     Float?   // 奖品价值
-  stock          Int      @default(0) // 库存
-  sortOrder      Int      @default(0)
-  isActive       Boolean  @default(true)
-  lotteryRecords LotteryRecord[]
-}
-
-// 抽奖记录
-model LotteryRecord {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  prizeId    String
-  prize      LotteryPrize @relation(fields: [prizeId], references: [id])
-  costIntegral Int    // 消耗积分
-  createdAt  DateTime @default(now())
-}
-
-// 积分商城商品
-model Commodity {
-  id                 String   @id @default(cuid())
-  commodityName      String
-  commodityImage     String
-  commodityIntegral  Int      // 所需积分
-  stock              Int      @default(0)
-  sortOrder          Int      @default(0)
-  isActive           Boolean  @default(true)
-  createdAt          DateTime @default(now())
-}
-
-// 积分收支记录
-model PointRecord {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  integral  Int      // 正数表示收入，负数表示支出
-  isGet     Boolean  // true: 收入, false: 支出
-  remark    String
-  createdAt DateTime @default(now())
-}
-
-// 优惠券
-model Coupon {
-  id              String   @id @default(cuid())
-  couponName      String
-  couponAmount    Float    // 优惠券金额
-  consumeMoney    Float    // 使用门槛
-  couponUseTime   DateTime // 有效期
-  totalStock      Int      @default(0)
-  remainStock     Int      @default(0)
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  userCoupons     UserCoupon[]
-}
-
-// 用户优惠券
-model UserCoupon {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  couponId  String
-  coupon    Coupon   @relation(fields: [couponId], references: [id])
-  status    String   @default("unused") // unused: 未使用, used: 已使用
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
-}
-
-// 签到记录
-model CheckInRecord {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  integral  Int      @default(0) // 签到获得的积分
-  createdAt DateTime @default(now())
-
-  @@unique([userId, createdAt(sort: DESC)])
-}
-
-// 订单
-model Order {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  orderType   String   // dine-in: 堂食, takeout: 外卖
-  status      String   @default("pending") // pending, paid, completed, cancelled
-  totalAmount Float
-  payAmount   Float    // 实际支付金额
-  address     String?  // 外卖地址
-  peopleCount Int?     // 就餐人数
-  remark      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orderItems  OrderItem[]
-}
-
-// 订单明细
-model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id])
-  foodId    String
-  foodName  String
-  foodPrice Float
-  quantity  Int
-  subtotal  Float
-}
-```
-
-## 4. 技术栈
+## 6. 技术栈
 
 ### 后端
 - **框架**: NestJS 10.x
 - **ORM**: Prisma 5.x
 - **数据库**: PostgreSQL 15+
-- **认证**: JWT (jsonwebtoken / @nestjs/jwt)
+- **认证**: JWT
 - **密码加密**: bcrypt
-- **文件上传**: @nestjs/platform-express (multer)
-- **验证**: class-validator, class-transformer
-- **文档**: @nestjs/swagger
+- **文件上传**: multer
 
 ### Monorepo 工具
 - **包管理**: pnpm
 - **Workspaces**: pnpm-workspace.yaml
-
-## 5. 模块依赖关系
-
-```mermaid
-graph TD
-    A[AppModule] --> B[AuthModule]
-    A --> C[UserModule]
-    A --> D[MenuModule]
-    A --> E[OrderModule]
-    A --> F[PointsModule]
-    A --> G[CouponModule]
-    A --> H[MoneyModule]
-    A --> I[UploadModule]
-    
-    B --> C
-    D --> B
-    E --> B
-    E --> C
-    E --> D
-    F --> B
-    F --> C
-    G --> B
-    G --> C
-    H --> B
-    H --> C
-```
-
-## 6. 认证流程
-
-```mermaid
-sequenceDiagram
-    participant Client as 客户端
-    participant API as API Gateway
-    participant Auth as Auth Module
-    participant DB as Database
-    
-    Client->>API: POST /api/users/login {phone, password}
-    API->>Auth: 验证凭据
-    Auth->>DB: 查询用户
-    DB-->>Auth: 用户数据
-    Auth->>Auth: 验证密码
-    Auth->>Auth: 生成 JWT Token
-    Auth-->>API: {token, user}
-    API-->>Client: {code: 0, token, user}
-    
-    Note over Client,DB: 后续请求携带 Token
-    
-    Client->>API: GET /api/users/getUserInfo
-    API->>Auth: 验证 JWT
-    Auth-->>API: 用户信息
-    API-->>Client: {code: 0, data: user}
-```
-
-## 7. 实施步骤
-
-### Phase 1: 基础设施搭建
-1. 初始化 monorepo 项目结构
-2. 配置 pnpm workspaces
-3. 创建 NestJS 应用
-4. 配置 Prisma 和 PostgreSQL
-5. 实现数据库迁移脚本
-
-### Phase 2: 核心模块开发
-1. 用户认证模块 (登录、注册、JWT)
-2. 用户管理模块 (CRUD、充值、签到)
-3. 文件上传模块
-
-### Phase 3: 业务模块开发
-1. 菜单/菜品模块
-2. 订单模块
-3. 积分/抽奖模块
-4. 优惠券模块
-5. 充值金额模块
-
-### Phase 4: 集成与测试
-1. 前后端联调
-2. 编写单元测试
-3. 编写 E2E 测试
-4. API 文档生成
-
-## 8. 环境变量配置
-
-```env
-# .env
-DATABASE_URL="postgresql://user:password@localhost:5432/orderfood?schema=public"
-JWT_SECRET="your-secret-key"
-JWT_EXPIRES_IN="7d"
-JWT_REFRESH_SECRET="your-refresh-secret"
-JWT_REFRESH_EXPIRES_IN="30d"
-UPLOAD_PATH="./uploads"
-MAX_FILE_SIZE=5242880 # 5MB
-```
-
-## 9. 注意事项
-
-1. **密码安全**: 使用 bcrypt 进行密码哈希，盐值 rounds = 10
-2. **Token 管理**: 实现 Token 刷新机制，支持 refresh token
-3. **文件上传**: 限制文件大小和类型，防止恶意上传
-4. **数据验证**: 使用 class-validator 进行请求体验证
-5. **错误处理**: 统一异常处理，返回标准格式响应
-6. **日志记录**: 记录关键操作日志，便于问题排查
-7. **并发控制**: 抽奖模块需要处理并发问题，防止超发

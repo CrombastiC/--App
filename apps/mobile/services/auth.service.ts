@@ -128,7 +128,7 @@ export const authService = {
    * @returns [error, response]
    */
   logout: () => {
-    return request.post<{ message: string }>('/api/auth/logout');
+    return request.post<{ message: string }>('/api/users/logout');
   },
 
   /**
@@ -138,7 +138,7 @@ export const authService = {
    */
   refreshToken: (refreshToken: string) => {
     return request.post<{ token: string; refreshToken: string }>(
-      '/api/auth/refresh-token',
+      '/api/users/refresh-token',
       { refreshToken }
     );
   },
@@ -148,7 +148,7 @@ export const authService = {
    * @returns [error, response]
    */
   verifyToken: () => {
-    return request.get<{ valid: boolean }>('/api/auth/verify');
+    return request.get<{ valid: boolean }>('/api/users/verify');
   },
 };
 

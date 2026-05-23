@@ -1,0 +1,21 @@
+{
+  "context": {
+    "project": "OrderFoodApp - 点餐系统 Monorepo，React Native (Expo) 前端 + NestJS 后端",
+    "language": "zh-CN",
+    "docsLocation": "CLAUDE.md"
+  },
+  "codingStyle": {
+    "language": "TypeScript",
+    "comments": "中文",
+    "componentNaming": "PascalCase",
+    "variableNaming": "camelCase",
+    "avoidAny": true,
+    "asyncStyle": "async/await",
+    "styles": "StyleSheet.create",
+    "listRendering": "FlatList"
+  },
+  "tools": {
+    "preferredShell": "bash",
+    "os": "win32"
+  }
+}
