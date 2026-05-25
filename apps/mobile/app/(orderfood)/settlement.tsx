@@ -1,5 +1,6 @@
 import { orderService } from '@/services/order.service';
 import { useCartStore } from '@/stores/cart-store';
+import { resolveImageUrl } from '@/utils/image';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -146,7 +147,7 @@ export default function SettlementScreen() {
                   <View style={styles.itemImage}>
                     {item.foodImage ? (
                       <Image
-                        source={{ uri: item.foodImage }}
+                        source={{ uri: resolveImageUrl(item.foodImage) }}
                         style={styles.foodImage}
                       />
                     ) : (

@@ -4,7 +4,7 @@
  */
 import { useRequest } from '@/hooks/use-request';
 import request from '@/request';
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
 
 // ==================== 定义数据类型 ====================
@@ -137,7 +137,7 @@ export function UserListComponent() {
     setUsers(data);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadUsers();
   }, []);
 

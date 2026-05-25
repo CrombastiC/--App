@@ -5,7 +5,7 @@
 import { tokenManager, userService } from '@/services';
 import { useLocationStore } from '@/stores/location-store';
 import { router, useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Image, ImageBackground, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Card, Icon, IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,7 +24,7 @@ export default function HomeScreen() {
   const locate = useLocationStore((s) => s.locate);
 
   // 初始化定位（首次进入 App 时）
-  React.useEffect(() => {
+  useEffect(() => {
     if (!initialized) {
       (async () => {
         const cached = await loadFromCache();
