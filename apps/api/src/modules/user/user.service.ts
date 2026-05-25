@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UpdateProfileDto, RechargeDto } from './dto/user.dto';
+import { UpdateProfileDto, RechargeDto, RedeemGiftCardDto } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -258,5 +258,64 @@ export class UserService {
     // 返回签到结果和连续签到天数
     const streak = await this.calculateStreak(userId);
     return { ...result, streak };
+  }
+
+  // 礼品卡兑换
+  async redeemGiftCard(userId: string, dto: RedeemGiftCardDto) {
+    const { code } = dto;
+
+    const giftCard = await this.prisma.giftCard.findUnique({
+      where: { code },
+    });
+
+    if (!giftCard) {
+      throw new BadRequestException('兑换码不存在');
+    }
+
+    if (giftCard.status === 'redeemed') {
+      throw new BadRequestException('该兑换码已被使用');
+    }
+
+    if (giftCard.status === 'expired') {
+      throw new BadRequestException('该兑换码已过期');
+    }
+
+    if (giftCard.expiresAt && new Date(giftCard.expiresAt) < new Date()) {
+      throw new BadRequestException('该兑换码已过期');
+    }
+
+    // 事务：更新礼品卡状态 → 增加余额 → 创建充值记录
+    const result = await this.prisma.$transaction(async (tx) => {
+      // 更新礼品卡状态
+      await tx.giftCard.update({
+        where: { id: giftCard.id },
+        data: {
+          status: 'redeemed',
+          redeemedBy: userId,
+          redeemedAt: new Date(),
+        },
+      });
+
+      // 增加用户余额
+      const user = await tx.user.update({
+        where: { id: userId },
+        data: { balance: { increment: giftCard.amount } },
+        select: { balance: true },
+      });
+
+      // 创建充值记录（标记来源为礼品卡）
+      await tx.topUpRecord.create({
+        data: {
+          userId,
+          balance: giftCard.amount,
+          giveBalance: 0,
+          totalBalance: user.balance,
+        },
+      });
+
+      return { amount: giftCard.amount, newBalance: user.balance };
+    });
+
+    return result;
   }
 }

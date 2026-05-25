@@ -234,3 +234,17 @@ model OrderItem {
 
   @@map("order_items")
 }
+
+// 礼品卡
+model GiftCard {
+  id         String    @id @default(cuid())
+  code       String    @unique           // 兑换码
+  amount     Float                         // 面额
+  status     String    @default("active") // active / redeemed / expired
+  redeemedBy String?                      // 兑换用户 ID
+  redeemedAt DateTime?                    // 兑换时间
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?                    // 过期时间
+
+  @@map("gift_cards")
+}

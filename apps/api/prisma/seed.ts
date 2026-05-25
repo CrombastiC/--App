@@ -145,6 +145,27 @@ async function main() {
   }
 
   console.log(`\n🎉 成功初始化 ${prizeData.length} 个奖品！`);
+
+  // 4. 初始化礼品卡
+  const existingCardCount = await prisma.giftCard.count();
+  if (existingCardCount > 0) {
+    console.log(`⚠️  已存在 ${existingCardCount} 张礼品卡，跳过初始化`);
+    return;
+  }
+
+  const giftCardData = [
+    { code: 'GIFT-100-ABCD', amount: 100, expiresAt: new Date('2027-12-31') },
+    { code: 'GIFT-50-EFGH', amount: 50, expiresAt: new Date('2027-12-31') },
+    { code: 'GIFT-200-IJKL', amount: 200, expiresAt: new Date('2027-12-31') },
+    { code: 'GIFT-500-MNOP', amount: 500, expiresAt: new Date('2027-12-31') },
+  ];
+
+  for (const card of giftCardData) {
+    await prisma.giftCard.create({ data: card });
+    console.log(`  ✅ 礼品卡: ${card.code} (面额: ¥${card.amount})`);
+  }
+
+  console.log(`\n🎉 成功初始化 ${giftCardData.length} 张礼品卡！`);
 }
 
 main()

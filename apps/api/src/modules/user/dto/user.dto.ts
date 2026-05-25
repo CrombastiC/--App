@@ -52,3 +52,9 @@ export class ChangePasswordDto {
   @IsString()
   newPassword: string;
 }
+
+export class RedeemGiftCardDto {
+  @ApiProperty({ description: '礼品卡兑换码' })
+  @IsString()
+  code: string;
+}
