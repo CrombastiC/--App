@@ -62,15 +62,14 @@ export default function TopUpScreen() {
         return;
       }
 
-      // 处理接口返回的数据
-      if (result && (result as any).data) {
-        const optionsData = (result as any).data;
+      // 拦截器已解包，result 直接就是选项数组
+      const optionsData = result as any;
+      if (Array.isArray(optionsData)) {
         setTopUpOptions(optionsData);
         // 默认选中第一个选项
         if (optionsData.length > 0) {
           setSelectedAmount(optionsData[0].moneyId);
         }
-        console.log('充值选项加载成功:', optionsData);
       }
     } catch (error) {
       console.error('Failed to load top-up options:', error);
@@ -458,15 +457,17 @@ export default function TopUpScreen() {
                   <View style={styles.recordItem}>
                     <View style={styles.recordLeft}>
                       <Text style={styles.recordTitle}>
-                        充值 {item.balance}元 {item.giveBalance > 0 ? `赠送${item.giveBalance}元` : ''}
+                        {item.giveBalance > 0
+                          ? `充值${item.balance}元 赠送${item.giveBalance}元`
+                          : `充值${item.balance}元`}
                       </Text>
                       <Text style={styles.recordSubtitle}>
                         充值后余额 ¥{item.totalBalance}
                       </Text>
                     </View>
                     <View style={styles.recordRight}>
-                      <Text style={styles.recordStatus}>
-                        充值成功
+                      <Text style={styles.recordAmount}>
+                        +¥{(item.balance + item.giveBalance).toFixed(2)}
                       </Text>
                       <Text style={styles.recordTime}>
                         {new Date(item.createdAt).toLocaleString('zh-CN', {
@@ -962,9 +963,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginLeft: 16,
   },
-  recordStatus: {
-    fontSize: 14,
-    color: '#333',
+  recordAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4ECDC4',
     marginBottom: 6,
   },
   recordTime: {

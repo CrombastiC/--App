@@ -28,6 +28,12 @@ export default function MemberLayout() {
           title: '充值成功',
         }}
       />
+      <Stack.Screen
+        name="gift-card"
+        options={{
+          title: '礼品卡兑换',
+        }}
+      />
     </Stack>
   );
 }

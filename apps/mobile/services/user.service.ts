@@ -171,6 +171,13 @@ export const userService = {
    */
   signIn: () => {
     return request.post('/api/user/checkIn');
+  },
+
+  /**
+   * 礼品卡兑换
+   */
+  redeemGiftCard: (code: string) => {
+    return request.post<{ amount: number; newBalance: number }>('/api/user/redeemGiftCard', { code });
   }
 
 };

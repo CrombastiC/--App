@@ -1,8 +1,9 @@
 import { orderService } from '@/services/order.service';
+import { userService } from '@/services';
 import { useCartStore } from '@/stores/cart-store';
 import { resolveImageUrl } from '@/utils/image';
 import { router, Stack } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
@@ -34,6 +35,18 @@ export default function SettlementScreen() {
 
   const [loading, setLoading] = useState(false);
   const [showItems, setShowItems] = useState(true);
+  const [balance, setBalance] = useState(0);
+
+  useEffect(() => {
+    loadBalance();
+  }, []);
+
+  const loadBalance = async () => {
+    const [error, result] = await userService.getProfile();
+    if (!error && result) {
+      setBalance((result as any).balance || 0);
+    }
+  };
 
   const totalCount = getTotalCount();
   const totalPrice = getTotalPrice();
@@ -58,9 +71,32 @@ export default function SettlementScreen() {
     );
   }
 
+  const insufficientBalance = balance < payAmount;
+
   const handleSubmit = async () => {
+    if (insufficientBalance) {
+      Alert.alert('余额不足', `当前余额 ¥${balance.toFixed(2)}，请先充值`, [
+        { text: '去充值', onPress: () => router.push('/(member)/top-up') },
+        { text: '取消', style: 'cancel' },
+      ]);
+      return;
+    }
+
     try {
       setLoading(true);
+
+      // 先扣减余额
+      const [deductError] = await userService.rechargeBalance(payAmount, 0, false);
+      if (deductError) {
+        Alert.alert('扣款失败', '余额不足，请先充值', [
+          { text: '去充值', onPress: () => router.push('/(member)/top-up') },
+          { text: '取消', style: 'cancel' },
+        ]);
+        setLoading(false);
+        return;
+      }
+
+      // 扣款成功后创建订单
       const [error, data] = await orderService.createOrder({
         orderType,
         totalAmount: totalPrice,
@@ -77,7 +113,7 @@ export default function SettlementScreen() {
       });
 
       if (error || !data) {
-        Alert.alert('下单失败', '请稍后重试');
+        Alert.alert('下单失败', '已扣款但订单创建失败，请联系客服');
         return;
       }
 
@@ -238,6 +274,40 @@ export default function SettlementScreen() {
             <Text style={styles.totalLabel}>应付金额</Text>
             <Text style={styles.totalValue}>¥{payAmount.toFixed(2)}</Text>
           </View>
+        </View>
+
+        {/* 支付方式 */}
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Icon source="wallet" size={20} color="#FF7214" />
+            <Text style={styles.cellLabel}>支付方式</Text>
+          </View>
+          <View style={[styles.rowBetween, { marginTop: 12 }]}>
+            <View>
+              <Text style={styles.payMethodLabel}>账户余额</Text>
+              <Text style={[
+                styles.payMethodBalance,
+                insufficientBalance && { color: '#D32F2F' },
+              ]}>
+                ¥{balance.toFixed(2)}
+              </Text>
+            </View>
+            {insufficientBalance ? (
+              <TouchableOpacity onPress={() => router.push('/(member)/top-up')}>
+                <Text style={styles.topUpLink}>去充值</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.payCheckmark}>
+                <Icon source="check-circle" size={22} color="#FF7214" />
+              </View>
+            )}
+          </View>
+          {insufficientBalance && (
+            <View style={styles.insufficientTip}>
+              <Icon source="alert-circle-outline" size={14} color="#D32F2F" />
+              <Text style={styles.insufficientText}>余额不足，请先充值</Text>
+            </View>
+          )}
         </View>
 
         {/* 底部留白 */}
@@ -515,5 +585,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
+  },
+  payMethodLabel: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 4,
+  },
+  payMethodBalance: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FF7214',
+  },
+  topUpLink: {
+    fontSize: 14,
+    color: '#FF7214',
+    fontWeight: '500',
+  },
+  payCheckmark: {
+    padding: 4,
+  },
+  insufficientTip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 4,
+  },
+  insufficientText: {
+    fontSize: 13,
+    color: '#D32F2F',
   },
 });

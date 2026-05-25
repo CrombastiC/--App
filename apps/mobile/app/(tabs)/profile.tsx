@@ -43,6 +43,7 @@ const menuItems: MenuListItem[] = [
     key: 'gift-card',
     icon: 'gift-outline',
     label: '礼品卡',
+    onPress: () => router.push('/(member)/gift-card'),
   },
   {
     key: 'address',
