@@ -4,8 +4,9 @@
 
 import { getProductInfo } from '@/services/order.service';
 import { useCartStore } from '@/stores/cart-store';
+import { resolveImageUrl } from '@/utils/image';
 import { router, Stack, useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View, ViewToken } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -56,6 +57,22 @@ const categoryIcons: { [key: string]: string } = {
   '小炒': 'chili-hot',
 };
 
+/** 带加载失败回退的菜品图片组件 */
+function FoodImage({ uri }: { uri: string }) {
+  const [error, setError] = useState(false);
+  if (error) {
+    return <Icon source="food" size={60} color="#ddd" />;
+  }
+  return (
+    <Image
+      source={{ uri }}
+      style={styles.foodImageStyle}
+      resizeMode="cover"
+      onError={() => setError(true)}
+    />
+  );
+}
+
 export default function OrderScreen() {
   const [orderType, setOrderType] = useState<'dine-in' | 'takeout'>('dine-in');
   const [selectedCategory, setSelectedCategory] = useState('');//选择的分类ID
@@ -69,6 +86,8 @@ export default function OrderScreen() {
   const storeName = '中海大厦店';
   const distance = '1.2km';
   const flatListRef = useRef<FlatList>(null);
+  const categoryScrollRef = useRef<ScrollView>(null);
+  const categoryPositions = useRef<Record<string, number>>({});
   const isScrollingRef = useRef(false);
 
   const { setItems, setOrderType: setCartOrderType, setStoreName, setPeopleCount } = useCartStore();
@@ -101,9 +120,19 @@ export default function OrderScreen() {
           }));
           setCategories(categoryList);
 
-          // 处理商品数据并添加quantity字段
+          // 处理商品数据：每个分类前插入标题项
           const productList: ProductItem[] = [];
           categoryData.forEach(cat => {
+            // 插入分类标题
+            productList.push({
+              id: `title_${cat.classifyId}`,
+              classifyId: cat.classifyId,
+              foodName: cat.classifyName,
+              foodImage: '',
+              foodPrice: 0,
+              quantity: 0,
+              isTitle: true,
+            });
             cat.foods.forEach(food => {
               productList.push({
                 ...food,
@@ -195,20 +224,31 @@ export default function OrderScreen() {
     }
   };
 
-  // 监听可见项变化
+  // 监听右侧可见项变化，同步左侧分类高亮
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (isScrollingRef.current || viewableItems.length === 0) return;
 
-    // 获取第一个可见项的分类ID
-    const firstVisibleItem = viewableItems[0]?.item as ProductItem;
-    if (firstVisibleItem && firstVisibleItem.classifyId && !firstVisibleItem.isTitle) {
-      setSelectedCategory(firstVisibleItem.classifyId);
+    // 找到第一个非标题项的分类ID
+    for (const viewToken of viewableItems) {
+      const item = viewToken.item as ProductItem;
+      if (item.classifyId && !item.isTitle) {
+        setSelectedCategory(item.classifyId);
+        break;
+      }
     }
   }).current;
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 50,
   }).current;
+
+  // 左侧分类跟随选中项自动滚动
+  useEffect(() => {
+    const y = categoryPositions.current[selectedCategory];
+    if (y !== undefined && categoryScrollRef.current) {
+      categoryScrollRef.current.scrollTo({ y: Math.max(0, y - 80), animated: true });
+    }
+  }, [selectedCategory]);
 
   if (loading) {
     return (
@@ -297,10 +337,13 @@ export default function OrderScreen() {
       <View style={styles.contentContainer}>
         {/* 左侧：分类菜单 */}
         <View style={styles.categoryContainer}>
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView ref={categoryScrollRef} showsVerticalScrollIndicator={false}>
             {categories.map((category) => (
               <TouchableOpacity
                 key={category.classifyId}
+                onLayout={(e) => {
+                  categoryPositions.current[category.classifyId] = e.nativeEvent.layout.y;
+                }}
                 style={[
                   styles.categoryItem,
                   selectedCategory === category.classifyId && styles.categoryItemActive,
@@ -350,11 +393,7 @@ export default function OrderScreen() {
                   {/* 商品图片 */}
                   <View style={styles.productImage}>
                     {item.foodImage ? (
-                      <Image
-                        source={{ uri: item.foodImage }}
-                        style={styles.foodImageStyle}
-                        resizeMode="cover"
-                      />
+                      <FoodImage uri={resolveImageUrl(item.foodImage)} />
                     ) : (
                       <Icon source="food" size={60} color="#ddd" />
                     )}
