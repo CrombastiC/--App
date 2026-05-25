@@ -1,32 +1,38 @@
 # OrderFoodApp
 
-点餐系统 Monorepo，React Native (Expo) 前端 + NestJS 后端。
+点餐系统 Monorepo，React Native (Expo) 移动端 + NestJS 后端 + React 管理后台。
 
 ## 项目结构
 
 ```
 OrderFoodApp/
 ├── apps/
-│   ├── mobile/           # Expo React Native 前端
-│   └── api/              # NestJS + Prisma 后端
+│   ├── mobile/           # Expo React Native 移动端
+│   ├── api/              # NestJS + Prisma 后端
+│   └── admin/            # React + Ant Design 管理后台
 ├── packages/
 │   ├── common/           # 共享代码
 │   └── shared-types/     # 共享类型
+├── .claude/
+│   ├── design/           # 设计文档
+│   ├── rules/            # 编码规范
+│   └── skills/           # Claude Code skills
 ├── package.json          # pnpm workspaces
 └── pnpm-workspace.yaml
 ```
 
 ## 技术栈
 
-| | 前端 (mobile) | 后端 (api) |
-|---|---|---|
-| 框架 | Expo Router 6 | NestJS 10 |
-| 样式 | NativeWind (Tailwind) | - |
-| 状态 | Zustand | - |
-| 请求 | Axios 封装 | - |
-| ORM | - | Prisma 5 |
-| 数据库 | - | PostgreSQL |
-| 认证 | AsyncStorage + JWT | JWT + bcrypt |
+| | 移动端 (mobile) | 管理后台 (admin) | 后端 (api) |
+|---|---|---|---|
+| 框架 | Expo Router 6 | React 18 + Vite | NestJS 10 |
+| UI 库 | React Native Paper | Ant Design 5 | - |
+| 样式 | StyleSheet | CSS Modules | - |
+| 状态 | Zustand | - | - |
+| 请求 | Axios 封装 | Axios 封装 | - |
+| ORM | - | - | Prisma 5 |
+| 数据库 | - | - | PostgreSQL |
+| 认证 | AsyncStorage + JWT | localStorage + JWT | JWT + bcrypt |
 
 ## 常用命令
 
@@ -34,6 +40,7 @@ OrderFoodApp/
 pnpm install          # 安装依赖
 pnpm dev:api          # 后端开发 http://localhost:5000
 pnpm dev:mobile       # 前端 Expo Go
+pnpm dev:admin        # 管理后台 http://localhost:5173
 pnpm dev              # 同 dev:api
 pnpm prisma:migrate   # 数据库迁移
 pnpm prisma:studio    # Prisma Studio
@@ -54,7 +61,17 @@ pnpm prisma:seed      # 种子数据
 - 废弃 API 及时提示替代方案
 - 示例文件放在 `examples/` 目录
 
-## 前端架构
+## 移动端架构
+
+### 底部 Tab
+
+5 个底部 Tab：首页、点餐、购物车、消息、我的。
+- `orders`（订单）从"我的"页面进入，不在底部显示
+- 购物车数据通过 Zustand `cart-store` 管理，点餐页添加商品后在购物车 Tab 查看
+
+### 我的页面菜单
+
+我的订单、会员权益、任务中心、礼品卡、地址管理、发票管理、联系客服
 
 ### 网络请求
 
@@ -110,7 +127,15 @@ ToastManager.show('成功', { position: 'top', containerStyle: { backgroundColor
 `apps/api/src/common/`：
 - `interceptors/` — 统一响应拦截器（返回 `{ code, data, message }`）
 - `filters/` — 全局异常过滤器
-- `decorators/` — 自定义装饰器（如 `@CurrentUser`）
+- `decorators/` — 自定义装饰器（`@CurrentUser`、`@Roles`、`@Public`）
+- `guards/` — 权限守卫（`AdminGuard` 校验管理员角色）
+
+### RBAC 权限
+
+- User 模型新增 `role` 字段（`user` / `admin`）
+- `@Public()` 标记公开接口，无需认证
+- `@Roles('admin')` + `AdminGuard` 限制仅管理员访问
+- 种子数据默认管理员：`13800000000` / `admin123`
 
 ### 数据库
 
