@@ -24,41 +24,40 @@ interface UserInfo {
 // 功能菜单配置
 const menuItems: MenuListItem[] = [
   {
+    key: 'orders',
+    icon: 'clipboard-text-outline',
+    label: '我的订单',
+    onPress: () => router.push('/orders'),
+  },
+  {
     key: 'member-benefits',
-    icon: 'map-marker',
+    icon: 'crown-outline',
     label: '会员权益',
   },
   {
-    key: 'task-center-1',
+    key: 'task-center',
     icon: 'checkbox-marked-circle-outline',
     label: '任务中心',
   },
   {
-    key: 'create-order',
-    icon: 'checkbox-marked-circle-outline',
-    label: '创建订单',
-    onPress: () => router.push('/user/createOrder'),
-  },
-  {
-    key: 'task-center-2',
+    key: 'gift-card',
     icon: 'gift-outline',
-    label: '幸运抽奖',
-    onPress: () => router.push('/(points)/luckyRoll'),
+    label: '礼品卡',
   },
   {
-    key: 'task-center-3',
-    icon: 'checkbox-marked-circle-outline',
-    label: '任务中心',
+    key: 'address',
+    icon: 'map-marker-outline',
+    label: '地址管理',
   },
   {
-    key: 'task-center-4',
-    icon: 'checkbox-marked-circle-outline',
-    label: '任务中心',
+    key: 'invoice',
+    icon: 'receipt',
+    label: '发票管理',
   },
   {
-    key: 'task-center-5',
-    icon: 'checkbox-marked-circle-outline',
-    label: '任务中心',
+    key: 'customer-service',
+    icon: 'headphones',
+    label: '联系客服',
   },
 ];
 
