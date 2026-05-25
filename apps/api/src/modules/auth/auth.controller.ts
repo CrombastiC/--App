@@ -1,8 +1,7 @@
-import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -32,18 +31,17 @@ export class AuthController {
     return this.authService.refreshToken(refreshToken);
   }
 
-  @Public()
+  @ApiBearerAuth('JWT-auth')
   @Get('verify')
   @ApiOperation({ summary: '验证 Token' })
-  @UseGuards(JwtAuthGuard)
   async verifyToken(@CurrentUser('id') userId: string) {
     return this.authService.verifyToken(userId);
   }
 
-  @Public()
+  @ApiBearerAuth('JWT-auth')
   @Post('logout')
   @ApiOperation({ summary: '退出登录' })
-  async logout(@CurrentUser('id') userId: string) {
+  async logout() {
     return { message: '退出登录成功' };
   }
 }

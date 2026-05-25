@@ -33,7 +33,7 @@ export class AuthService {
     }
 
     // 生成 Token
-    const tokens = this.generateTokens(user.id, user.phone);
+    const tokens = this.generateTokens(user.id, user.phone, user.role);
 
     // 返回用户信息（排除密码）
     const { password: _, ...userInfo } = user;
@@ -69,7 +69,7 @@ export class AuthService {
     });
 
     // 生成 Token
-    const tokens = this.generateTokens(user.id, user.phone);
+    const tokens = this.generateTokens(user.id, user.phone, user.role);
 
     // 返回用户信息（排除密码）
     const { password: _, ...userInfo } = user;
@@ -80,8 +80,8 @@ export class AuthService {
   }
 
   // 生成 JWT Token
-  private generateTokens(userId: string, phone: string) {
-    const payload = { sub: userId, phone };
+  private generateTokens(userId: string, phone: string, role: string = 'user') {
+    const payload = { sub: userId, phone, role };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET'),
@@ -114,7 +114,7 @@ export class AuthService {
         throw new UnauthorizedException('用户不存在');
       }
 
-      return this.generateTokens(user.id, user.phone);
+      return this.generateTokens(user.id, user.phone, user.role);
     } catch (error) {
       throw new UnauthorizedException('Token 无效或已过期');
     }

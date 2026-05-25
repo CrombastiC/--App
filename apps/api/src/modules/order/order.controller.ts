@@ -1,12 +1,10 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OrderService } from './order.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('订单')
 @Controller('order')
-@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}

@@ -5,6 +5,7 @@
   "description": "OrderFood App Monorepo with React Native and NestJS",
   "scripts": {
     "dev:mobile": "pnpm --filter mobile start",
+    "dev:admin": "pnpm --filter @orderfood/admin dev",
     "dev:api": "pnpm --filter api start:dev",
     "dev": "pnpm --filter api start:dev",
     "build:mobile": "pnpm --filter mobile build",
@@ -14,6 +15,7 @@
     "test": "pnpm -r test",
     "prisma:generate": "pnpm --filter api prisma generate",
     "prisma:migrate": "pnpm --filter api prisma migrate dev",
+    "prisma:seed": "pnpm --filter api prisma:seed",
     "prisma:studio": "pnpm --filter api prisma studio",
     "runall": "pnpm dev:mobile & pnpm dev:api"
   },

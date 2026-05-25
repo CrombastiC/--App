@@ -34,8 +34,7 @@ export class UploadService {
     // 移动文件到上传目录
     fs.writeFileSync(filepath, file.buffer);
 
-    // 返回访问 URL
-    const baseUrl = this.configService.get('BASE_URL', 'http://localhost:5000');
-    return { url: `${baseUrl}/uploads/${filename}` };
+    // 返回相对路径，前端自行拼接 base URL
+    return { url: `/uploads/${filename}` };
   }
 }

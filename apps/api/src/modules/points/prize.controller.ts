@@ -11,7 +11,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PointsService } from './points.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AdminGuard } from '../../common/guards/admin.guard';
 
 export interface CreatePrizeDto {
   prizeName: string;
@@ -34,7 +35,8 @@ export interface UpdatePrizeDto {
 
 @ApiTags('奖品管理')
 @Controller('points/prize')
-@UseGuards(JwtAuthGuard)
+@UseGuards(AdminGuard)
+@Roles('admin')
 @ApiBearerAuth('JWT-auth')
 export class PrizeController {
   constructor(private readonly pointsService: PointsService) {}

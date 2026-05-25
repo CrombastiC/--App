@@ -1,12 +1,10 @@
-import { Controller, Post, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CouponService } from './coupon.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('优惠券')
 @Controller('coupon')
-@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class CouponController {
   constructor(private readonly couponService: CouponService) {}

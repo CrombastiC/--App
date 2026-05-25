@@ -1,12 +1,10 @@
-import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PointsService } from './points.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('积分')
 @Controller('points')
-@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class PointsController {
   constructor(private readonly pointsService: PointsService) {}

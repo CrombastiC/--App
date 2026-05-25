@@ -1,11 +1,10 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 // 九宫格奖品配置
-// prizeIntegral: 0 = 实物大奖, > 0 = 积分奖励
 const prizeData = [
-  // ---- 大奖（prizeIntegral = 0）----
   {
     prizeName: 'iPhone 16 Pro',
     prizeImage: 'https://img.icons8.com/3d-fluency/94/iphone-16-pro.png',
@@ -22,7 +21,6 @@ const prizeData = [
     stock: 2,
     sortOrder: 4,
   },
-  // ---- 积分奖励（prizeIntegral > 0）----
   {
     prizeName: '积分 ×50',
     prizeImage: 'https://img.icons8.com/3d-fluency/94/coins.png',
@@ -81,14 +79,63 @@ const prizeData = [
   },
 ];
 
-async function main() {
-  console.log('🌱 开始初始化九宫格奖品数据...');
+// 菜品分类
+const categoryData = [
+  { classifyName: '热销推荐', icon: 'fire', sortOrder: 0 },
+  { classifyName: '主食', icon: 'rice', sortOrder: 1 },
+  { classifyName: '炒菜', icon: 'pot', sortOrder: 2 },
+  { classifyName: '汤品', icon: 'soup', sortOrder: 3 },
+  { classifyName: '饮品', icon: 'cup', sortOrder: 4 },
+  { classifyName: '甜品', icon: 'cake', sortOrder: 5 },
+];
 
-  // 清空旧数据（可选，保留抽奖记录则不删）
-  const existingCount = await prisma.lotteryPrize.count();
-  if (existingCount > 0) {
-    console.log(`⚠️  已存在 ${existingCount} 个奖品，跳过初始化`);
-    console.log('💡 如需重新初始化，请先清空 lottery_prizes 表');
+// 管理员账号
+const ADMIN_PHONE = '13800000000';
+const ADMIN_PASSWORD = 'admin123';
+
+async function main() {
+  // 1. 初始化管理员
+  const existingAdmin = await prisma.user.findUnique({
+    where: { phone: ADMIN_PHONE },
+  });
+
+  if (!existingAdmin) {
+    const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
+    await prisma.user.create({
+      data: {
+        phone: ADMIN_PHONE,
+        username: '管理员',
+        password: hashedPassword,
+        role: 'admin',
+      },
+    });
+    console.log(`✅ 管理员账号创建成功: ${ADMIN_PHONE} / ${ADMIN_PASSWORD}`);
+  } else if (existingAdmin.role !== 'admin') {
+    await prisma.user.update({
+      where: { id: existingAdmin.id },
+      data: { role: 'admin' },
+    });
+    console.log(`✅ 已将 ${ADMIN_PHONE} 升级为管理员`);
+  } else {
+    console.log(`⚠️  管理员账号已存在: ${ADMIN_PHONE}`);
+  }
+
+  // 2. 初始化菜品分类
+  const existingCatCount = await prisma.foodCategory.count();
+  if (existingCatCount === 0) {
+    for (const cat of categoryData) {
+      await prisma.foodCategory.create({ data: cat });
+      console.log(`  ✅ 分类: ${cat.classifyName}`);
+    }
+    console.log(`🎉 成功初始化 ${categoryData.length} 个菜品分类`);
+  } else {
+    console.log(`⚠️  已存在 ${existingCatCount} 个分类，跳过初始化`);
+  }
+
+  // 3. 初始化奖品
+  const existingPrizeCount = await prisma.lotteryPrize.count();
+  if (existingPrizeCount > 0) {
+    console.log(`⚠️  已存在 ${existingPrizeCount} 个奖品，跳过初始化`);
     return;
   }
 
@@ -98,8 +145,6 @@ async function main() {
   }
 
   console.log(`\n🎉 成功初始化 ${prizeData.length} 个奖品！`);
-  console.log(`  📦 大奖: ${prizeData.filter(p => p.prizeIntegral === 0).length} 个`);
-  console.log(`  💰 积分奖励: ${prizeData.filter(p => p.prizeIntegral > 0).length} 个`);
 }
 
 main()
