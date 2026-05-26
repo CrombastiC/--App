@@ -17,11 +17,14 @@
     "prisma:migrate": "pnpm --filter api prisma migrate dev",
     "prisma:seed": "pnpm --filter api prisma:seed",
     "prisma:studio": "pnpm --filter api prisma studio",
-    "runall": "pnpm dev:mobile & pnpm dev:api"
+    "runall": "concurrently -n api,admin,mobile -c cyan,green,magenta \"pnpm dev:api\" \"pnpm dev:admin\" \"pnpm dev:mobile\""
   },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@8.15.0"
+  "packageManager": "pnpm@8.15.0",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }
