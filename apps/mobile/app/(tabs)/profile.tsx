@@ -40,6 +40,12 @@ const menuItems: MenuListItem[] = [
     label: '任务中心',
   },
   {
+    key: 'lottery',
+    icon: 'slot-machine',
+    label: '幸运抽奖',
+    onPress: () => router.push('/(points)/luckyRoll' as any),
+  },
+  {
     key: 'gift-card',
     icon: 'gift-outline',
     label: '礼品卡',
