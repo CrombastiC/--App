@@ -34,19 +34,23 @@ interface Food {
 function CategoryTab() {
   const [data, setData] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form] = Form.useForm();
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (p: number = page) => {
     setLoading(true);
     try {
-      const res = await request.get('/menu/categories');
-      setData((res as { data: Category[] }).data);
+      const res = await request.get('/menu/categories', { params: { page: p, limit: 10 } });
+      const result = (res as { data: { data: Category[]; total: number } }).data;
+      setData(result.data);
+      setTotal(result.total);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -104,7 +108,19 @@ function CategoryTab() {
       <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} style={{ marginBottom: 16 }}>
         新建分类
       </Button>
-      <Table columns={columns} dataSource={data} rowKey="id" loading={loading} pagination={false} />
+      <Table
+        columns={columns}
+        dataSource={data}
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          current: page,
+          total,
+          pageSize: 10,
+          showTotal: (t) => `共 ${t} 条`,
+          onChange: (p) => { setPage(p); fetchData(p); },
+        }}
+      />
       <Modal
         title={editing ? '编辑分类' : '新建分类'}
         open={modalOpen}
@@ -133,24 +149,28 @@ function FoodTab() {
   const [data, setData] = useState<Food[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Food | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [form] = Form.useForm();
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (p: number = page) => {
     setLoading(true);
     try {
       const [foodsRes, catsRes] = await Promise.all([
-        request.get('/menu/foods'),
-        request.get('/menu/categories'),
+        request.get('/menu/foods', { params: { page: p, limit: 10 } }),
+        request.get('/menu/categories', { params: { page: 1, limit: 100 } }),
       ]);
-      setData((foodsRes as { data: Food[] }).data);
-      setCategories((catsRes as { data: Category[] }).data);
+      const result = (foodsRes as { data: { data: Food[]; total: number } }).data;
+      setData(result.data);
+      setTotal(result.total);
+      setCategories((catsRes as { data: { data: Category[] } }).data.data);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -265,7 +285,19 @@ function FoodTab() {
       <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} style={{ marginBottom: 16 }}>
         新建菜品
       </Button>
-      <Table columns={columns} dataSource={data} rowKey="id" loading={loading} pagination={false} />
+      <Table
+        columns={columns}
+        dataSource={data}
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          current: page,
+          total,
+          pageSize: 10,
+          showTotal: (t) => `共 ${t} 条`,
+          onChange: (p) => { setPage(p); fetchData(p); },
+        }}
+      />
       <Modal
         title={editing ? '编辑菜品' : '新建菜品'}
         open={modalOpen}

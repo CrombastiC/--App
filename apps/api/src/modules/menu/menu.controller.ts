@@ -31,9 +31,15 @@ export class MenuController {
   @Get('categories')
   @Roles('admin')
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: '获取全部分类（管理员）' })
-  async getCategories() {
-    return this.menuService.getCategories();
+  @ApiOperation({ summary: '获取分类列表（管理员，分页）' })
+  async getCategories(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.menuService.getCategories(
+      Number(page) || 1,
+      Number(limit) || 10,
+    );
   }
 
   @Post('category')
@@ -65,9 +71,17 @@ export class MenuController {
   @Get('foods')
   @Roles('admin')
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: '获取全部菜品（管理员）' })
-  async getFoods(@Query('classifyId') classifyId?: string) {
-    return this.menuService.getFoods(classifyId);
+  @ApiOperation({ summary: '获取菜品列表（管理员，分页）' })
+  async getFoods(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('classifyId') classifyId?: string,
+  ) {
+    return this.menuService.getFoods(
+      Number(page) || 1,
+      Number(limit) || 10,
+      classifyId,
+    );
   }
 
   @Post('food')

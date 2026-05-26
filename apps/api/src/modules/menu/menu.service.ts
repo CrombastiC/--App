@@ -43,14 +43,19 @@ export class MenuService {
 
   // ==================== 分类管理（管理后台） ====================
 
-  /** 获取全部分类（含菜品数量） */
-  async getCategories() {
-    return this.prisma.foodCategory.findMany({
-      orderBy: { sortOrder: 'asc' },
-      include: {
-        _count: { select: { foods: true } },
-      },
-    });
+  /** 获取分类列表（含菜品数量，分页） */
+  async getCategories(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.foodCategory.findMany({
+        orderBy: { sortOrder: 'asc' },
+        include: { _count: { select: { foods: true } } },
+        skip,
+        take: limit,
+      }),
+      this.prisma.foodCategory.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   /** 创建分类 */
@@ -84,14 +89,21 @@ export class MenuService {
 
   // ==================== 菜品管理（管理后台） ====================
 
-  /** 获取全部菜品（含分类信息，支持筛选） */
-  async getFoods(classifyId?: string) {
+  /** 获取菜品列表（含分类信息，支持筛选，分页） */
+  async getFoods(page: number, limit: number, classifyId?: string) {
+    const skip = (page - 1) * limit;
     const where = classifyId ? { classifyId } : {};
-    return this.prisma.food.findMany({
-      where,
-      include: { category: { select: { classifyName: true } } },
-      orderBy: { sortOrder: 'asc' },
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.food.findMany({
+        where,
+        include: { category: { select: { classifyName: true } } },
+        orderBy: { sortOrder: 'asc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.food.count({ where }),
+    ]);
+    return { data, total, page, limit };
   }
 
   /** 创建菜品 */
