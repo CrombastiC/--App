@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AdminGuard } from '../../common/guards/admin.guard';
 
 @ApiTags('订单')
 @Controller('order')
@@ -39,5 +41,32 @@ export class OrderController {
   @ApiOperation({ summary: '获取订单详情' })
   async getOrderDetail(@Param('id') id: string) {
     return this.orderService.getOrderDetail(id);
+  }
+
+  @Get('all')
+  @Roles('admin')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: '获取订单列表（管理端，分页）' })
+  async getAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.orderService.getAll(
+      Number(page) || 1,
+      Number(limit) || 10,
+      status,
+    );
+  }
+
+  @Put('status/:id')
+  @Roles('admin')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: '更新订单状态' })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ) {
+    return this.orderService.updateStatus(id, status);
   }
 }

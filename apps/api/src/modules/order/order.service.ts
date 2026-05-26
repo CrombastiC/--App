@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -63,6 +63,40 @@ export class OrderService {
       include: {
         orderItems: true,
       },
+    });
+  }
+
+  // 管理端：订单列表（分页、状态筛选）
+  async getAll(page: number, limit: number, status?: string) {
+    const skip = (page - 1) * limit;
+    const where = status ? { status } : {};
+    const [data, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        include: {
+          orderItems: true,
+          user: { select: { username: true, phone: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  // 管理端：更新订单状态
+  async updateStatus(orderId: string, status: string) {
+    const validStatuses = ['pending', 'paid', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      throw new BadRequestException(`无效状态，可选：${validStatuses.join(', ')}`);
+    }
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('订单不存在');
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: { status },
     });
   }
 }
