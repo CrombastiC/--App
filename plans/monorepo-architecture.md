@@ -6,11 +6,12 @@
 OrderFoodApp/
 ├── apps/
 │   ├── mobile/                 # Expo React Native 前端
-│   └── api/                    # NestJS + Prisma 后端
+│   ├── api/                    # NestJS + Prisma 后端
+│   └── admin/                  # React + Vite + Ant Design 管理后台
 ├── packages/
 │   ├── common/                 # 共享代码
 │   └── shared-types/           # 共享类型
-├── package.json
+├── package.json                # concurrently 统一启动三端
 └── pnpm-workspace.yaml
 ```
 
@@ -44,8 +45,15 @@ OrderFoodApp/
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| GET | `/api/menu/getMenuList/:id?` | 获取菜单列表 | 公开 |
-| POST | `/api/menu/createFood` | 创建菜品 | 公开 |
+| GET | `/api/menu/getMenuList/:id?` | 获取菜单列表（客户端） | 公开 |
+| GET | `/api/menu/categories` | 获取分类列表（管理端，分页） | 管理员 |
+| POST | `/api/menu/category` | 创建分类 | 管理员 |
+| PUT | `/api/menu/category/:id` | 更新分类 | 管理员 |
+| DELETE | `/api/menu/category/:id` | 删除分类 | 管理员 |
+| GET | `/api/menu/foods` | 获取菜品列表（管理端，分页） | 管理员 |
+| POST | `/api/menu/food` | 创建菜品 | 管理员 |
+| PUT | `/api/menu/food/:id` | 更新菜品 | 管理员 |
+| DELETE | `/api/menu/food/:id` | 删除菜品 | 管理员 |
 
 ### 2.4 优惠券模块 — `CouponController` (`/api/coupon`)
 
@@ -57,7 +65,11 @@ OrderFoodApp/
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| GET | `/api/money/getMoneyList` | 获取充值选项 | 需 JWT |
+| GET | `/api/money/getMoneyList` | 获取充值选项（客户端） | 公开 |
+| GET | `/api/money/all` | 获取充值选项列表（管理端，分页） | 管理员 |
+| POST | `/api/money/create` | 创建充值选项 | 管理员 |
+| PUT | `/api/money/update/:id` | 更新充值选项 | 管理员 |
+| DELETE | `/api/money/delete/:id` | 删除充值选项 | 管理员 |
 
 ### 2.6 订单模块 — `OrderController` (`/api/order`)
 
@@ -88,7 +100,17 @@ OrderFoodApp/
 | DELETE | `/api/points/prize/delete/:id` | 删除奖品 | 需 JWT |
 | PUT | `/api/points/prize/toggle/:id` | 启用/禁用奖品 | 需 JWT |
 
-### 2.9 文件上传模块 — `UploadController` (`/api/upload`)
+### 2.9 积分商品管理模块 — `CommodityController` (`/api/points/commodity`)
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | `/api/points/commodity/list` | 积分商品列表（含已禁用，分页） | 管理员 |
+| POST | `/api/points/commodity/create` | 创建积分商品 | 管理员 |
+| PUT | `/api/points/commodity/update/:id` | 更新积分商品 | 管理员 |
+| DELETE | `/api/points/commodity/delete/:id` | 删除积分商品 | 管理员 |
+| PUT | `/api/points/commodity/toggle/:id` | 启用/禁用积分商品 | 管理员 |
+
+### 2.10 文件上传模块 — `UploadController` (`/api/upload`)
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
@@ -178,15 +200,19 @@ OrderFoodApp/
 | 2 | `GET /api/order/list` | 订单列表 | 高 |
 | 3 | `GET /api/order/detail/:id` | 订单详情 | 高 |
 
-### 4.4 后台管理接口（前端暂不需要）
+### 4.4 后台管理接口
 
-| 路径前缀 | 说明 |
-|---------|------|
-| `/api/points/prize/*` | 奖品 CRUD，供管理后台使用 |
+| 路径前缀 | 说明 | 管理后台状态 |
+|---------|------|-------------|
+| `/api/points/prize/*` | 奖品 CRUD | ⬜ 前端待实现 |
+| `/api/menu/categories` | 分类管理（分页） | ✅ 已对接 |
+| `/api/menu/foods` | 菜品管理（分页） | ✅ 已对接 |
+| `/api/money/*` | 充值选项 CRUD | ✅ 已对接 |
+| `/api/points/commodity/*` | 积分商品 CRUD | ✅ 已对接 |
 
 ---
 
-## 5. 后台管理系统规划（admin）
+## 5. 后台管理系统（admin）— 已实现
 
 利用 monorepo 架构，在同一仓库中新增管理后台应用 `apps/admin/`，共享后端 API。
 
@@ -194,81 +220,100 @@ OrderFoodApp/
 
 | 分类 | 技术 |
 |------|------|
-| 框架 | Next.js 14 (App Router) |
+| 框架 | React 18 + Vite |
 | UI 库 | Ant Design 5 |
-| 状态/请求 | TanStack Query |
-| 样式 | CSS Modules / TailwindCSS |
-| 图表 | Ant Design Charts |
+| 路由 | React Router 6 |
+| 请求 | Axios 封装 |
+| 样式 | CSS Modules |
 | 共享 | 复用 `apps/api` 全部接口 |
 
-### 5.2 项目结构更新
+### 5.2 项目结构
 
 ```
-OrderFoodApp/
-├── apps/
-│   ├── mobile/          # 移动端
-│   ├── api/             # NestJS 后端
-│   └── admin/           # 管理后台（新增）
-│       ├── app/         # Next.js App Router
-│       ├── components/  # 业务组件
-│       ├── lib/         # 工具、API 封装
-│       └── package.json
+apps/admin/
+├── src/
+│   ├── App.tsx              # 路由配置
+│   ├── main.tsx             # 入口
+│   ├── lib/                 # 工具、API 封装、auth
+│   └── pages/
+│       ├── login/           # 登录页
+│       ├── layout/          # 侧边栏布局
+│       ├── menu/            # 菜单管理（分类+菜品，分页）
+│       ├── money/           # 充值选项管理（CRUD）
+│       └── commodity/       # 积分礼品管理（CRUD）
+├── index.html
+└── package.json
 ```
 
 ### 5.3 功能模块
 
-| 模块 | 功能 | 依赖后端接口 |
-|------|------|-------------|
-| 仪表盘 | 订单统计、用户增长、销售额 | 新增聚合接口 |
-| 菜单管理 | 菜品分类 CRUD、菜品 CRUD | `menu/*` + 新增分类管理 |
-| 奖品管理 | 抽奖奖品 CRUD、启用/禁用 | `points/prize/*`（已有） |
-| 积分商城 | 商品 CRUD、库存管理 | 新增 `commodity/*` |
-| 用户管理 | 用户列表、余额调整、冻结 | 新增 `users/list`、`users/:id` |
-| 订单管理 | 订单列表、详情、状态流转 | `order/*` + 新增状态更新 |
-| 优惠券 | 优惠券创建、发放、核销 | 新增 `coupon/*` CRUD |
-| 充值配置 | 充值金额档位、赠送比例 | `money/*` + 新增 CRUD |
-| 系统设置 | 轮播图、公告、基本配置 | 新增 `settings/*` |
+| 模块 | 功能 | 依赖后端接口 | 状态 |
+|------|------|-------------|------|
+| 登录 | 管理员登录 | `/api/user/login` + role 校验 | ✅ 已完成 |
+| 布局 | 侧边栏导航 + 路由守卫 | — | ✅ 已完成 |
+| 菜单管理 | 菜品分类 CRUD、菜品 CRUD（分页） | `menu/*` | ✅ 已完成 |
+| 充值配置 | 充值金额档位 CRUD（分页） | `money/*` | ✅ 已完成 |
+| 积分礼品 | 积分商品 CRUD、启禁用（分页） | `points/commodity/*` | ✅ 已完成 |
+| 奖品管理 | 抽奖奖品 CRUD、启用/禁用 | `points/prize/*`（已有） | ⬜ 待实现 |
+| 用户管理 | 用户列表、余额调整、冻结 | 新增 `users/list`、`users/:id` | ⬜ 待实现 |
+| 订单管理 | 订单列表、详情、状态流转 | `order/*` + 新增状态更新 | ⬜ 待实现 |
+| 优惠券 | 优惠券创建、发放、核销 | 新增 `coupon/*` CRUD | ⬜ 待实现 |
+| 仪表盘 | 订单统计、用户增长、销售额 | 新增聚合接口 | ⬜ 待实现 |
+| 系统设置 | 轮播图、公告、基本配置 | 新增 `settings/*` | ⬜ 待实现 |
 
 ### 5.4 后端需补充的接口
 
-| 模块 | 需新增接口 | 说明 |
-|------|-----------|------|
-| 认证 | `POST /api/auth/admin-login` | 管理员独立登录（或登录后返回角色） |
-| 用户 | `GET /api/user/list` | 用户列表（分页、筛选） |
-| 用户 | `GET /api/user/:id` | 用户详情 |
-| 用户 | `PUT /api/user/:id/balance` | 调整用户余额 |
-| 订单 | `PUT /api/order/:id/status` | 修改订单状态 |
-| 菜单 | `POST /api/menu/category` | 创建分类 |
-| 菜单 | `PUT /api/menu/category/:id` | 更新分类 |
-| 菜单 | `DELETE /api/menu/category/:id` | 删除分类 |
-| 积分商城 | `POST /api/commodity` | 创建商品 |
-| 积分商城 | `PUT /api/commodity/:id` | 更新商品 |
-| 积分商城 | `DELETE /api/commodity/:id` | 删除商品 |
-| 优惠券 | `POST /api/coupon` | 创建优惠券 |
-| 优惠券 | `PUT /api/coupon/:id` | 更新优惠券 |
-| 优惠券 | `DELETE /api/coupon/:id` | 删除优惠券 |
-| 充值 | `POST /api/money` | 创建充值档位 |
-| 充值 | `PUT /api/money/:id` | 更新充值档位 |
-| 充值 | `DELETE /api/money/:id` | 删除充值档位 |
-| 统计 | `GET /api/dashboard/stats` | 仪表盘聚合数据 |
+| 模块 | 需新增接口 | 说明 | 状态 |
+|------|-----------|------|------|
+| 认证 | `POST /api/auth/admin-login` | 管理员独立登录（或登录后返回角色） | ✅ 已有 RBAC，登录返回 role |
+| 菜单 | `GET /api/menu/categories` | 分类列表（分页） | ✅ 已完成 |
+| 菜单 | `POST /api/menu/category` | 创建分类 | ✅ 已完成 |
+| 菜单 | `PUT /api/menu/category/:id` | 更新分类 | ✅ 已完成 |
+| 菜单 | `DELETE /api/menu/category/:id` | 删除分类 | ✅ 已完成 |
+| 菜单 | `GET /api/menu/foods` | 菜品列表（分页） | ✅ 已完成 |
+| 菜单 | `POST /api/menu/food` | 创建菜品 | ✅ 已完成 |
+| 菜单 | `PUT /api/menu/food/:id` | 更新菜品 | ✅ 已完成 |
+| 菜单 | `DELETE /api/menu/food/:id` | 删除菜品 | ✅ 已完成 |
+| 充值 | `GET /api/money/all` | 充值选项列表（管理端，分页） | ✅ 已完成 |
+| 充值 | `POST /api/money/create` | 创建充值档位 | ✅ 已完成 |
+| 充值 | `PUT /api/money/update/:id` | 更新充值档位 | ✅ 已完成 |
+| 充值 | `DELETE /api/money/delete/:id` | 删除充值档位 | ✅ 已完成 |
+| 积分商城 | `GET /api/points/commodity/list` | 商品列表（分页） | ✅ 已完成 |
+| 积分商城 | `POST /api/points/commodity/create` | 创建商品 | ✅ 已完成 |
+| 积分商城 | `PUT /api/points/commodity/update/:id` | 更新商品 | ✅ 已完成 |
+| 积分商城 | `DELETE /api/points/commodity/delete/:id` | 删除商品 | ✅ 已完成 |
+| 积分商城 | `PUT /api/points/commodity/toggle/:id` | 启用/禁用商品 | ✅ 已完成 |
+| 用户 | `GET /api/user/list` | 用户列表（分页、筛选） | ⬜ 待实现 |
+| 用户 | `GET /api/user/:id` | 用户详情 | ⬜ 待实现 |
+| 用户 | `PUT /api/user/:id/balance` | 调整用户余额 | ⬜ 待实现 |
+| 订单 | `PUT /api/order/:id/status` | 修改订单状态 | ⬜ 待实现 |
+| 优惠券 | `POST /api/coupon` | 创建优惠券 | ⬜ 待实现 |
+| 优惠券 | `PUT /api/coupon/:id` | 更新优惠券 | ⬜ 待实现 |
+| 优惠券 | `DELETE /api/coupon/:id` | 删除优惠券 | ⬜ 待实现 |
+| 统计 | `GET /api/dashboard/stats` | 仪表盘聚合数据 | ⬜ 待实现 |
 
-### 5.5 权限控制
+### 5.5 权限控制 — ✅ 已实现
 
-- 用户表增加 `role` 字段：`user`（默认）/ `admin`
-- JWT payload 携带 `role`
-- 新增 `AdminGuard`：验证 `role === 'admin'`，否则返回 403
-- 管理后台路由统一加 `@UseGuards(JwtAuthGuard, AdminGuard)`
+- ✅ User 模型 `role` 字段：`user`（默认）/ `admin`
+- ✅ JWT payload 携带 `role`
+- ✅ `AdminGuard`：验证 `role === 'admin'`，否则返回 403
+- ✅ `@Public()` 标记公开接口，`@Roles('admin')` 限制管理员访问
+- ✅ 种子数据默认管理员：`13800000000` / `admin123`
 
-### 5.6 实施优先级
+### 5.6 实施进度
 
-| 阶段 | 内容 | 预计工作量 |
-|------|------|-----------|
-| Phase 1 | 后端：role 字段 + AdminGuard + 用户列表/详情 | 1 天 |
-| Phase 2 | 后端：菜单分类 CRUD + 订单状态更新 | 1 天 |
-| Phase 3 | 后端：优惠券 CRUD + 积分商品 CRUD + 充值档位 CRUD | 1 天 |
-| Phase 4 | 前端 admin：脚手架 + 登录 + 布局框架 | 1 天 |
-| Phase 5 | 前端 admin：菜单管理 + 奖品管理 + 订单管理 | 2 天 |
-| Phase 6 | 前端 admin：用户管理 + 优惠券 + 积分商城 + 仪表盘 | 2 天 |
+| 阶段 | 内容 | 状态 |
+|------|------|------|
+| Phase 1 | 后端：role 字段 + AdminGuard + RBAC 权限体系 | ✅ 已完成 |
+| Phase 2 | 后端：菜单分类/菜品 CRUD + 分页 | ✅ 已完成 |
+| Phase 3 | 后端：充值档位 CRUD + 积分商品 CRUD | ✅ 已完成 |
+| Phase 4 | 前端 admin：Vite 脚手架 + 登录 + 侧边栏布局 | ✅ 已完成 |
+| Phase 5 | 前端 admin：菜单管理 + 充值选项 + 积分礼品 | ✅ 已完成 |
+| Phase 6 | 种子数据：充值选项 + 积分商品初始化 | ✅ 已完成 |
+| Phase 7 | 后端：奖品管理前端页面 + 订单状态更新 | ⬜ 待实现 |
+| Phase 8 | 后端：用户管理接口 + 前端页面 | ⬜ 待实现 |
+| Phase 9 | 后端：优惠券 CRUD + 前端页面 | ⬜ 待实现 |
+| Phase 10 | 仪表盘统计聚合接口 + 图表页面 | ⬜ 待实现 |
 
 ---
 
