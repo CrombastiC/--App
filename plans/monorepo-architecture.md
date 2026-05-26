@@ -204,7 +204,7 @@ OrderFoodApp/
 
 | 路径前缀 | 说明 | 管理后台状态 |
 |---------|------|-------------|
-| `/api/points/prize/*` | 奖品 CRUD | ⬜ 前端待实现 |
+| `/api/points/prize/*` | 奖品 CRUD | ✅ 已对接 |
 | `/api/menu/categories` | 分类管理（分页） | ✅ 已对接 |
 | `/api/menu/foods` | 菜品管理（分页） | ✅ 已对接 |
 | `/api/money/*` | 充值选项 CRUD | ✅ 已对接 |
@@ -240,7 +240,9 @@ apps/admin/
 │       ├── layout/          # 侧边栏布局
 │       ├── menu/            # 菜单管理（分类+菜品，分页）
 │       ├── money/           # 充值选项管理（CRUD）
-│       └── commodity/       # 积分礼品管理（CRUD）
+│       ├── commodity/       # 积分礼品管理（CRUD）
+│       ├── prize/           # 抽奖奖品管理（CRUD）
+│       └── order/           # 订单管理（列表+状态更新+详情）
 ├── index.html
 └── package.json
 ```
@@ -254,9 +256,9 @@ apps/admin/
 | 菜单管理 | 菜品分类 CRUD、菜品 CRUD（分页） | `menu/*` | ✅ 已完成 |
 | 充值配置 | 充值金额档位 CRUD（分页） | `money/*` | ✅ 已完成 |
 | 积分礼品 | 积分商品 CRUD、启禁用（分页） | `points/commodity/*` | ✅ 已完成 |
-| 奖品管理 | 抽奖奖品 CRUD、启用/禁用 | `points/prize/*`（已有） | ⬜ 待实现 |
+| 奖品管理 | 抽奖奖品 CRUD、启用/禁用 | `points/prize/*` | ✅ 已完成 |
 | 用户管理 | 用户列表、余额调整、冻结 | 新增 `users/list`、`users/:id` | ⬜ 待实现 |
-| 订单管理 | 订单列表、详情、状态流转 | `order/*` + 新增状态更新 | ⬜ 待实现 |
+| 订单管理 | 订单列表、详情、状态流转 | `order/*` | ✅ 已完成 |
 | 优惠券 | 优惠券创建、发放、核销 | 新增 `coupon/*` CRUD | ⬜ 待实现 |
 | 仪表盘 | 订单统计、用户增长、销售额 | 新增聚合接口 | ⬜ 待实现 |
 | 系统设置 | 轮播图、公告、基本配置 | 新增 `settings/*` | ⬜ 待实现 |
@@ -286,7 +288,8 @@ apps/admin/
 | 用户 | `GET /api/user/list` | 用户列表（分页、筛选） | ⬜ 待实现 |
 | 用户 | `GET /api/user/:id` | 用户详情 | ⬜ 待实现 |
 | 用户 | `PUT /api/user/:id/balance` | 调整用户余额 | ⬜ 待实现 |
-| 订单 | `PUT /api/order/:id/status` | 修改订单状态 | ⬜ 待实现 |
+| 订单 | `PUT /api/order/status/:id` | 修改订单状态 | ✅ 已完成 |
+| 订单 | `GET /api/order/all` | 订单列表（管理端，分页+状态筛选） | ✅ 已完成 |
 | 优惠券 | `POST /api/coupon` | 创建优惠券 | ⬜ 待实现 |
 | 优惠券 | `PUT /api/coupon/:id` | 更新优惠券 | ⬜ 待实现 |
 | 优惠券 | `DELETE /api/coupon/:id` | 删除优惠券 | ⬜ 待实现 |
@@ -310,7 +313,7 @@ apps/admin/
 | Phase 4 | 前端 admin：Vite 脚手架 + 登录 + 侧边栏布局 | ✅ 已完成 |
 | Phase 5 | 前端 admin：菜单管理 + 充值选项 + 积分礼品 | ✅ 已完成 |
 | Phase 6 | 种子数据：充值选项 + 积分商品初始化 | ✅ 已完成 |
-| Phase 7 | 后端：奖品管理前端页面 + 订单状态更新 | ⬜ 待实现 |
+| Phase 7 | 后端：奖品管理前端页面 + 订单管理（状态更新+分页） | ✅ 已完成 |
 | Phase 8 | 后端：用户管理接口 + 前端页面 | ⬜ 待实现 |
 | Phase 9 | 后端：优惠券 CRUD + 前端页面 | ⬜ 待实现 |
 | Phase 10 | 仪表盘统计聚合接口 + 图表页面 | ⬜ 待实现 |
