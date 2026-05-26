@@ -103,6 +103,7 @@ export default function LoginScreen() {
         style={styles.backgroundImage}
         resizeMode="cover"
       >
+        <View style={styles.overlay} />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.container}
@@ -220,6 +221,10 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     width: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   container: {
     flex: 1,
