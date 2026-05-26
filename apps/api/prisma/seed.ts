@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -132,40 +135,111 @@ async function main() {
     console.log(`⚠️  已存在 ${existingCatCount} 个分类，跳过初始化`);
   }
 
-  // 3. 初始化奖品
+  // 3. 初始化充值选项
+  const existingMoneyCount = await prisma.moneyOption.count();
+  if (existingMoneyCount === 0) {
+    const moneyOptionData = [
+      { money: 50, giveMoney: 0, sortOrder: 0 },
+      { money: 100, giveMoney: 5, sortOrder: 1 },
+      { money: 200, giveMoney: 15, sortOrder: 2 },
+      { money: 500, giveMoney: 50, sortOrder: 3 },
+      { money: 1000, giveMoney: 120, sortOrder: 4 },
+      { money: 2000, giveMoney: 300, sortOrder: 5 },
+    ];
+    for (const opt of moneyOptionData) {
+      await prisma.moneyOption.create({ data: opt });
+      console.log(`  ✅ 充值选项: ¥${opt.money} (送¥${opt.giveMoney})`);
+    }
+    console.log(`🎉 成功初始化 ${moneyOptionData.length} 个充值选项`);
+  } else {
+    console.log(`⚠️  已存在 ${existingMoneyCount} 个充值选项，跳过初始化`);
+  }
+
+  // 4. 初始化奖品
   const existingPrizeCount = await prisma.lotteryPrize.count();
   if (existingPrizeCount > 0) {
     console.log(`⚠️  已存在 ${existingPrizeCount} 个奖品，跳过初始化`);
-    return;
+  } else {
+    for (const prize of prizeData) {
+      await prisma.lotteryPrize.create({ data: prize });
+      console.log(`  ✅ ${prize.prizeName} (积分: ${prize.prizeIntegral}, 库存: ${prize.stock})`);
+    }
+    console.log(`\n🎉 成功初始化 ${prizeData.length} 个奖品！`);
   }
 
-  for (const prize of prizeData) {
-    await prisma.lotteryPrize.create({ data: prize });
-    console.log(`  ✅ ${prize.prizeName} (积分: ${prize.prizeIntegral}, 库存: ${prize.stock})`);
+  // 5. 初始化积分商城商品
+  const existingCommodityCount = await prisma.commodity.count();
+  if (existingCommodityCount === 0) {
+    const commodityData = [
+      {
+        commodityName: '拿铁咖啡兑换券',
+        commodityImage: 'https://img.icons8.com/3d-fluency/94/coffee.png',
+        commodityIntegral: 200,
+        stock: 100,
+        sortOrder: 0,
+      },
+      {
+        commodityName: '芒果布丁',
+        commodityImage: 'https://img.icons8.com/3d-fluency/94/pudding.png',
+        commodityIntegral: 150,
+        stock: 50,
+        sortOrder: 1,
+      },
+      {
+        commodityName: '5元代金券',
+        commodityImage: 'https://img.icons8.com/3d-fluency/94/voucher.png',
+        commodityIntegral: 300,
+        stock: 200,
+        sortOrder: 2,
+      },
+      {
+        commodityName: '10元代金券',
+        commodityImage: 'https://img.icons8.com/3d-fluency/94/discount.png',
+        commodityIntegral: 500,
+        stock: 100,
+        sortOrder: 3,
+      },
+      {
+        commodityName: '精美餐具套装',
+        commodityImage: 'https://img.icons8.com/3d-fluency/94/tableware.png',
+        commodityIntegral: 800,
+        stock: 30,
+        sortOrder: 4,
+      },
+      {
+        commodityName: '定制马克杯',
+        commodityImage: 'https://img.icons8.com/3d-fluency/94/mug.png',
+        commodityIntegral: 1000,
+        stock: 20,
+        sortOrder: 5,
+      },
+    ];
+    for (const commodity of commodityData) {
+      await prisma.commodity.create({ data: commodity });
+      console.log(`  ✅ 积分商品: ${commodity.commodityName} (${commodity.commodityIntegral}积分, 库存${commodity.stock})`);
+    }
+    console.log(`🎉 成功初始化 ${commodityData.length} 个积分商品`);
+  } else {
+    console.log(`⚠️  已存在 ${existingCommodityCount} 个积分商品，跳过初始化`);
   }
 
-  console.log(`\n🎉 成功初始化 ${prizeData.length} 个奖品！`);
-
-  // 4. 初始化礼品卡
+  // 6. 初始化礼品卡
   const existingCardCount = await prisma.giftCard.count();
   if (existingCardCount > 0) {
     console.log(`⚠️  已存在 ${existingCardCount} 张礼品卡，跳过初始化`);
-    return;
+  } else {
+    const giftCardData = [
+      { code: 'GIFT-100-ABCD', amount: 100, expiresAt: new Date('2027-12-31') },
+      { code: 'GIFT-50-EFGH', amount: 50, expiresAt: new Date('2027-12-31') },
+      { code: 'GIFT-200-IJKL', amount: 200, expiresAt: new Date('2027-12-31') },
+      { code: 'GIFT-500-MNOP', amount: 500, expiresAt: new Date('2027-12-31') },
+    ];
+    for (const card of giftCardData) {
+      await prisma.giftCard.create({ data: card });
+      console.log(`  ✅ 礼品卡: ${card.code} (面额: ¥${card.amount})`);
+    }
+    console.log(`\n🎉 成功初始化 ${giftCardData.length} 张礼品卡！`);
   }
-
-  const giftCardData = [
-    { code: 'GIFT-100-ABCD', amount: 100, expiresAt: new Date('2027-12-31') },
-    { code: 'GIFT-50-EFGH', amount: 50, expiresAt: new Date('2027-12-31') },
-    { code: 'GIFT-200-IJKL', amount: 200, expiresAt: new Date('2027-12-31') },
-    { code: 'GIFT-500-MNOP', amount: 500, expiresAt: new Date('2027-12-31') },
-  ];
-
-  for (const card of giftCardData) {
-    await prisma.giftCard.create({ data: card });
-    console.log(`  ✅ 礼品卡: ${card.code} (面额: ¥${card.amount})`);
-  }
-
-  console.log(`\n🎉 成功初始化 ${giftCardData.length} 张礼品卡！`);
 }
 
 main()
