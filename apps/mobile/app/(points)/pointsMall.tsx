@@ -96,7 +96,7 @@ export default function PointsMallScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={getFilledData(data?.data)}
+        data={getFilledData(data as unknown as Commodity[])}
         renderItem={renderCard}
         // keyExtractor={(item) => item.commodityId.toString()}
         numColumns={2}
