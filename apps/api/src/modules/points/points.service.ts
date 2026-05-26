@@ -195,4 +195,61 @@ export class PointsService {
       data: { isActive: !prize.isActive },
     });
   }
+
+  // ==================== 积分商品管理 ====================
+
+  // 获取所有商品（含已禁用，分页）
+  async getCommodityListAll(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.commodity.findMany({
+        orderBy: { sortOrder: 'asc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.commodity.count(),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  // 创建商品
+  async createCommodity(data: {
+    commodityName: string;
+    commodityImage: string;
+    commodityIntegral: number;
+    stock?: number;
+    sortOrder?: number;
+  }) {
+    return this.prisma.commodity.create({ data });
+  }
+
+  // 更新商品
+  async updateCommodity(id: string, data: {
+    commodityName?: string;
+    commodityImage?: string;
+    commodityIntegral?: number;
+    stock?: number;
+    sortOrder?: number;
+    isActive?: boolean;
+  }) {
+    return this.prisma.commodity.update({
+      where: { id },
+      data,
+    });
+  }
+
+  // 删除商品
+  async deleteCommodity(id: string) {
+    return this.prisma.commodity.delete({ where: { id } });
+  }
+
+  // 切换商品启用/禁用状态
+  async toggleCommodity(id: string) {
+    const commodity = await this.prisma.commodity.findUnique({ where: { id } });
+    if (!commodity) throw new BadRequestException('商品不存在');
+    return this.prisma.commodity.update({
+      where: { id },
+      data: { isActive: !commodity.isActive },
+    });
+  }
 }

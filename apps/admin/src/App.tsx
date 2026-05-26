@@ -3,6 +3,8 @@ import { isAuthenticated } from '@/lib/auth';
 import LoginPage from '@/pages/login';
 import AdminLayout from '@/pages/layout';
 import MenuPage from '@/pages/menu';
+import MoneyPage from '@/pages/money';
+import CommodityPage from '@/pages/commodity';
 
 /** 路由守卫：未登录跳转登录页 */
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -27,6 +29,8 @@ export default function App() {
         >
           <Route index element={<Navigate to="/menu" replace />} />
           <Route path="menu" element={<MenuPage />} />
+          <Route path="money" element={<MoneyPage />} />
+          <Route path="commodity" element={<CommodityPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

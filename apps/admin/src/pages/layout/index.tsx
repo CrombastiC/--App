@@ -5,6 +5,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   CoffeeOutlined,
+  DollarOutlined,
+  GiftOutlined,
   UserOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
@@ -17,6 +19,16 @@ const menuItems = [
     key: '/menu',
     icon: <CoffeeOutlined />,
     label: '菜单管理',
+  },
+  {
+    key: '/money',
+    icon: <DollarOutlined />,
+    label: '充值选项',
+  },
+  {
+    key: '/commodity',
+    icon: <GiftOutlined />,
+    label: '积分礼品',
   },
 ];
 
