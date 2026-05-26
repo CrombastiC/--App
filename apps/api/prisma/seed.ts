@@ -223,7 +223,72 @@ async function main() {
     console.log(`⚠️  已存在 ${existingCommodityCount} 个积分商品，跳过初始化`);
   }
 
-  // 6. 初始化礼品卡
+  // 6. 初始化抽奖中奖记录（围观大奖 + 中奖播报）
+  const existingRecordCount = await prisma.lotteryRecord.count();
+  if (existingRecordCount === 0) {
+    // 创建几个模拟用户用于中奖展示
+    const mockUsers = [
+      { phone: '13900001111', username: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan' },
+      { phone: '13900002222', username: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' },
+      { phone: '13900003333', username: '王五', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=wangwu' },
+      { phone: '13900004444', username: '赵六', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhaoliu' },
+      { phone: '13900005555', username: '小美', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=xiaomei' },
+      { phone: '13900006666', username: '阿杰', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ajie' },
+      { phone: '13900007777', username: '大熊', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=daxiong' },
+      { phone: '13900008888', username: '小红', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=xiaohong' },
+    ];
+
+    const hashedMockPwd = await bcrypt.hash('123456', 10);
+    const createdUsers: { id: string }[] = [];
+    for (const u of mockUsers) {
+      const existing = await prisma.user.findUnique({ where: { phone: u.phone } });
+      if (existing) {
+        createdUsers.push(existing);
+      } else {
+        const user = await prisma.user.create({
+          data: { phone: u.phone, username: u.username, avatar: u.avatar, password: hashedMockPwd },
+        });
+        createdUsers.push(user);
+      }
+    }
+
+    // 查询已有的奖品
+    const prizes = await prisma.lotteryPrize.findMany({ orderBy: { sortOrder: 'asc' } });
+    const bigPrizes = prizes.filter(p => p.prizeIntegral === 0); // 大奖
+    const pointPrizes = prizes.filter(p => p.prizeIntegral > 0); // 积分奖
+
+    if (prizes.length > 0 && createdUsers.length > 0) {
+      const records: { userId: string; prizeId: string; costIntegral: number; createdAt: Date }[] = [];
+      const now = Date.now();
+
+      // 生成 20 条中奖记录（混合大奖和积分奖）
+      for (let i = 0; i < 20; i++) {
+        const user = createdUsers[i % createdUsers.length];
+        // 每 5 条出一个大奖，其余为积分奖
+        const isBig = i % 5 === 0 && bigPrizes.length > 0;
+        const prize = isBig
+          ? bigPrizes[i % bigPrizes.length]
+          : pointPrizes[i % pointPrizes.length];
+        // 时间递减，每条间隔 10-30 分钟
+        const createdAt = new Date(now - i * (10 + Math.random() * 20) * 60 * 1000);
+
+        records.push({
+          userId: user.id,
+          prizeId: prize.id,
+          costIntegral: 200,
+          createdAt,
+        });
+      }
+
+      await prisma.lotteryRecord.createMany({ data: records });
+      console.log(`  ✅ 中奖记录: ${records.length} 条`);
+      console.log(`🎉 成功初始化 ${records.length} 条抽奖中奖记录`);
+    }
+  } else {
+    console.log(`⚠️  已存在 ${existingRecordCount} 条中奖记录，跳过初始化`);
+  }
+
+  // 7. 初始化礼品卡
   const existingCardCount = await prisma.giftCard.count();
   if (existingCardCount > 0) {
     console.log(`⚠️  已存在 ${existingCardCount} 张礼品卡，跳过初始化`);

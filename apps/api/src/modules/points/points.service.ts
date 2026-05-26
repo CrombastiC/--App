@@ -101,7 +101,7 @@ export class PointsService {
       where.prize = { prizeIntegral: 0 };
     }
 
-    return this.prisma.lotteryRecord.findMany({
+    const records = await this.prisma.lotteryRecord.findMany({
       where,
       include: {
         user: { select: { username: true, avatar: true } },
@@ -110,6 +110,16 @@ export class PointsService {
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
+
+    // 映射为前端期望的扁平结构
+    return records.map((r) => ({
+      id: r.id,
+      username: r.user.username,
+      userAvatar: r.user.avatar || '',
+      prizeName: r.prize.prizeName,
+      prizeImage: r.prize.prizeImage,
+      createdAt: r.createdAt.toISOString(),
+    }));
   }
 
   // 获取积分商城商品
@@ -153,7 +163,7 @@ export class PointsService {
     });
   }
 
-  // 创建奖品
+  // 创建奖品（九宫格最多 9 个）
   async createPrize(data: {
     prizeName: string;
     prizeImage: string;
@@ -162,6 +172,10 @@ export class PointsService {
     stock?: number;
     sortOrder?: number;
   }) {
+    const count = await this.prisma.lotteryPrize.count();
+    if (count >= 9) {
+      throw new BadRequestException('九宫格最多支持 9 个奖品，请先删除再添加');
+    }
     return this.prisma.lotteryPrize.create({ data });
   }
 
