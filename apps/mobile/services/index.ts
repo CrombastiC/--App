@@ -4,32 +4,41 @@
  */
 
 // 认证服务
-export { authService, tokenManager } from './auth.service';
+export { authService, tokenManager } from "./auth.service";
 export type {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  User
-} from './auth.service';
+  User,
+} from "./auth.service";
 
 // 用户服务
-export { userService } from './user.service';
+export { userService } from "./user.service";
 export type {
   ChangePasswordRequest,
   TopUpRecord,
   TopUpRecordsResponse,
   UpdateProfileRequest,
-  UserStats
-} from './user.service';
+  UserStats,
+} from "./user.service";
+
+// 支付服务
+export { payService } from "./pay.service";
+export type {
+  CreatePayRequest,
+  PayPageResult,
+  PayAppResult,
+  PayStatus,
+} from "./pay.service";
 
 // ==================== 使用说明 ====================
 /*
 统一导入所有服务：
 
-import { 
-  authService, 
-  tokenManager, 
+import {
+  authService,
+  tokenManager,
   userService,
   type LoginRequest,
   type User,

@@ -13,18 +13,18 @@ datasource db {
 // ==================== 用户模块 ====================
 
 model User {
-  id        String   @id @default(cuid())
-  phone     String   @unique
+  id        String    @id @default(cuid())
+  phone     String    @unique
   username  String
   password  String
   avatar    String?
-  gender    Int      @default(2) // 0: 男, 1: 女, 2: 保密
+  gender    Int       @default(2) // 0: 男, 1: 女, 2: 保密
   birthday  DateTime?
-  balance   Float    @default(0)
-  integral  Int      @default(0) // 积分
-  role      String   @default("user") // user: 普通用户, admin: 管理员
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  balance   Float     @default(0)
+  integral  Int       @default(0) // 积分
+  role      String    @default("user") // user: 普通用户, admin: 管理员
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   // 关联
   topUpRecords   TopUpRecord[]
@@ -33,6 +33,7 @@ model User {
   userCoupons    UserCoupon[]
   orders         Order[]
   checkInRecords CheckInRecord[]
+  paymentRecords PaymentRecord[]
 
   @@map("users")
 }
@@ -42,9 +43,9 @@ model TopUpRecord {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id])
-  balance      Float    // 充值金额
+  balance      Float // 充值金额
   giveBalance  Float    @default(0) // 赠送金额
-  totalBalance Float    // 充值后余额
+  totalBalance Float // 充值后余额
   createdAt    DateTime @default(now())
 
   @@map("top_up_records")
@@ -52,11 +53,11 @@ model TopUpRecord {
 
 // 充值选项配置
 model MoneyOption {
-  id        String  @id @default(cuid())
-  money     Float   // 充值金额
-  giveMoney Float   @default(0) // 赠送金额
-  sortOrder Int     @default(0)
-  isActive  Boolean @default(true)
+  id        String   @id @default(cuid())
+  money     Float // 充值金额
+  giveMoney Float    @default(0) // 赠送金额
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -80,16 +81,16 @@ model FoodCategory {
 
 // 菜品
 model Food {
-  id         String   @id @default(cuid())
+  id         String       @id @default(cuid())
   classifyId String
   category   FoodCategory @relation(fields: [classifyId], references: [id])
   foodName   String
   foodImage  String?
   foodPrice  Float
-  sortOrder  Int      @default(0)
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  sortOrder  Int          @default(0)
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   @@map("foods")
 }
@@ -98,45 +99,45 @@ model Food {
 
 // 抽奖奖品配置
 model LotteryPrize {
-  id             String        @id @default(cuid())
+  id             String          @id @default(cuid())
   prizeName      String
   prizeImage     String
-  prizeIntegral  Int           @default(0) // 0表示实物大奖，>0表示积分
-  prizeValue     Float?        // 奖品价值
-  stock          Int           @default(0) // 库存
-  sortOrder      Int           @default(0)
-  isActive       Boolean       @default(true)
+  prizeIntegral  Int             @default(0) // 0表示实物大奖，>0表示积分
+  prizeValue     Float? // 奖品价值
+  stock          Int             @default(0) // 库存
+  sortOrder      Int             @default(0)
+  isActive       Boolean         @default(true)
   lotteryRecords LotteryRecord[]
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@map("lottery_prizes")
 }
 
 // 抽奖记录
 model LotteryRecord {
-  id           String   @id @default(cuid())
+  id           String       @id @default(cuid())
   userId       String
   user         User         @relation(fields: [userId], references: [id])
   prizeId      String
   prize        LotteryPrize @relation(fields: [prizeId], references: [id])
-  costIntegral Int        // 消耗积分
-  createdAt    DateTime   @default(now())
+  costIntegral Int // 消耗积分
+  createdAt    DateTime     @default(now())
 
   @@map("lottery_records")
 }
 
 // 积分商城商品
 model Commodity {
-  id                 String   @id @default(cuid())
-  commodityName      String
-  commodityImage     String
-  commodityIntegral  Int      // 所需积分
-  stock              Int      @default(0)
-  sortOrder          Int      @default(0)
-  isActive           Boolean  @default(true)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                String   @id @default(cuid())
+  commodityName     String
+  commodityImage    String
+  commodityIntegral Int // 所需积分
+  stock             Int      @default(0)
+  sortOrder         Int      @default(0)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@map("commodities")
 }
@@ -146,8 +147,8 @@ model PointRecord {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  integral  Int      // 正数表示收入，负数表示支出
-  isGet     Boolean  // true: 收入, false: 支出
+  integral  Int // 正数表示收入，负数表示支出
+  isGet     Boolean // true: 收入, false: 支出
   remark    String
   createdAt DateTime @default(now())
 
@@ -158,31 +159,31 @@ model PointRecord {
 
 // 优惠券
 model Coupon {
-  id            String     @id @default(cuid())
+  id            String       @id @default(cuid())
   couponName    String
-  couponAmount  Float      // 优惠券金额
-  consumeMoney  Float      // 使用门槛
-  couponUseTime DateTime   // 有效期
-  totalStock    Int        @default(0)
-  remainStock   Int        @default(0)
-  isActive      Boolean    @default(true)
+  couponAmount  Float // 优惠券金额
+  consumeMoney  Float // 使用门槛
+  couponUseTime DateTime // 有效期
+  totalStock    Int          @default(0)
+  remainStock   Int          @default(0)
+  isActive      Boolean      @default(true)
   userCoupons   UserCoupon[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@map("coupons")
 }
 
 // 用户优惠券
 model UserCoupon {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
   couponId  String
-  coupon    Coupon   @relation(fields: [couponId], references: [id])
-  status    String   @default("unused") // unused: 未使用, used: 已使用
+  coupon    Coupon    @relation(fields: [couponId], references: [id])
+  status    String    @default("unused") // unused: 未使用, used: 已使用
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@map("user_coupons")
 }
@@ -200,32 +201,66 @@ model CheckInRecord {
   @@map("check_in_records")
 }
 
+// ==================== 支付模块 ====================
+
+// 支付宝交易状态枚举
+enum TradeStatus {
+  NOT_PAY // 未支付（自定义）
+  WAIT_BUYER_PAY // 等待买家付款
+  TRADE_CLOSED // 交易关闭
+  TRADE_SUCCESS // 交易成功（可退款）
+  TRADE_FINISHED // 交易结束（不可退款）
+}
+
+// 支付记录
+model PaymentRecord {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId     String?
+  order       Order?      @relation(fields: [orderId], references: [id])
+  outTradeNo  String      @unique // 商户订单号
+  tradeNo     String? // 支付宝交易号
+  amount      Float // 支付金额
+  subject     String // 订单标题
+  body        String? // 订单描述
+  tradeStatus TradeStatus @default(NOT_PAY) // 交易状态
+  payTime     DateTime? // 支付时间
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([tradeNo])
+  @@index([orderId])
+  @@map("payment_records")
+}
+
 // ==================== 订单模块 ====================
 
 // 订单
 model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-  orderType   String      // dine-in: 堂食, takeout: 外卖
-  status      String      @default("pending") // pending, paid, completed, cancelled
-  totalAmount Float
-  payAmount   Float       // 实际支付金额
-  address     String?     // 外卖地址
-  peopleCount Int?        // 就餐人数
-  remark      String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItems  OrderItem[]
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id])
+  orderType      String // dine-in: 堂食, takeout: 外卖
+  status         String          @default("pending") // pending, paid, completed, cancelled
+  totalAmount    Float
+  payAmount      Float // 实际支付金额
+  address        String? // 外卖地址
+  peopleCount    Int? // 就餐人数
+  remark         String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  orderItems     OrderItem[]
+  paymentRecords PaymentRecord[]
 
   @@map("orders")
 }
 
 // 订单明细
 model OrderItem {
-  id        String  @id @default(cuid())
+  id        String @id @default(cuid())
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id])
+  order     Order  @relation(fields: [orderId], references: [id])
   foodId    String
   foodName  String
   foodPrice Float
@@ -238,13 +273,13 @@ model OrderItem {
 // 礼品卡
 model GiftCard {
   id         String    @id @default(cuid())
-  code       String    @unique           // 兑换码
-  amount     Float                         // 面额
+  code       String    @unique // 兑换码
+  amount     Float // 面额
   status     String    @default("active") // active / redeemed / expired
-  redeemedBy String?                      // 兑换用户 ID
-  redeemedAt DateTime?                    // 兑换时间
+  redeemedBy String? // 兑换用户 ID
+  redeemedAt DateTime? // 兑换时间
   createdAt  DateTime  @default(now())
-  expiresAt  DateTime?                    // 过期时间
+  expiresAt  DateTime? // 过期时间
 
   @@map("gift_cards")
 }
