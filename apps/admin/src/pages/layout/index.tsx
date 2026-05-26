@@ -7,6 +7,8 @@ import {
   CoffeeOutlined,
   DollarOutlined,
   GiftOutlined,
+  TrophyOutlined,
+  OrderedListOutlined,
   UserOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
@@ -29,6 +31,16 @@ const menuItems = [
     key: '/commodity',
     icon: <GiftOutlined />,
     label: '积分礼品',
+  },
+  {
+    key: '/prize',
+    icon: <TrophyOutlined />,
+    label: '抽奖奖品',
+  },
+  {
+    key: '/order',
+    icon: <OrderedListOutlined />,
+    label: '订单管理',
   },
 ];
 

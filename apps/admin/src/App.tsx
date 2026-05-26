@@ -5,6 +5,8 @@ import AdminLayout from '@/pages/layout';
 import MenuPage from '@/pages/menu';
 import MoneyPage from '@/pages/money';
 import CommodityPage from '@/pages/commodity';
+import PrizePage from '@/pages/prize';
+import OrderPage from '@/pages/order';
 
 /** 路由守卫：未登录跳转登录页 */
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -31,6 +33,8 @@ export default function App() {
           <Route path="menu" element={<MenuPage />} />
           <Route path="money" element={<MoneyPage />} />
           <Route path="commodity" element={<CommodityPage />} />
+          <Route path="prize" element={<PrizePage />} />
+          <Route path="order" element={<OrderPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
