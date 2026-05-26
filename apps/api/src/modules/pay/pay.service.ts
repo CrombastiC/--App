@@ -4,7 +4,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 import { AlipayService } from "../../common/pay/alipay.service";
 import type { CreatePayDto } from "./dto/create-pay.dto";
 import * as nanoid from "nanoid";
-import dayjs from "dayjs";
+import * as dayjs from 'dayjs';
 import type { Request } from "express";
 
 /**
@@ -53,6 +53,18 @@ export class PayService {
   ) {}
 
   /**
+   * 验证支付宝异步通知签名
+   */
+  private verifyNotifySign(params: Record<string, string>): boolean {
+    try {
+      const alipaySdk = this.alipayService.getAlipaySdk();
+      return alipaySdk.checkNotifySign(params);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * 生成商户订单号
    */
   private createTradeNo(): string {
@@ -88,8 +100,65 @@ export class PayService {
       return { code: 400, message: "该订单已取消", data: null };
     }
 
+    // 校验金额：前端传入的金额必须与订单实际金额一致
+    if (Math.abs(order.payAmount - createPayDto.totalAmount) > 0.01) {
+      return { code: 400, message: "支付金额与订单金额不一致", data: null };
+    }
+
     const result = await this.prisma.$transaction(async (tx) => {
-      // 1. 创建支付记录
+      // 1. 检查是否已存在该订单的未过期支付记录（幂等性）
+      const existingPayment = await tx.paymentRecord.findFirst({
+        where: {
+          orderId: createPayDto.orderId,
+          tradeStatus: "WAIT_BUYER_PAY",
+          createdAt: {
+            gte: dayjs().subtract(15, "minute").toDate(),
+          },
+        },
+      });
+
+      if (existingPayment) {
+        // 复用已有支付记录
+        const payType = createPayDto.payType || "page";
+        const notifyUrl = `${this.configService.get<string>("ALIPAY_NOTIFY_URL")}/api/pay/notify`;
+
+        const bizContent = {
+          out_trade_no: existingPayment.outTradeNo,
+          total_amount: existingPayment.amount.toFixed(2),
+          subject: existingPayment.subject,
+          body: existingPayment.body,
+          product_code: "FAST_INSTANT_TRADE_PAY",
+          time_expire: dayjs(existingPayment.createdAt).add(15, "minute").format("YYYY-MM-DD HH:mm:ss"),
+        };
+
+        if (payType === "app") {
+          const signedStr = this.alipayService
+            .getAlipaySdk()
+            .sdkExec("alipay.trade.app.pay", {
+              bizContent,
+              notify_url: notifyUrl,
+            });
+          return {
+            payString: signedStr,
+            outTradeNo: existingPayment.outTradeNo,
+            timeExpire: dayjs(existingPayment.createdAt).add(15, "minute").valueOf(),
+          };
+        }
+
+        const payUrl = this.alipayService
+          .getAlipaySdk()
+          .pageExecute("alipay.trade.page.pay", "GET", {
+            bizContent,
+            notify_url: notifyUrl,
+          });
+        return {
+          payUrl,
+          outTradeNo: existingPayment.outTradeNo,
+          timeExpire: dayjs(existingPayment.createdAt).add(15, "minute").valueOf(),
+        };
+      }
+
+      // 2. 创建新的支付记录
       const outTradeNo = this.createTradeNo();
       await tx.paymentRecord.create({
         data: {
@@ -158,7 +227,7 @@ export class PayService {
    * 支付宝异步通知处理
    *
    * 支付宝回调流程：
-   * 1. 验签（由 alipay-sdk 自动处理）
+   * 1. 验签
    * 2. 更新支付记录状态
    * 3. 更新订单状态为已支付
    */
@@ -169,8 +238,23 @@ export class PayService {
       throw new Error("无效的支付宝通知参数");
     }
 
-    // 验签（alipay-sdk checkNotifySign 需要在 controller 层调用）
-    // 这里假设验签已通过
+    // 验签
+    const isValid = this.verifyNotifySign(req.body as Record<string, string>);
+    if (!isValid) {
+      throw new Error("支付宝通知签名验证失败");
+    }
+
+    // 检查支付记录是否已处理过（防止重复处理）
+    const existingRecord = await this.prisma.paymentRecord.findFirst({
+      where: {
+        outTradeNo: notifyBody.out_trade_no,
+        tradeStatus: "TRADE_SUCCESS",
+      },
+    });
+
+    if (existingRecord) {
+      return true; // 已处理过，直接返回成功
+    }
 
     await this.prisma.$transaction(async (tx) => {
       // 1. 更新支付记录

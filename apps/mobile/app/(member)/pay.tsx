@@ -3,7 +3,7 @@
  * 用户下单后跳转到此页面确认支付
  */
 
-import { payService, PayPageResult } from '@/services/pay.service';
+import { payService, PayPageResult, PayStatus } from '@/services/pay.service';
 import ToastManager from '@/utils/toast';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect, useCallback } from 'react';
@@ -23,6 +23,8 @@ export default function PayScreen() {
   const [loading, setLoading] = useState(false);
   const [payResult, setPayResult] = useState<PayPageResult | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [polling, setPolling] = useState(false);
+  const [payStatus, setPayStatus] = useState<'pending' | 'success' | 'failed' | null>(null);
 
   const orderId = params.orderId || '';
   const totalAmount = parseFloat(params.totalAmount || '0');
@@ -46,6 +48,56 @@ export default function PayScreen() {
 
     return () => clearInterval(timer);
   }, [payResult?.timeExpire]);
+
+  // 轮询支付状态
+  const startPolling = useCallback(() => {
+    if (polling) return;
+
+    setPolling(true);
+    let attempts = 0;
+    const maxAttempts = 30; // 最多轮询30次（约60秒）
+
+    const pollTimer = setInterval(async () => {
+      attempts++;
+
+      if (attempts > maxAttempts) {
+        clearInterval(pollTimer);
+        setPolling(false);
+        ToastManager.show('支付状态查询超时，请稍后查看订单');
+        return;
+      }
+
+      const [error, data] = await payService.queryPayStatus(orderId);
+
+      if (!error && data) {
+        const status = data as PayStatus;
+        if (status.tradeStatus === 'TRADE_SUCCESS') {
+          clearInterval(pollTimer);
+          setPolling(false);
+          setPayStatus('success');
+          ToastManager.show('支付成功！', {
+            position: 'top',
+            containerStyle: { backgroundColor: '#4CAF50' },
+          });
+          // 跳转到订单详情或首页
+          setTimeout(() => {
+            router.replace('/(tabs)/order' as any);
+          }, 1500);
+          return;
+        }
+
+        if (status.tradeStatus === 'TRADE_CLOSED') {
+          clearInterval(pollTimer);
+          setPolling(false);
+          setPayStatus('failed');
+          ToastManager.show('支付已关闭');
+          return;
+        }
+      }
+    }, 2000); // 每2秒轮询一次
+
+    return () => clearInterval(pollTimer);
+  }, [orderId, polling]);
 
   /** 发起支付 */
   const handlePay = useCallback(async () => {
@@ -83,6 +135,9 @@ export default function PayScreen() {
 
       if (browserResult.type === 'cancel') {
         ToastManager.show('支付已取消');
+      } else {
+        // 用户从支付宝返回，启动轮询检查支付状态
+        startPolling();
       }
     } catch (e) {
       ToastManager.show('打开支付页面失败');
@@ -169,6 +224,33 @@ export default function PayScreen() {
           </Card.Content>
         </Card>
 
+        {/* 支付状态提示 */}
+        {polling && (
+          <Card style={[styles.card, { backgroundColor: '#FFF3E0' }]}>
+            <Card.Content>
+              <View style={styles.pollingRow}>
+                <ActivityIndicator size="small" color="#FF6B35" />
+                <Text variant="bodyMedium" style={styles.pollingText}>
+                  正在查询支付结果...
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
+
+        {payStatus === 'success' && (
+          <Card style={[styles.card, { backgroundColor: '#E8F5E9' }]}>
+            <Card.Content>
+              <View style={styles.statusRow}>
+                <Text style={styles.statusIcon}>✓</Text>
+                <Text variant="bodyMedium" style={styles.successText}>
+                  支付成功！正在跳转...
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
+
         {/* 操作按钮 */}
         <View style={styles.buttonContainer}>
           {!payResult ? (
@@ -187,12 +269,12 @@ export default function PayScreen() {
             <Button
               mode="contained"
               onPress={handlePay}
-              disabled={timeLeft <= 0}
+              disabled={timeLeft <= 0 || polling || payStatus === 'success'}
               style={styles.payButton}
               contentStyle={styles.payButtonContent}
               labelStyle={styles.payButtonLabel}
             >
-              {timeLeft <= 0 ? '已超时' : '重新支付'}
+              {payStatus === 'success' ? '支付成功' : timeLeft <= 0 ? '已超时' : '重新支付'}
             </Button>
           )}
 
@@ -317,6 +399,29 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     marginTop: 12,
+  },
+  pollingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  pollingText: {
+    color: '#FF6B35',
+    fontWeight: '500',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  statusIcon: {
+    fontSize: 20,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+  },
+  successText: {
+    color: '#4CAF50',
+    fontWeight: '500',
   },
   tips: {
     marginTop: 24,

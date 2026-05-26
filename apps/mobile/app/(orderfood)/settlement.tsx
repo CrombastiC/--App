@@ -36,6 +36,7 @@ export default function SettlementScreen() {
   const [loading, setLoading] = useState(false);
   const [showItems, setShowItems] = useState(true);
   const [balance, setBalance] = useState(0);
+  const [payMethod, setPayMethod] = useState<'balance' | 'alipay'>('balance');
 
   useEffect(() => {
     loadBalance();
@@ -73,8 +74,24 @@ export default function SettlementScreen() {
 
   const insufficientBalance = balance < payAmount;
 
+  const createOrderData = () => ({
+    orderType,
+    totalAmount: totalPrice,
+    payAmount,
+    peopleCount: orderType === 'dine-in' ? peopleCount : undefined,
+    remark: remark || undefined,
+    items: items.map((item) => ({
+      foodId: item.foodId,
+      foodName: item.foodName,
+      foodPrice: item.foodPrice,
+      quantity: item.quantity,
+      subtotal: item.foodPrice * item.quantity,
+    })),
+  });
+
   const handleSubmit = async () => {
-    if (insufficientBalance) {
+    // 余额支付：检查余额
+    if (payMethod === 'balance' && insufficientBalance) {
       Alert.alert('余额不足', `当前余额 ¥${balance.toFixed(2)}，请先充值`, [
         { text: '去充值', onPress: () => router.push('/(member)/top-up') },
         { text: '取消', style: 'cancel' },
@@ -85,49 +102,47 @@ export default function SettlementScreen() {
     try {
       setLoading(true);
 
-      // 先扣减余额
-      const [deductError] = await userService.rechargeBalance(payAmount, 0, false);
-      if (deductError) {
-        Alert.alert('扣款失败', '余额不足，请先充值', [
-          { text: '去充值', onPress: () => router.push('/(member)/top-up') },
-          { text: '取消', style: 'cancel' },
+      if (payMethod === 'balance') {
+        // 余额支付：先扣余额再创建订单
+        const [deductError] = await userService.rechargeBalance(payAmount, 0, false);
+        if (deductError) {
+          Alert.alert('扣款失败', '余额不足，请先充值', [
+            { text: '去充值', onPress: () => router.push('/(member)/top-up') },
+            { text: '取消', style: 'cancel' },
+          ]);
+          setLoading(false);
+          return;
+        }
+
+        const [error, data] = await orderService.createOrder(createOrderData());
+        if (error || !data) {
+          Alert.alert('下单失败', '已扣款但订单创建失败，请联系客服');
+          return;
+        }
+
+        clearCart();
+        Alert.alert('下单成功', `订单号: #${data.id.slice(-4)}`, [
+          { text: '查看订单', onPress: () => router.replace('/(tabs)/orders' as any) },
+          { text: '继续点餐', onPress: () => router.replace('/(tabs)/order' as any) },
         ]);
-        setLoading(false);
-        return;
+      } else {
+        // 支付宝支付：先创建订单，再跳转支付页
+        const [error, data] = await orderService.createOrder(createOrderData());
+        if (error || !data) {
+          Alert.alert('下单失败', '订单创建失败，请重试');
+          return;
+        }
+
+        clearCart();
+        router.push({
+          pathname: '/(member)/pay' as any,
+          params: {
+            orderId: data.id,
+            totalAmount: payAmount.toString(),
+            subject: `${storeName || '点餐'}订单`,
+          },
+        });
       }
-
-      // 扣款成功后创建订单
-      const [error, data] = await orderService.createOrder({
-        orderType,
-        totalAmount: totalPrice,
-        payAmount,
-        peopleCount: orderType === 'dine-in' ? peopleCount : undefined,
-        remark: remark || undefined,
-        items: items.map((item) => ({
-          foodId: item.foodId,
-          foodName: item.foodName,
-          foodPrice: item.foodPrice,
-          quantity: item.quantity,
-          subtotal: item.foodPrice * item.quantity,
-        })),
-      });
-
-      if (error || !data) {
-        Alert.alert('下单失败', '已扣款但订单创建失败，请联系客服');
-        return;
-      }
-
-      clearCart();
-      Alert.alert('下单成功', `订单号: #${data.id.slice(-4)}`, [
-        {
-          text: '查看订单',
-          onPress: () => router.replace('/(tabs)/orders' as any),
-        },
-        {
-          text: '继续点餐',
-          onPress: () => router.replace('/(tabs)/order' as any),
-        },
-      ]);
     } catch {
       Alert.alert('下单失败', '网络异常，请稍后重试');
     } finally {
@@ -282,32 +297,55 @@ export default function SettlementScreen() {
             <Icon source="wallet" size={20} color="#FF7214" />
             <Text style={styles.cellLabel}>支付方式</Text>
           </View>
-          <View style={[styles.rowBetween, { marginTop: 12 }]}>
-            <View>
-              <Text style={styles.payMethodLabel}>账户余额</Text>
-              <Text style={[
-                styles.payMethodBalance,
-                insufficientBalance && { color: '#D32F2F' },
-              ]}>
-                ¥{balance.toFixed(2)}
-              </Text>
-            </View>
-            {insufficientBalance ? (
-              <TouchableOpacity onPress={() => router.push('/(member)/top-up')}>
-                <Text style={styles.topUpLink}>去充值</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.payCheckmark}>
-                <Icon source="check-circle" size={22} color="#FF7214" />
+          {/* 账户余额 */}
+          <TouchableOpacity
+            style={[styles.payOption, payMethod === 'balance' && styles.payOptionActive]}
+            onPress={() => setPayMethod('balance')}
+          >
+            <View style={styles.payOptionLeft}>
+              <Icon source="wallet-outline" size={22} color="#FF7214" />
+              <View style={{ marginLeft: 10 }}>
+                <Text style={styles.payMethodLabel}>账户余额</Text>
+                <Text style={[
+                  styles.payMethodBalance,
+                  insufficientBalance && { color: '#D32F2F' },
+                ]}>
+                  ¥{balance.toFixed(2)}
+                </Text>
               </View>
+            </View>
+            {payMethod === 'balance' ? (
+              <Icon source="check-circle" size={22} color="#FF7214" />
+            ) : (
+              <Icon source="radiobox-blank" size={22} color="#ccc" />
             )}
-          </View>
-          {insufficientBalance && (
+          </TouchableOpacity>
+          {payMethod === 'balance' && insufficientBalance && (
             <View style={styles.insufficientTip}>
               <Icon source="alert-circle-outline" size={14} color="#D32F2F" />
               <Text style={styles.insufficientText}>余额不足，请先充值</Text>
+              <TouchableOpacity onPress={() => router.push('/(member)/top-up')}>
+                <Text style={styles.topUpLink}>去充值</Text>
+              </TouchableOpacity>
             </View>
           )}
+          {/* 支付宝 */}
+          <TouchableOpacity
+            style={[styles.payOption, payMethod === 'alipay' && styles.payOptionActive]}
+            onPress={() => setPayMethod('alipay')}
+          >
+            <View style={styles.payOptionLeft}>
+              <View style={styles.alipayBadge}>
+                <Text style={styles.alipayBadgeText}>支付宝</Text>
+              </View>
+              <Text style={[styles.payMethodLabel, { marginLeft: 10 }]}>支付宝支付</Text>
+            </View>
+            {payMethod === 'alipay' ? (
+              <Icon source="check-circle" size={22} color="#FF7214" />
+            ) : (
+              <Icon source="radiobox-blank" size={22} color="#ccc" />
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* 底部留白 */}
@@ -329,7 +367,7 @@ export default function SettlementScreen() {
           onPress={handleSubmit}
         >
           <Text style={styles.submitBtnText}>
-            {loading ? '提交中...' : '确认下单'}
+            {loading ? '提交中...' : payMethod === 'alipay' ? '支付宝支付' : '确认下单'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -597,9 +635,10 @@ const styles = StyleSheet.create({
     color: '#FF7214',
   },
   topUpLink: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#FF7214',
-    fontWeight: '500',
+    fontWeight: '600',
+    marginLeft: 8,
   },
   payCheckmark: {
     padding: 4,
@@ -613,5 +652,34 @@ const styles = StyleSheet.create({
   insufficientText: {
     fontSize: 13,
     color: '#D32F2F',
+  },
+  payOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#f0f0f0',
+  },
+  payOptionActive: {
+    borderColor: '#FF7214',
+    backgroundColor: '#FFF5F0',
+  },
+  payOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  alipayBadge: {
+    backgroundColor: '#1677FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  alipayBadgeText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
