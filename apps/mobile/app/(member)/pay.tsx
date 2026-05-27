@@ -127,7 +127,14 @@ export default function PayScreen() {
 
     // 打开支付宝支付页面
     try {
-      const browserResult = await WebBrowser.openBrowserAsync(result.payUrl, {
+      const payUrl = (result as PayPageResult).payUrl;
+
+      if (!payUrl || typeof payUrl !== 'string') {
+        ToastManager.show('支付链接无效，请重试');
+        return;
+      }
+
+      const browserResult = await WebBrowser.openBrowserAsync(payUrl, {
         toolbarColor: '#1677FF',
         enableBarCollapsing: true,
         showInRecents: true,
@@ -139,8 +146,9 @@ export default function PayScreen() {
         // 用户从支付宝返回，启动轮询检查支付状态
         startPolling();
       }
-    } catch (e) {
-      ToastManager.show('打开支付页面失败');
+    } catch (e: any) {
+      console.error('[Pay] 打开支付页面失败:', e?.message || e);
+      ToastManager.show('打开支付页面失败，请重试');
     }
   }, [orderId, subject, body, totalAmount]);
 

@@ -13,8 +13,11 @@ import type { Request } from "express";
 interface AlipayNotifyBody {
   out_trade_no: string;
   trade_no: string;
-  gmt_payment: string;
-  body: string;
+  trade_status?: string;
+  total_amount?: string;
+  gmt_payment?: string;
+  body?: string;
+  [key: string]: string | undefined;
 }
 
 /**
@@ -30,9 +33,7 @@ function isAlipayNotifyBody(value: unknown): value is AlipayNotifyBody {
   const body = value as Record<string, unknown>;
   return (
     typeof body.out_trade_no === "string" &&
-    typeof body.trade_no === "string" &&
-    typeof body.gmt_payment === "string" &&
-    typeof body.body === "string"
+    typeof body.trade_no === "string"
   );
 }
 
@@ -89,20 +90,20 @@ export class PayService {
     });
 
     if (!order) {
-      return { code: 404, message: "订单不存在", data: null };
+      throw new Error("订单不存在");
     }
 
     if (order.status === "paid") {
-      return { code: 400, message: "该订单已支付", data: null };
+      throw new Error("该订单已支付");
     }
 
     if (order.status === "cancelled") {
-      return { code: 400, message: "该订单已取消", data: null };
+      throw new Error("该订单已取消");
     }
 
     // 校验金额：前端传入的金额必须与订单实际金额一致
     if (Math.abs(order.payAmount - createPayDto.totalAmount) > 0.01) {
-      return { code: 400, message: "支付金额与订单金额不一致", data: null };
+      throw new Error("支付金额与订单金额不一致");
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
@@ -220,7 +221,7 @@ export class PayService {
       };
     });
 
-    return { code: 200, message: "success", data: result };
+    return result;
   }
 
   /**
@@ -234,8 +235,17 @@ export class PayService {
   async notify(req: Request) {
     const notifyBody = req.body as unknown;
 
+    console.log('[PayService] 收到支付宝通知:', JSON.stringify(notifyBody, null, 2));
+
     if (!isAlipayNotifyBody(notifyBody)) {
+      console.error('[PayService] 通知参数验证失败, body:', JSON.stringify(notifyBody));
       throw new Error("无效的支付宝通知参数");
+    }
+
+    // 只处理交易成功的通知
+    if (notifyBody.trade_status && notifyBody.trade_status !== "TRADE_SUCCESS") {
+      console.log('[PayService] 非成功状态, trade_status:', notifyBody.trade_status);
+      return true;
     }
 
     // 验签
@@ -263,17 +273,23 @@ export class PayService {
         data: {
           tradeNo: notifyBody.trade_no,
           tradeStatus: "TRADE_SUCCESS",
-          payTime: dayjs(notifyBody.gmt_payment).toDate(),
+          payTime: notifyBody.gmt_payment ? dayjs(notifyBody.gmt_payment).toDate() : new Date(),
         },
       });
 
       // 2. 解析自定义 payload 并更新订单状态
-      const payload = JSON.parse(notifyBody.body) as unknown;
-      if (isNotifyPayload(payload)) {
-        await tx.order.update({
-          where: { id: payload.orderId },
-          data: { status: "paid" },
-        });
+      if (notifyBody.body) {
+        try {
+          const payload = JSON.parse(notifyBody.body) as unknown;
+          if (isNotifyPayload(payload)) {
+            await tx.order.update({
+              where: { id: payload.orderId },
+              data: { status: "paid" },
+            });
+          }
+        } catch (e) {
+          console.error('[PayService] 解析通知 body 失败:', notifyBody.body, e);
+        }
       }
     });
 
@@ -293,19 +309,15 @@ export class PayService {
     });
 
     if (!paymentRecord) {
-      return { code: 404, message: "未找到支付记录", data: null };
+      throw new Error("未找到支付记录");
     }
 
     return {
-      code: 200,
-      message: "success",
-      data: {
-        outTradeNo: paymentRecord.outTradeNo,
-        tradeNo: paymentRecord.tradeNo,
-        tradeStatus: paymentRecord.tradeStatus,
-        amount: paymentRecord.amount,
-        payTime: paymentRecord.payTime,
-      },
+      outTradeNo: paymentRecord.outTradeNo,
+      tradeNo: paymentRecord.tradeNo,
+      tradeStatus: paymentRecord.tradeStatus,
+      amount: paymentRecord.amount,
+      payTime: paymentRecord.payTime,
     };
   }
 }
