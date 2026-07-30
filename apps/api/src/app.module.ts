@@ -13,6 +13,8 @@ import { UploadModule } from "./modules/upload/upload.module";
 import { PayModule } from "./modules/pay/pay.module";
 import { JwtAuthGuard } from "./modules/auth/guards/jwt-auth.guard";
 import { AdminModule } from "./modules/admin/admin.module";
+import { QueueModule } from "./modules/queue/queue.module";
+import { SupportModule } from "./modules/support/support.module";
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { AdminModule } from "./modules/admin/admin.module";
     UploadModule,
     PayModule,
     AdminModule,
+    QueueModule,
+    SupportModule,
   ],
   providers: [
     {

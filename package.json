@@ -13,10 +13,10 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
-    "prisma:generate": "pnpm --filter api prisma generate",
-    "prisma:migrate": "pnpm --filter api prisma migrate dev",
+    "prisma:generate": "pnpm --filter api exec prisma generate",
+    "prisma:migrate": "pnpm --filter api exec prisma migrate dev",
     "prisma:seed": "pnpm --filter api prisma:seed",
-    "prisma:studio": "pnpm --filter api prisma studio",
+    "prisma:studio": "pnpm --filter api exec prisma studio",
     "runall": "concurrently -n api,admin,mobile -c cyan,green,magenta \"pnpm dev:api\" \"pnpm dev:admin\" \"pnpm dev:mobile\""
   },
   "engines": {

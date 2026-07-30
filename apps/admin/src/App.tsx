@@ -14,6 +14,7 @@ const UsersPage = lazy(() => import('@/pages/users'));
 const CouponsPage = lazy(() => import('@/pages/coupons'));
 const GiftCardsPage = lazy(() => import('@/pages/gift-cards'));
 const PrizesPage = lazy(() => import('@/pages/prizes'));
+const SupportPage = lazy(() => import('@/pages/support'));
 
 // 预加载所有后台页面组件，避免首次切换菜单时懒加载闪烁
 const pageModules = [
@@ -26,6 +27,7 @@ const pageModules = [
   import('@/pages/prizes'),
   import('@/pages/coupons'),
   import('@/pages/gift-cards'),
+  import('@/pages/support'),
 ];
 function preloadPages() {
   pageModules.forEach((mod) => mod.catch(() => {}));
@@ -68,6 +70,7 @@ export default function App() {
             <Route path="prizes" element={<PrizesPage />} />
             <Route path="coupons" element={<CouponsPage />} />
             <Route path="gift-cards" element={<GiftCardsPage />} />
+            <Route path="support" element={<SupportPage />} />
           </Route>
         </Routes>
       </Suspense>

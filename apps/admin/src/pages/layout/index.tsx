@@ -15,6 +15,7 @@ import {
   TagsOutlined,
   CreditCardOutlined,
   TrophyOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 import { clearAuth, getUser } from '@/lib/auth';
 
@@ -65,6 +66,11 @@ const menuItems = [
     key: '/gift-cards',
     icon: <CreditCardOutlined />,
     label: '礼品卡管理',
+  },
+  {
+    key: '/support',
+    icon: <MessageOutlined />,
+    label: '在线客服',
   },
 ];
 

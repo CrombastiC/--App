@@ -28,6 +28,7 @@ pnpm dev:admin
 | `/prizes` | 抽奖奖品、积分奖励、库存和排序 |
 | `/coupons` | 优惠券库存、启停和定向发放 |
 | `/gift-cards` | 礼品卡创建、有效期和兑换状态 |
+| `/support` | 在线客服会话、未读提醒、回复和结束会话 |
 
 页面使用路由懒加载，Vite 会按管理模块拆分生产资源。
 
@@ -51,6 +52,11 @@ GET    /api/admin/gift-cards
 POST   /api/admin/gift-cards
 PUT    /api/admin/gift-cards/:id
 DELETE /api/admin/gift-cards/:id
+
+GET    /api/admin/support/conversations
+GET    /api/admin/support/conversations/:id/messages
+POST   /api/admin/support/conversations/:id/messages
+POST   /api/admin/support/conversations/:id/status
 ```
 
 菜单、充值档位、积分商品和奖品继续使用各自的管理员接口。
@@ -66,6 +72,9 @@ const result = await api.get<PaginatedResult<AdminOrder>>('/admin/orders', {
 ```
 
 页面业务类型集中在 `src/types/admin.ts`。
+
+在线客服工作台每 4 秒刷新会话和当前消息。移动端发送消息后会话自动进入
+`open` 状态；管理员可结束会话，任意一方再次发送消息时会重新打开。
 
 ## 构建
 

@@ -76,6 +76,8 @@ export default function RootLayout() {
             <Stack.Screen name="(location)" options={{ headerShown: false }} />
             {/* 点餐相关页面，具体页面配置在 (orderfood)/_layout.tsx */}
             <Stack.Screen name="(orderfood)" options={{ headerShown: false }} />
+            {/* 排队取号相关页面 */}
+            <Stack.Screen name="queue" options={{ headerShown: false }} />
           </Stack>
           {/* 状态栏组件，自动适配系统主题 */}
           <StatusBar style="auto" />

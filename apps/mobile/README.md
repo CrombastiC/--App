@@ -32,8 +32,9 @@ apps/mobile/
 │   ├── (points)/         # 积分：积分页、商城、抽奖
 │   ├── (orderfood)/      # 点餐：人数选择、结算
 │   ├── (location)/       # 位置：城市选择、地址选择
+│   ├── queue/            # 排队：门店列表、取号和进度
 │   ├── auth/             # 认证：登录、注册
-│   └── user/             # 用户：账户、优惠券
+│   └── user/             # 用户：账户、优惠券、在线客服
 ├── components/           # 可复用组件
 ├── services/             # API 服务层
 ├── request/              # Axios 封装（返回 [error, data] 元组）
@@ -53,6 +54,13 @@ apps/mobile/
 - Token 通过 `tokenManager`（`services/auth.service.ts`）管理；请求拦截器自动注入，并在 401 时合并并发请求后刷新 Token
 - 全局 Toast：`ToastManager.show(msg, options)` 来自 `utils/toast.tsx`
 - API 地址配置：`config/api.config.ts`，支持 development / staging / production 三套环境
+
+## 排队与在线客服
+
+- 首页“排队取号”进入真实门店列表，可选择 1-20 位就餐人数并生成 A/B 组号码。
+- “我的排队”展示前方桌数与预计等待时间，每 15 秒刷新，也支持手动刷新和取消。
+- 消息页“在线客服”展示最近消息及未读数；聊天页每 4 秒与管理后台同步。
+- 排队取号和客服发消息都需要登录，门店列表允许未登录浏览。
 
 ## 构建
 

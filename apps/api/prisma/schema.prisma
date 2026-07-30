@@ -27,13 +27,15 @@ model User {
   updatedAt DateTime  @updatedAt
 
   // 关联
-  topUpRecords   TopUpRecord[]
-  pointRecords   PointRecord[]
-  lotteryRecords LotteryRecord[]
-  userCoupons    UserCoupon[]
-  orders         Order[]
-  checkInRecords CheckInRecord[]
-  paymentRecords PaymentRecord[]
+  topUpRecords        TopUpRecord[]
+  pointRecords        PointRecord[]
+  lotteryRecords      LotteryRecord[]
+  userCoupons         UserCoupon[]
+  orders              Order[]
+  checkInRecords      CheckInRecord[]
+  paymentRecords      PaymentRecord[]
+  queueTickets        QueueTicket[]
+  supportConversation SupportConversation?
 
   @@map("users")
 }
@@ -282,4 +284,93 @@ model GiftCard {
   expiresAt  DateTime? // 过期时间
 
   @@map("gift_cards")
+}
+
+// ==================== 门店排队模块 ====================
+
+model Store {
+  id                 String              @id @default(cuid())
+  name               String
+  city               String
+  address            String
+  phone              String
+  businessHours      String
+  averageWaitMinutes Int                 @default(8)
+  canTakeout         Boolean             @default(true)
+  isActive           Boolean             @default(true)
+  sortOrder          Int                 @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  queueCounters      StoreQueueCounter[]
+  queueTickets       QueueTicket[]
+
+  @@index([city, isActive])
+  @@map("stores")
+}
+
+model StoreQueueCounter {
+  storeId    String
+  queueDate  String
+  lastNumber Int    @default(0)
+  store      Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@id([storeId, queueDate])
+  @@map("store_queue_counters")
+}
+
+model QueueTicket {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  queueDate   String
+  queueType   String // small: 1-4 人桌, large: 5 人及以上
+  number      Int
+  partySize   Int
+  status      String    @default("waiting") // waiting / called / completed / cancelled
+  calledAt    DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([storeId, queueDate, queueType, number])
+  @@index([userId, status])
+  @@index([storeId, queueDate, queueType, status, number])
+  @@map("queue_tickets")
+}
+
+// ==================== 在线客服模块 ====================
+
+model SupportConversation {
+  id                 String           @id @default(cuid())
+  userId             String           @unique
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status             String           @default("open") // open / closed
+  lastMessagePreview String?
+  lastMessageAt      DateTime?
+  userUnreadCount    Int              @default(0)
+  adminUnreadCount   Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  messages           SupportMessage[]
+
+  @@index([status, lastMessageAt])
+  @@map("support_conversations")
+}
+
+model SupportMessage {
+  id             String              @id @default(cuid())
+  conversationId String
+  conversation   SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  senderRole     String // user / admin
+  content        String
+  readAt         DateTime?
+  createdAt      DateTime            @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([conversationId, senderRole, readAt])
+  @@map("support_messages")
 }

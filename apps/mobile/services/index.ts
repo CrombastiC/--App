@@ -33,6 +33,18 @@ export type {
   PayStatus,
 } from "./pay.service";
 
+// 排队取号服务
+export { queueService } from './queue.service';
+export type { QueueStore, QueueTicket } from './queue.service';
+
+// 在线客服服务
+export { supportService } from './support.service';
+export type {
+  SupportConversationSummary,
+  SupportMessage,
+  SupportMessagesResult,
+} from './support.service';
+
 // ==================== 使用说明 ====================
 /*
 统一导入所有服务：

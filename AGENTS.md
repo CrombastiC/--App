@@ -121,6 +121,8 @@ ToastManager.show('成功', { position: 'top', containerStyle: { backgroundColor
 - `coupon` — 优惠券
 - `money` — 充值金额选项配置
 - `upload` — 图片上传
+- `queue` — 门店列表、排队取号、当前进度和取消排队
+- `support` — 移动端与管理后台在线客服会话
 
 ### 公共模块
 
@@ -140,7 +142,7 @@ ToastManager.show('成功', { position: 'top', containerStyle: { backgroundColor
 ### 数据库
 
 Prisma schema 在 `apps/api/prisma/schema.prisma`，主要模型：
-`User`、`TopUpRecord`、`MoneyOption`、`FoodCategory`、`Food`、`LotteryPrize`、`LotteryRecord`、`Commodity`、`PointRecord`、`Coupon`、`UserCoupon`、`Order`、`OrderItem`
+`User`、`TopUpRecord`、`MoneyOption`、`FoodCategory`、`Food`、`LotteryPrize`、`LotteryRecord`、`Commodity`、`PointRecord`、`Coupon`、`UserCoupon`、`Order`、`OrderItem`、`Store`、`QueueTicket`、`SupportConversation`、`SupportMessage`
 
 ## 重要注意事项
 

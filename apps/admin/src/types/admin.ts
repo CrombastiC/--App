@@ -97,3 +97,38 @@ export interface LotteryPrize {
   isActive: boolean;
   createdAt: string;
 }
+
+export interface SupportUser {
+  id: string;
+  username: string;
+  phone: string;
+  avatar: string | null;
+}
+
+export interface SupportConversation {
+  id: string;
+  userId: string;
+  status: 'open' | 'closed';
+  lastMessagePreview: string | null;
+  lastMessageAt: string | null;
+  userUnreadCount: number;
+  adminUnreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+  user: SupportUser;
+}
+
+export interface SupportMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderRole: 'user' | 'admin';
+  content: string;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface SupportMessagesResult {
+  conversation: SupportConversation;
+  messages: SupportMessage[];
+}

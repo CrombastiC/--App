@@ -166,7 +166,7 @@ export default function HomeScreen() {
             <Card 
               style={[styles.serviceCard, styles.queueCard]} 
               mode="elevated"
-              onPress={() => router.push('/(location)/addressSelect?type=queue')}
+              onPress={() => router.push('/queue' as any)}
             >
               <Card.Content style={styles.serviceContent}>
                 <Icon source="ticket" size={40} color="#FF7214" />

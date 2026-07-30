@@ -49,6 +49,7 @@ const menuItems: MenuListItem[] = [
     key: 'customer-service',
     icon: 'headphones',
     label: '联系客服',
+    onPress: () => router.push('/user/support' as any),
   },
 ];
 

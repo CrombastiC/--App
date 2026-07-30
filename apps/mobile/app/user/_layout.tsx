@@ -26,6 +26,14 @@ export default function UserLayout() {
           headerTitleAlign: 'center',
         }}
       />
+      <Stack.Screen
+        name="support"
+        options={{
+          title: '在线客服',
+          headerShown: true,
+          headerTitleAlign: 'center',
+        }}
+      />
     </Stack>
   );
 }

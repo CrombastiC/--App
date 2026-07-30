@@ -96,6 +96,49 @@ const categoryData = [
 const ADMIN_PHONE = '13800000000';
 const ADMIN_PASSWORD = 'admin123';
 
+const storeData = [
+  {
+    id: 'store-shanghai-zhonghai',
+    name: '黛西餐厅（中海大厦店）',
+    city: '上海市',
+    address: '静安区江场三路134号',
+    phone: '18339658260',
+    businessHours: '10:00-22:00',
+    averageWaitMinutes: 8,
+    sortOrder: 1,
+  },
+  {
+    id: 'store-shanghai-jingan',
+    name: '黛西餐厅（静安大悦城店）',
+    city: '上海市',
+    address: '静安区西藏北路166号',
+    phone: '18878006788',
+    businessHours: '10:00-22:00',
+    averageWaitMinutes: 7,
+    sortOrder: 2,
+  },
+  {
+    id: 'store-shanghai-pudong',
+    name: '黛西餐厅（浦东世纪汇店）',
+    city: '上海市',
+    address: '浦东新区世纪大道1192号',
+    phone: '18878006789',
+    businessHours: '10:30-21:30',
+    averageWaitMinutes: 10,
+    sortOrder: 3,
+  },
+  {
+    id: 'store-hangzhou-hubin',
+    name: '黛西餐厅（杭州湖滨店）',
+    city: '杭州市',
+    address: '上城区湖滨路28号',
+    phone: '18878006790',
+    businessHours: '10:00-22:00',
+    averageWaitMinutes: 8,
+    sortOrder: 4,
+  },
+];
+
 async function main() {
   // 1. 初始化管理员
   const existingAdmin = await prisma.user.findUnique({
@@ -240,6 +283,16 @@ async function main() {
     }
     console.log(`\n🎉 成功初始化 ${giftCardData.length} 张礼品卡！`);
   }
+
+  // 7. 初始化排队门店（可重复执行）
+  for (const store of storeData) {
+    await prisma.store.upsert({
+      where: { id: store.id },
+      update: store,
+      create: store,
+    });
+  }
+  console.log(`🎉 已同步 ${storeData.length} 家排队门店`);
 }
 
 main()
