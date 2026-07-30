@@ -29,7 +29,7 @@ export default function LuckyRollScreen() {
 
   // 抽奖结果弹窗状态
   const [showResultModal, setShowResultModal] = useState<boolean>(false);
-  const [resultPrizes, setResultPrizes] = useState<any[]>([]);
+  const [resultPrizes, setResultPrizes] = useState<LuckyRollData[]>([]);
   const [isMultiResult, setIsMultiResult] = useState<boolean>(false);
 
   // 抽奖次数统计(用于保底机制)
@@ -129,9 +129,9 @@ export default function LuckyRollScreen() {
       console.error('获取抽奖数据失败:', error);
       return;
     }
-    const data = (result as LuckyRollDataResponse)?.prizeList;
-    setCurrentPoints((result as LuckyRollDataResponse)?.userIntegral || 0);
-    setFreeDrawCount((result as LuckyRollDataResponse)?.luckyDrawCount || 0);
+    const data = result?.prizeList;
+    setCurrentPoints(result?.userIntegral || 0);
+    setFreeDrawCount(result?.luckyDrawCount || 0);
     if (data && Array.isArray(data)) {
       setLuckyRollData(data);
       console.log('抽奖数据:', data);
@@ -374,7 +374,7 @@ export default function LuckyRollScreen() {
             setCurrentIndex(-1);
 
             // 展示十连抽结果 - 使用弹窗展示
-            setResultPrizes(result as any);
+            setResultPrizes(result || []);
             setIsMultiResult(true);
             setShowResultModal(true);
 
@@ -452,7 +452,7 @@ export default function LuckyRollScreen() {
       return;
     }
     console.log('获取围观大奖数据成功:', result);
-    setBigPrizeData((result as any) || []);
+    setBigPrizeData(result || []);
   };
 
   // 获取中奖播报数据
@@ -463,7 +463,7 @@ export default function LuckyRollScreen() {
       return;
     }
     console.log('获取中奖播报数据成功:', result);
-    setBroadcastMessages((result as any) || []);
+    setBroadcastMessages(result || []);
   };
   return (
     <ImageBackground

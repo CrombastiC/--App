@@ -12,6 +12,7 @@ import { MoneyModule } from "./modules/money/money.module";
 import { UploadModule } from "./modules/upload/upload.module";
 import { PayModule } from "./modules/pay/pay.module";
 import { JwtAuthGuard } from "./modules/auth/guards/jwt-auth.guard";
+import { AdminModule } from "./modules/admin/admin.module";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { JwtAuthGuard } from "./modules/auth/guards/jwt-auth.guard";
     MoneyModule,
     UploadModule,
     PayModule,
+    AdminModule,
   ],
   providers: [
     {

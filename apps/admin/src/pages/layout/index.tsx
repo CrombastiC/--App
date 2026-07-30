@@ -9,12 +9,33 @@ import {
   GiftOutlined,
   UserOutlined,
   LogoutOutlined,
+  DashboardOutlined,
+  ShoppingCartOutlined,
+  TeamOutlined,
+  TagsOutlined,
+  CreditCardOutlined,
+  TrophyOutlined,
 } from '@ant-design/icons';
 import { clearAuth, getUser } from '@/lib/auth';
 
 const { Header, Sider, Content } = Layout;
 
 const menuItems = [
+  {
+    key: '/dashboard',
+    icon: <DashboardOutlined />,
+    label: '经营概览',
+  },
+  {
+    key: '/orders',
+    icon: <ShoppingCartOutlined />,
+    label: '订单管理',
+  },
+  {
+    key: '/users',
+    icon: <TeamOutlined />,
+    label: '用户管理',
+  },
   {
     key: '/menu',
     icon: <CoffeeOutlined />,
@@ -29,6 +50,21 @@ const menuItems = [
     key: '/commodity',
     icon: <GiftOutlined />,
     label: '积分礼品',
+  },
+  {
+    key: '/prizes',
+    icon: <TrophyOutlined />,
+    label: '抽奖奖品',
+  },
+  {
+    key: '/coupons',
+    icon: <TagsOutlined />,
+    label: '优惠券管理',
+  },
+  {
+    key: '/gift-cards',
+    icon: <CreditCardOutlined />,
+    label: '礼品卡管理',
   },
 ];
 

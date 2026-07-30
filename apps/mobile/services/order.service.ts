@@ -1,44 +1,17 @@
 import request from '@/request';
+import type {
+  Category,
+  CreateFoodRequest,
+  CreateOrderRequest,
+  Food,
+  Order,
+  OrderStatus,
+} from '@orderfood/common';
 
-/**
- * 订单项
- */
-export interface OrderItem {
-  foodId: string;
-  foodName: string;
-  foodPrice: number;
-  quantity: number;
-  subtotal: number;
-}
+export type { CreateOrderRequest, Order, OrderItem } from '@orderfood/common';
 
-/**
- * 创建订单请求
- */
-export interface CreateOrderRequest {
-  orderType: string;      // dine-in: 堂食, takeout: 外卖
-  totalAmount: number;
-  payAmount: number;
-  address?: string;
-  peopleCount?: number;
-  remark?: string;
-  items: OrderItem[];
-}
-
-/**
- * 订单响应
- */
-export interface Order {
-  id: string;
-  orderType: string;
-  status: string;         // pending, paid, completed, cancelled
-  totalAmount: number;
-  payAmount: number;
-  address?: string;
-  peopleCount?: number;
-  remark?: string;
-  createdAt: string;
-  updatedAt: string;
-  orderItems: OrderItem[];
+export interface UploadResult {
+  url: string;
 }
 
 /**
@@ -46,20 +19,21 @@ export interface Order {
  * @param id 商品ID 不传就是获取全部商品
  */
 export const getProductInfo = (id?: string) => {
-  return request.get(`/api/menu/getMenuList/${id || ''}`);
+  const url = id ? `/api/menu/getMenuList/${id}` : '/api/menu/getMenuList';
+  return request.get<Category[]>(url);
 };
 /**
  * 创建菜品（测试用）
  */
-export const createDish = (data: any) => {
-  return request.post('/api/menu/createFood', data);
+export const createDish = (data: CreateFoodRequest) => {
+  return request.post<Food>('/api/menu/food', data);
 };
 
 /**
  * 上传图片
  */
-export const uploadImage = (data: any) => {
-  return request.post('/api/upload/uploadImg', data, {
+export const uploadImage = (data: FormData) => {
+  return request.post<UploadResult>('/api/upload/uploadImg', data, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -81,7 +55,7 @@ export const orderService = {
    * 获取订单列表
    * @param status 可选状态筛选
    */
-  getOrders: (status?: string) => {
+  getOrders: (status?: OrderStatus) => {
     return request.get<Order[]>('/api/order/list', status ? { status } : undefined);
   },
 

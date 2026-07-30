@@ -9,11 +9,12 @@ import {
   Image,
   ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Icon, Text } from 'react-native-paper';
+import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettlementScreen() {
@@ -44,7 +45,7 @@ export default function SettlementScreen() {
   const loadBalance = async () => {
     const [error, result] = await userService.getProfile();
     if (!error && result) {
-      setBalance((result as any).balance || 0);
+      setBalance(result.balance || 0);
     }
   };
 
@@ -85,18 +86,7 @@ export default function SettlementScreen() {
     try {
       setLoading(true);
 
-      // 先扣减余额
-      const [deductError] = await userService.rechargeBalance(payAmount, 0, false);
-      if (deductError) {
-        Alert.alert('扣款失败', '余额不足，请先充值', [
-          { text: '去充值', onPress: () => router.push('/(member)/top-up') },
-          { text: '取消', style: 'cancel' },
-        ]);
-        setLoading(false);
-        return;
-      }
-
-      // 扣款成功后创建订单
+      // 后端在创建订单的事务内完成余额扣款，避免扣款成功但订单创建失败。
       const [error, data] = await orderService.createOrder({
         orderType,
         totalAmount: totalPrice,
@@ -113,7 +103,7 @@ export default function SettlementScreen() {
       });
 
       if (error || !data) {
-        Alert.alert('下单失败', '已扣款但订单创建失败，请联系客服');
+        Alert.alert('下单失败', '订单创建失败，请稍后重试');
         return;
       }
 

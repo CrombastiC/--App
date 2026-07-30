@@ -3,23 +3,13 @@
  */
 
 import MenuList, { MenuListItem } from '@/components/ui/MenuList';
-import { userService } from '@/services';
+import { userService, type UserProfile } from '@/services';
 import ToastManager from '@/utils/toast';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-interface UserInfo {
-  id: string;
-  username: string;
-  phone?: string;
-  avatar?: string;
-  balance?: number;
-  integral?: number;
-  couponCount?: number;
-}
 
 // 功能菜单配置
 const menuItems: MenuListItem[] = [
@@ -63,7 +53,7 @@ const menuItems: MenuListItem[] = [
 ];
 
 export default function ProfileScreen() {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
   const [phone, setPhone] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [signInStatus, setSignInStatus] = useState(false);// 是否已签到
@@ -92,14 +82,12 @@ export default function ProfileScreen() {
       }
 
       // axios 拦截器已解包，result 直接就是用户数据
-      const data = result as any;
-      if (data) {
-        const user = data as UserInfo;
-        setUserInfo(user);
+      if (result) {
+        setUserInfo(result);
 
         // 格式化手机号，隐藏中间4位
-        if (data.phone) {
-          const formattedPhone = data.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+        if (result.phone) {
+          const formattedPhone = result.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
           setPhone(formattedPhone);
         }
       }
@@ -116,9 +104,9 @@ export default function ProfileScreen() {
         return;
       }
       console.log(result);
-      setSignInStatus((result as any)?.isCheckIn);
-      setConsecutiveSignInDays((result as any)?.streak);
-      console.log('签到状态', (result as any)?.isCheckIn);
+      setSignInStatus(result.isCheckIn);
+      setConsecutiveSignInDays(result.streak);
+      console.log('签到状态', result.isCheckIn);
     } catch (error) {
       console.error('Failed to get sign-in status:', error);
     }
@@ -128,8 +116,8 @@ export default function ProfileScreen() {
     try {
       const [error, result] = await userService.signIn();
       if (error) {
-        console.error('签到失败:', error);
-        const errorMsg = (error as any)?.message || '签到失败';
+        console.error('签到失败:', result.message);
+        const errorMsg = result.message || '签到失败';
         ToastManager.show(errorMsg);
         return;
       }
@@ -428,4 +416,3 @@ const styles = StyleSheet.create({
     color: '#999',
   },
 });
-

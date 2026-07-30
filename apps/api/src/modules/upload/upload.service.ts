@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -25,6 +25,12 @@ export class UploadService {
   }
 
   async uploadFile(file: UploadedFile): Promise<{ url: string }> {
+    if (!file) {
+      throw new BadRequestException('请选择要上传的图片');
+    }
+    if (!file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('仅支持上传图片文件');
+    }
     // 生成唯一文件名
     const timestamp = Date.now();
     const ext = path.extname(file.originalname);

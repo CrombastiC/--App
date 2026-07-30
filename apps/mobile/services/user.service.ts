@@ -3,73 +3,29 @@
  * 处理用户信息相关操作
  */
 import request from '@/request';
-import { User, UserProfile } from './auth.service';
+import type {
+  ChangePasswordRequest,
+  CheckInResult,
+  CheckInStatus,
+  Coupon,
+  GiftCardRedemption,
+  MoneyOption,
+  TopUpRecord,
+  UpdateProfileRequest,
+  User,
+  UserProfile,
+  UserStats,
+} from '@orderfood/common';
 
 // ==================== 数据类型定义 ====================
-
-/**
- * 更新用户信息请求
- */
-export interface UpdateProfileRequest {
-  username?: string;
-  avatar?: string;
-  gender?: number; // 0: 男, 1: 女, 2: 保密
-  birthday?: string;
-}
-
-/**
- * 修改密码请求
- */
-export interface ChangePasswordRequest {
-  oldPassword: string;
-  newPassword: string;
-}
-
-/**
- * 用户统计信息
- */
-export interface UserStats {
-  orderCount: number;      // 订单数量
-  favoriteCount: number;   // 收藏数量
-  couponCount: number;     // 优惠券数量
-  points: number;          // 积分
-}
-
-/**
- * 充值记录项
- */
-export interface TopUpRecord {
-  balance: number;         // 充值金额
-  giveBalance: number;     // 赠送金额
-  totalBalance: number;    // 总金额（充值后的余额）
-  createdAt: string;       // 创建时间
-}
-
-/**
- * 充值记录响应
- */
-// axios 拦截器解包后，result 直接就是 TopUpRecord[]
 export type TopUpRecordsResponse = TopUpRecord[];
-
-/**
- * 优惠券
- * @param couponId 优惠券ID
- * @param couponName 优惠券名称
- * @param couponAmount 优惠券金额
- * @param consumeMoney 使用条件
- * @param couponUseTime 有效期
- * @param status 使用状态
- */
-export interface Coupon {
-  couponId: string;
-  couponName: string;
-  couponAmount: number;
-  consumeMoney: number;
-  couponUseTime: string;
-  status: 'unused' | 'used'; // unused: 未使用, used: 已使用
-}
-
-
+export type {
+  ChangePasswordRequest,
+  Coupon,
+  TopUpRecord,
+  UpdateProfileRequest,
+  UserStats,
+} from '@orderfood/common';
 
 // ==================== 用户服务 ====================
 
@@ -105,7 +61,7 @@ export const userService = {
    * @param file 图片文件
    * @returns [error, response]
    */
-  uploadAvatar: (file: any) => {
+  uploadAvatar: (file: { uri: string; type: string; name: string }) => {
     return request.upload<{ url: string }>('/api/upload/uploadImg', file);
   },
 
@@ -156,28 +112,28 @@ export const userService = {
    * 获取金额卡片
    */
   getTopUpOptions: () => {
-    return request.get('/api/money/getMoneyList');
+    return request.get<MoneyOption[]>('/api/money/getMoneyList');
   },
 
   /**
    * 获取签到状态 
    */
   getSignInStatus: () => {
-    return request.get('/api/user/getCheckInStatus');
+    return request.get<CheckInStatus>('/api/user/getCheckInStatus');
   },
 
   /**
    * 签到
    */
   signIn: () => {
-    return request.post('/api/user/checkIn');
+    return request.post<CheckInResult>('/api/user/checkIn');
   },
 
   /**
    * 礼品卡兑换
    */
   redeemGiftCard: (code: string) => {
-    return request.post<{ amount: number; newBalance: number }>('/api/user/redeemGiftCard', { code });
+    return request.post<GiftCardRedemption>('/api/user/redeemGiftCard', { code });
   }
 
 };

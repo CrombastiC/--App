@@ -23,7 +23,7 @@ export default function GiftCardScreen() {
   const loadBalance = async () => {
     const [error, result] = await userService.getProfile();
     if (!error && result) {
-      setBalance((result as any).balance || 0);
+      setBalance(result.balance || 0);
     }
   };
 
@@ -39,15 +39,14 @@ export default function GiftCardScreen() {
     setLoading(false);
 
     if (error) {
-      const msg = (error as any)?.message || '兑换失败，请检查兑换码';
+      const msg = result.message || '兑换失败，请检查兑换码';
       Alert.alert('兑换失败', msg);
       return;
     }
 
-    const data = result as any;
-    Alert.alert('兑换成功', `¥${data.amount} 已充入您的账户`);
+    Alert.alert('兑换成功', `¥${result.amount} 已充入您的账户`);
     setCode('');
-    setBalance(data.newBalance);
+    setBalance(result.newBalance);
   };
 
   return (

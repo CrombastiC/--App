@@ -5,17 +5,19 @@ export interface User {
   id: string;
   username: string;
   phone?: string;
-  avatar?: string;
-  balance?: number;
-  integral?: number;
+  avatar?: string | null;
+  balance: number;
+  integral: number;
+  role?: 'user' | 'admin';
 }
 
 /**
  * 用户个人资料
  */
 export interface UserProfile extends User {
-  birthday?: string;
-  gender?: number; // 0: 男, 1: 女, 2: 保密
+  birthday?: string | null;
+  gender: number; // 0: 男, 1: 女, 2: 保密
+  couponCount: number;
 }
 
 /**
@@ -30,8 +32,6 @@ export interface LoginRequest {
  * 登录响应数据
  */
 export interface LoginResponse {
-  code: number;
-  message: string;
   token: string;
   refreshToken: string;
   user: User;
@@ -50,7 +50,15 @@ export interface RegisterRequest {
  * 注册响应数据
  */
 export interface RegisterResponse {
-  code: number;
   token: string;
+  refreshToken: string;
   user: User;
+}
+
+/**
+ * Token 刷新响应
+ */
+export interface TokenPair {
+  token: string;
+  refreshToken: string;
 }

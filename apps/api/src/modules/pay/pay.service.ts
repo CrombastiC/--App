@@ -1,4 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../prisma/prisma.service";
 import { AlipayService } from "../../common/pay/alipay.service";
@@ -15,6 +19,8 @@ interface AlipayNotifyBody {
   trade_no: string;
   gmt_payment: string;
   body: string;
+  total_amount: string;
+  trade_status: string;
 }
 
 /**
@@ -32,7 +38,9 @@ function isAlipayNotifyBody(value: unknown): value is AlipayNotifyBody {
     typeof body.out_trade_no === "string" &&
     typeof body.trade_no === "string" &&
     typeof body.gmt_payment === "string" &&
-    typeof body.body === "string"
+    typeof body.body === "string" &&
+    typeof body.total_amount === "string" &&
+    typeof body.trade_status === "string"
   );
 }
 
@@ -77,15 +85,19 @@ export class PayService {
     });
 
     if (!order) {
-      return { code: 404, message: "订单不存在", data: null };
+      throw new NotFoundException("订单不存在");
     }
 
     if (order.status === "paid") {
-      return { code: 400, message: "该订单已支付", data: null };
+      throw new BadRequestException("该订单已支付");
     }
 
     if (order.status === "cancelled") {
-      return { code: 400, message: "该订单已取消", data: null };
+      throw new BadRequestException("该订单已取消");
+    }
+
+    if (Math.abs(createPayDto.totalAmount - order.payAmount) > 0.01) {
+      throw new BadRequestException("支付金额与订单金额不一致");
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
@@ -151,7 +163,7 @@ export class PayService {
       };
     });
 
-    return { code: 200, message: "success", data: result };
+    return result;
   }
 
   /**
@@ -166,11 +178,36 @@ export class PayService {
     const notifyBody = req.body as unknown;
 
     if (!isAlipayNotifyBody(notifyBody)) {
-      throw new Error("无效的支付宝通知参数");
+      throw new BadRequestException("无效的支付宝通知参数");
     }
 
-    // 验签（alipay-sdk checkNotifySign 需要在 controller 层调用）
-    // 这里假设验签已通过
+    const signatureValid = this.alipayService
+      .getAlipaySdk()
+      .checkNotifySignV2(notifyBody);
+    if (!signatureValid) {
+      throw new BadRequestException("支付宝通知验签失败");
+    }
+
+    if (!["TRADE_SUCCESS", "TRADE_FINISHED"].includes(notifyBody.trade_status)) {
+      return true;
+    }
+
+    const payload = JSON.parse(notifyBody.body) as unknown;
+    if (!isNotifyPayload(payload)) {
+      throw new BadRequestException("支付宝通知业务参数无效");
+    }
+
+    const paymentRecord = await this.prisma.paymentRecord.findUnique({
+      where: { outTradeNo: notifyBody.out_trade_no },
+    });
+    if (
+      !paymentRecord ||
+      paymentRecord.orderId !== payload.orderId ||
+      paymentRecord.userId !== payload.userId ||
+      Math.abs(paymentRecord.amount - Number(notifyBody.total_amount)) > 0.01
+    ) {
+      throw new BadRequestException("支付宝通知订单信息不匹配");
+    }
 
     await this.prisma.$transaction(async (tx) => {
       // 1. 更新支付记录
@@ -183,14 +220,11 @@ export class PayService {
         },
       });
 
-      // 2. 解析自定义 payload 并更新订单状态
-      const payload = JSON.parse(notifyBody.body) as unknown;
-      if (isNotifyPayload(payload)) {
-        await tx.order.update({
-          where: { id: payload.orderId },
-          data: { status: "paid" },
-        });
-      }
+      // 2. 更新订单状态
+      await tx.order.update({
+        where: { id: payload.orderId },
+        data: { status: "paid" },
+      });
     });
 
     return true;
@@ -209,19 +243,15 @@ export class PayService {
     });
 
     if (!paymentRecord) {
-      return { code: 404, message: "未找到支付记录", data: null };
+      throw new NotFoundException("未找到支付记录");
     }
 
     return {
-      code: 200,
-      message: "success",
-      data: {
-        outTradeNo: paymentRecord.outTradeNo,
-        tradeNo: paymentRecord.tradeNo,
-        tradeStatus: paymentRecord.tradeStatus,
-        amount: paymentRecord.amount,
-        payTime: paymentRecord.payTime,
-      },
+      outTradeNo: paymentRecord.outTradeNo,
+      tradeNo: paymentRecord.tradeNo,
+      tradeStatus: paymentRecord.tradeStatus,
+      amount: paymentRecord.amount,
+      payTime: paymentRecord.payTime,
     };
   }
 }

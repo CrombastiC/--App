@@ -34,7 +34,7 @@ export interface Order {
   remark?: string;
   createdAt: string;
   updatedAt: string;
-  items: OrderItem[];
+  orderItems: OrderItem[];
 }
 
 /**

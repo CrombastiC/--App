@@ -6,3 +6,13 @@ export interface ApiResponse<T = unknown> {
   message: string;
   data: T;
 }
+
+/**
+ * 分页数据
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}

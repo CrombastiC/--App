@@ -13,25 +13,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PointsService } from './points.service';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AdminGuard } from '../../common/guards/admin.guard';
-
-export interface CreatePrizeDto {
-  prizeName: string;
-  prizeImage: string;
-  prizeIntegral: number;
-  prizeValue?: number;
-  stock?: number;
-  sortOrder?: number;
-}
-
-export interface UpdatePrizeDto {
-  prizeName?: string;
-  prizeImage?: string;
-  prizeIntegral?: number;
-  prizeValue?: number;
-  stock?: number;
-  sortOrder?: number;
-  isActive?: boolean;
-}
+import { CreatePrizeDto, UpdatePrizeDto } from './dto/admin-points.dto';
 
 @ApiTags('奖品管理')
 @Controller('points/prize')

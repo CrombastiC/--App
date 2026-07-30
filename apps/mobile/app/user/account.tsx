@@ -1,5 +1,5 @@
 import MenuList, { MenuListItem } from '@/components/ui/MenuList';
-import { tokenManager, userService } from "@/services";
+import { tokenManager, userService, type UserProfile } from "@/services";
 import { uploadImage } from "@/services/order.service";
 import { formatDateChinese } from "@/utils/dateUtils";
 import { StorageUtils } from "@/utils/storage";
@@ -25,21 +25,10 @@ import {
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface UserInfo {
-  id: string;
-  username: string;
-  phone?: string;
-  avatar?: string;
-  gender?: number; // 0: 男, 1: 女, 2: 保密
-  birthday?: string;
-  balance?: number;
-  integral?: number;
-}
-
 export default function AccountScreen() {
   const [date, setDate] = useState<Date | null>(null);
   const [show, setShow] = useState(false);
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
   const [genderVisible, setGenderVisible] = useState(false);
   const [nicknameVisible, setNicknameVisible] = useState(false);
   const [nicknameInput, setNicknameInput] = useState('');
@@ -66,23 +55,12 @@ export default function AccountScreen() {
       console.log('User data:', result);
 
       // axios 拦截器已解包，result 直接就是用户数据
-      const data = result as any;
-      if (data) {
-        const { avatar, username, phone, gender, birthday, balance, integral, id } = data;
-        setUserInfo({
-          id: id || '',
-          avatar,
-          username,
-          phone,
-          gender,
-          birthday,
-          balance,
-          integral,
-        });
+      if (result) {
+        setUserInfo(result);
 
         // 如果有生日数据，设置日期
-        if (birthday) {
-          setDate(new Date(birthday));
+        if (result.birthday) {
+          setDate(new Date(result.birthday));
         } else {
           setDate(null);
         }
@@ -216,13 +194,7 @@ export default function AccountScreen() {
         return;
       }
 
-      const responseData = uploadData as any;
-      if (responseData.code !== 0 || !responseData.data?.url) {
-        Alert.alert('提示', responseData.message || '图片上传失败');
-        return;
-      }
-
-      const avatarUrl = responseData.data.url;
+      const avatarUrl = uploadData.url;
       console.log('头像上传成功:', avatarUrl);
 
       // 调用更新接口，传入头像 URL

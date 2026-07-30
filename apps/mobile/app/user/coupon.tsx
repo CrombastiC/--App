@@ -40,8 +40,7 @@ export default function CouponScreen() {
     setIsLoading(true);
     const [error, result] = await userService.getCoupons(isExpired);
     if (!error) {
-      const data = (result as any)?.data;
-      setCoupons(data || []);
+      setCoupons(result || []);
     } else {
       setCoupons([]);
     }

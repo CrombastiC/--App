@@ -1,10 +1,10 @@
-import { Controller, Post, Get, Body, Param, All, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, All, Req, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PayService } from './pay.service';
 import { CreatePayDto } from './dto/create-pay.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 @ApiTags('支付')
 @Controller('pay')
@@ -38,7 +38,8 @@ export class PayController {
   @Public()
   @All('notify')
   @ApiOperation({ summary: '支付宝支付异步通知回调' })
-  async notify(@Req() req: Request) {
-    return this.payService.notify(req);
+  async notify(@Req() req: Request, @Res() response: Response) {
+    const success = await this.payService.notify(req);
+    return response.type('text/plain').send(success ? 'success' : 'failure');
   }
 }

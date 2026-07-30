@@ -1,5 +1,3 @@
-import { User } from '../auth';
-
 /**
  * 更新用户信息请求
  */
@@ -53,4 +51,21 @@ export interface TopUpRecord {
 export interface CheckInStatus {
   isCheckIn: boolean;
   streak: number;
+}
+
+/**
+ * 签到响应
+ */
+export interface CheckInResult {
+  id: string;
+  integral: number;
+  streak: number;
+}
+
+/**
+ * 礼品卡兑换响应
+ */
+export interface GiftCardRedemption {
+  amount: number;
+  newBalance: number;
 }

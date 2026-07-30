@@ -4,66 +4,25 @@
  */
 import request from '@/request';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type {
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+  TokenPair,
+  User,
+  UserProfile,
+} from '@orderfood/common';
 
 // ==================== 数据类型定义 ====================
-
-/**
- * 用户信息
- */
-export interface User {
-  id: string;
-  username: string;
-  phone?: string;
-  avatar?: string;
-  balance?: number;    // 余额
-  integral?: number;   // 积分
-}
-
-/**
- * 用户个人资料
- */
-export interface UserProfile extends User {
-  birthday?: string;
-  gender?: number; // 0: 男, 1: 女, 2: 保密
-}
-/**
- * 登录请求参数
- */
-export interface LoginRequest {
-  phone: string;
-  password: string;
-}
-
-/**
- * 登录响应数据
- * 响应格式: { code: 0, token: string, user: User }
- */
-export interface LoginResponse {
-  message: string;
-  code: number;
-  token: string;
-  refreshToken: string;
-  user: User;
-}
-
-/**
- * 注册请求参数
- */
-export interface RegisterRequest {
-  phone: string;
-  password: string;
-  username: string; // 昵称
-}
-
-/**
- * 注册响应数据
- * 响应格式: { code: 0, token: string, user: User }
- */
-export interface RegisterResponse {
-  code: number;
-  token: string;
-  user: User;
-}
+export type {
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+  User,
+  UserProfile,
+} from '@orderfood/common';
 
 // 以下接口暂时不可用，需要接入短信平台后启用
 // /**
@@ -137,7 +96,7 @@ export const authService = {
    * @returns [error, response]
    */
   refreshToken: (refreshToken: string) => {
-    return request.post<{ token: string; refreshToken: string }>(
+    return request.post<TokenPair>(
       '/api/user/refresh-token',
       { refreshToken }
     );
@@ -225,6 +184,7 @@ export const tokenManager = {
     try {
       await AsyncStorage.multiRemove([
         'token',
+        'refreshToken',
         'userId',
         'userInfo',
       ]);

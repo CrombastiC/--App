@@ -49,8 +49,8 @@ apps/mobile/
 
 ## 核心约定
 
-- 网络请求统一返回 `[error, data]` 元组，通过 `useRequest` Hook 管理状态
-- Token 通过 `tokenManager`（`services/auth.service.ts`）管理，请求拦截器自动注入
+- 网络请求统一返回 `[error, data]` 判别元组；成功时 `data` 为已解包的业务数据，失败时为统一错误对象
+- Token 通过 `tokenManager`（`services/auth.service.ts`）管理；请求拦截器自动注入，并在 401 时合并并发请求后刷新 Token
 - 全局 Toast：`ToastManager.show(msg, options)` 来自 `utils/toast.tsx`
 - API 地址配置：`config/api.config.ts`，支持 development / staging / production 三套环境
 
@@ -65,3 +65,7 @@ eas build --profile production --platform all
 ```
 
 详见 [docs/development-guide.md](docs/development-guide.md)。
+
+## 接口契约
+
+移动端服务优先复用 `packages/common/src` 的共享类型。订单、菜单、用户、积分、优惠券等接口变更时，需要同步更新共享类型和 Nest DTO，避免仅靠类型断言掩盖响应差异。

@@ -2,6 +2,11 @@ import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PointsService } from './points.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  ExchangeMultiPrizeDto,
+  ExchangePrizeDto,
+  PointsListQueryDto,
+} from './dto/points.dto';
 
 @ApiTags('积分')
 @Controller('points')
@@ -19,7 +24,7 @@ export class PointsController {
   @ApiOperation({ summary: '兑换奖品(单抽)' })
   async exchangePrize(
     @CurrentUser('id') userId: string,
-    @Body() body: { prizeId: string; costIntegral: number },
+    @Body() body: ExchangePrizeDto,
   ) {
     return this.pointsService.exchangePrize(userId, body.prizeId, body.costIntegral);
   }
@@ -28,7 +33,7 @@ export class PointsController {
   @ApiOperation({ summary: '十连抽' })
   async exchangeMultiPrize(
     @CurrentUser('id') userId: string,
-    @Body() body: { prizeIds: string[]; costIntegral: number },
+    @Body() body: ExchangeMultiPrizeDto,
   ) {
     return this.pointsService.exchangeMultiPrize(userId, body.prizeIds, body.costIntegral);
   }
@@ -49,9 +54,8 @@ export class PointsController {
   @ApiOperation({ summary: '获取积分收支记录' })
   async getPointsList(
     @CurrentUser('id') userId: string,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 20,
+    @Query() query: PointsListQueryDto,
   ) {
-    return this.pointsService.getPointsList(userId, page, limit);
+    return this.pointsService.getPointsList(userId, query.page, query.limit);
   }
 }

@@ -3,6 +3,7 @@
  */
 
 import { useRequest } from '@/hooks/use-request';
+import { TextInput } from '@/components/ui/PaperTextInput';
 import { authService } from '@/services';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -16,7 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Button, Icon, Text, TextInput } from 'react-native-paper';
+import { Button, Icon, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegisterScreen() {

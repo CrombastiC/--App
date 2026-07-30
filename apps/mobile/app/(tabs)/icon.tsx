@@ -1,7 +1,7 @@
 import iconsData from '@/json/MaterialCommunityIcons.json'
 import { useMemo, useState } from 'react'
-import { FlatList, StyleSheet, View } from 'react-native'
-import { Icon, Searchbar, Text } from 'react-native-paper'
+import { FlatList, StyleSheet, Text, View } from 'react-native'
+import { Icon, Searchbar } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function IconScreen() {

@@ -1,5 +1,5 @@
 import { userService } from "@/services";
-import { pointsService } from "@/services/points.service";
+import { PointRecord, pointsService } from "@/services/points.service";
 import { formatDateTime } from "@/utils/dateUtils";
 import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
@@ -7,13 +7,13 @@ interface UserInfo {
   id: string;
   username: string;
   phone?: string;
-  avatar?: string;
+  avatar?: string | null;
   balance?: number;
   integral?: number;
   couponCount?: number;
 }
 export default function PointPageScreen() {
-  const [records, setRecords] = useState<any[]>([]);
+  const [records, setRecords] = useState<PointRecord[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [loading, setLoading] = useState(false);
@@ -36,10 +36,8 @@ export default function PointPageScreen() {
       }
 
       // axios 拦截器已解包，result 直接就是用户数据
-      const data = result as any;
-      if (data) {
-        const user = data as UserInfo;
-        setUserInfo(user);
+      if (result) {
+        setUserInfo(result);
 
         
       }
@@ -64,7 +62,7 @@ export default function PointPageScreen() {
       console.error('获取积分收支记录失败:', error);
       return;
     }
-    const data = (result as any)?.data || [];
+    const data = result?.data || [];
     
     if (pageNum === 1) {
       setRecords(data);
@@ -95,7 +93,7 @@ export default function PointPageScreen() {
     loadUserInfo();
   };
 
-  const renderRecord = ({ item }: { item: any }) => {
+  const renderRecord = ({ item }: { item: PointRecord }) => {
     return (
       <View style={styles.recordItem}>
         <View>

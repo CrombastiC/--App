@@ -5,7 +5,7 @@ export interface Food {
   id: string;
   classifyId: string;
   foodName: string;
-  foodImage?: string;
+  foodImage?: string | null;
   foodPrice: number;
 }
 
@@ -13,9 +13,9 @@ export interface Food {
  * 菜品分类
  */
 export interface Category {
-  id: string;
+  classifyId: string;
   classifyName: string;
-  icon?: string;
+  icon?: string | null;
   foods: Food[];
 }
 

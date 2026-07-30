@@ -13,23 +13,10 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PointsService } from './points.service';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AdminGuard } from '../../common/guards/admin.guard';
-
-export interface CreateCommodityDto {
-  commodityName: string;
-  commodityImage: string;
-  commodityIntegral: number;
-  stock?: number;
-  sortOrder?: number;
-}
-
-export interface UpdateCommodityDto {
-  commodityName?: string;
-  commodityImage?: string;
-  commodityIntegral?: number;
-  stock?: number;
-  sortOrder?: number;
-  isActive?: boolean;
-}
+import {
+  CreateCommodityDto,
+  UpdateCommodityDto,
+} from './dto/admin-points.dto';
 
 @ApiTags('积分商品管理')
 @Controller('points/commodity')

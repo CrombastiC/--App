@@ -11,6 +11,7 @@ export type {
   RegisterRequest,
   RegisterResponse,
   User,
+  UserProfile,
 } from "./auth.service";
 
 // 用户服务

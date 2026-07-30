@@ -76,7 +76,7 @@ export default function PointsMallScreen() {
     const filled = [...list];
     if (filled.length % 2 !== 0) {
       filled.push({
-        commodityId: `empty_${filled.length}` as any,
+        commodityId: `empty_${filled.length}`,
         commodityName: '',
         commodityImage: '',
         commodityIntegral: 0,

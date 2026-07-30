@@ -7,8 +7,8 @@ import { useCartStore } from '@/stores/cart-store';
 import { resolveImageUrl } from '@/utils/image';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View, ViewToken } from 'react-native';
-import { Icon, Text } from 'react-native-paper';
+import { ActivityIndicator, Animated, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, ViewToken } from 'react-native';
+import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // 分类数据类型

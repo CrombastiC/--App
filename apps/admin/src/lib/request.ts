@@ -2,6 +2,19 @@ import axios from 'axios';
 import { message } from 'antd';
 import { getToken, clearAuth } from './auth';
 
+export interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 const request = axios.create({
   baseURL: '/api',
   timeout: 10000,
@@ -36,3 +49,23 @@ request.interceptors.response.use(
 );
 
 export default request;
+
+/** 解包后端统一响应，业务页面直接获得 data。 */
+export const api = {
+  async get<T>(url: string, config?: Parameters<typeof request.get>[1]) {
+    const response = await request.get<unknown, ApiResponse<T>>(url, config);
+    return response.data;
+  },
+  async post<T>(url: string, data?: unknown) {
+    const response = await request.post<unknown, ApiResponse<T>>(url, data);
+    return response.data;
+  },
+  async put<T>(url: string, data?: unknown) {
+    const response = await request.put<unknown, ApiResponse<T>>(url, data);
+    return response.data;
+  },
+  async delete<T>(url: string) {
+    const response = await request.delete<unknown, ApiResponse<T>>(url);
+    return response.data;
+  },
+};

@@ -6,8 +6,8 @@ import { useCartStore } from '@/stores/cart-store';
 import { resolveImageUrl } from '@/utils/image';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Icon, Text } from 'react-native-paper';
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 /** 带加载失败回退的菜品图片组件 */

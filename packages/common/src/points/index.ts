@@ -2,7 +2,7 @@
  * 积分商城商品
  */
 export interface Commodity {
-  commodityId: number;
+  commodityId: string;
   commodityName: string;
   commodityImage: string;
   commodityIntegral: number;

@@ -22,6 +22,7 @@ export class UserService {
         integral: true,
         createdAt: true,
         updatedAt: true,
+        _count: { select: { userCoupons: true } },
       },
     });
 
@@ -29,7 +30,8 @@ export class UserService {
       throw new NotFoundException('用户不存在');
     }
 
-    return user;
+    const { _count, ...profile } = user;
+    return { ...profile, couponCount: _count.userCoupons };
   }
 
   // 更新用户信息
@@ -65,9 +67,12 @@ export class UserService {
         newBalance += balance + giveBalance;
       } else {
         // 扣除
+        if (giveBalance !== 0) {
+          throw new BadRequestException('余额扣除时赠送金额必须为 0');
+        }
         newBalance -= balance;
         if (newBalance < 0) {
-          throw new Error('余额不足');
+          throw new BadRequestException('余额不足');
         }
       }
 
@@ -148,8 +153,24 @@ export class UserService {
 
   // 注销账户
   async deleteAccount(userId: string) {
-    await this.prisma.user.delete({
-      where: { id: userId },
+    await this.prisma.$transaction(async (tx) => {
+      const orders = await tx.order.findMany({
+        where: { userId },
+        select: { id: true },
+      });
+      const orderIds = orders.map((order) => order.id);
+
+      await tx.paymentRecord.deleteMany({ where: { userId } });
+      if (orderIds.length > 0) {
+        await tx.orderItem.deleteMany({ where: { orderId: { in: orderIds } } });
+      }
+      await tx.order.deleteMany({ where: { userId } });
+      await tx.userCoupon.deleteMany({ where: { userId } });
+      await tx.lotteryRecord.deleteMany({ where: { userId } });
+      await tx.pointRecord.deleteMany({ where: { userId } });
+      await tx.checkInRecord.deleteMany({ where: { userId } });
+      await tx.topUpRecord.deleteMany({ where: { userId } });
+      await tx.user.delete({ where: { id: userId } });
     });
 
     return { message: '账户注销成功' };

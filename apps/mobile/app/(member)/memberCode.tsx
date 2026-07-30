@@ -1,4 +1,4 @@
-import { tokenManager, userService } from "@/services";
+import { tokenManager, userService, type UserProfile } from "@/services";
 import Barcode from "@kichiyaki/react-native-barcode-generator";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -9,15 +9,6 @@ import {
 } from "react-native";
 import { Card, Icon } from "react-native-paper";
 import QRCode from "react-native-qrcode-svg";
-interface UserInfo {
-  id: string;
-  username: string;
-  phone?: string;
-  avatar?: string;
-  balance?: number;
-  integral?: number;
-  couponCount?: number;
-}
 export default function MemberCodeScreen() {
   const [accountBalance, setAccountBalance] = useState<number>(0);
   // 生成随机会员码
@@ -47,7 +38,7 @@ export default function MemberCodeScreen() {
       loadUserInfo();
     }, [])
   );
- const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+ const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
     const loadUserInfo = async () => {
       try {
         // 从API获取用户信息
@@ -58,10 +49,8 @@ export default function MemberCodeScreen() {
         }
   
         // axios 拦截器已解包，result 直接就是用户数据
-        const data = result as any;
-        if (data) {
-          const user = data as UserInfo;
-          setUserInfo(user);
+        if (result) {
+          setUserInfo(result);
   
           
         }

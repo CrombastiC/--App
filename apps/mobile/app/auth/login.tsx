@@ -3,6 +3,7 @@
  */
 
 import { API_CONFIG, CURRENT_ENV } from '@/config/api.config';
+import { TextInput } from '@/components/ui/PaperTextInput';
 import { useRequest } from '@/hooks/use-request';
 import { authService, tokenManager } from '@/services';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -17,7 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Button, Icon, Text, TextInput } from 'react-native-paper';
+import { Button, Icon, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {

@@ -1,9 +1,10 @@
 import { createDish, getProductInfo, uploadImage } from '@/services/order.service';
+import { TextInput } from '@/components/ui/PaperTextInput';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Button, Dialog, Divider, Icon, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Dialog, Divider, Icon, Portal, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // 分类数据类型
@@ -33,16 +34,9 @@ export default function CreateOrderScreen() {
       const [isError, data] = await getProductInfo();
 
       if (!isError && data) {
-        const responseData = data as any;
-
-        if (responseData.code === 0 && responseData.data) {
-          const categoryData = responseData.data;
-          console.log('商品数据加载成功:', categoryData);
-          
-          // 提取分类列表
-          if (Array.isArray(categoryData)) {
-            setCategories(categoryData);
-          }
+        console.log('商品数据加载成功:', data);
+        if (Array.isArray(data)) {
+          setCategories(data);
         }
       }
     } catch (error) {
@@ -117,15 +111,9 @@ export default function CreateOrderScreen() {
       const [isError, data] = await uploadImage(formData);
 
       if (!isError && data) {
-        const responseData = data as any;
-        if (responseData.code === 0 && responseData.data?.url) {
-          setFoodImage(responseData.data.url);
-          console.log('图片上传成功:', responseData.data.url);
-          Alert.alert('成功', '图片上传成功');
-        } else {
-          console.log('图片上传失败:', responseData.message);
-          Alert.alert('失败', responseData.message || '图片上传失败');
-        }
+        setFoodImage(data.url);
+        console.log('图片上传成功:', data.url);
+        Alert.alert('成功', '图片上传成功');
       }
     } catch (error) {
       console.error('上传图片失败:', error);
@@ -159,32 +147,25 @@ export default function CreateOrderScreen() {
     console.log('提交订单:', {
       classifyId: selectedCategoryId,
       foodName: dishName.trim(),
-      foodPrice: dishPrice,
+      foodPrice: Number(dishPrice),
       foodImage: foodImage,
     });
     // TODO: 调用提交订单的 API
     const [isError, data] =await createDish({
       classifyId: selectedCategoryId,
       foodName: dishName.trim(),
-      foodPrice: dishPrice,
+      foodPrice: Number(dishPrice),
       foodImage: foodImage,
     });
     if (!isError && data) {
-      const responseData = data as any;
-      if (responseData.code === 0) {
-        setVisible(true);
-        console.log('订单创建成功');
-        //
-        // 重置表单
-        setSelectedCategory('');
-        setSelectedCategoryId('');
-        setDishName('');
-        setDishPrice('');
-        setFoodImage('');
-        setImageUri('');
-      } else {
-        console.log('订单创建失败:', responseData.message);
-      }
+      setVisible(true);
+      console.log('菜品创建成功:', data.id);
+      setSelectedCategory('');
+      setSelectedCategoryId('');
+      setDishName('');
+      setDishPrice('');
+      setFoodImage('');
+      setImageUri('');
     }
   };
 

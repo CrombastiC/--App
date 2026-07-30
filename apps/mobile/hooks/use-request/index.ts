@@ -29,7 +29,9 @@ export function useRequest<T>(
         setLoading(true)
         const [error, requestdata] = await serviceMethod(...(options?.defaultParams || []))
         setLoading(false)
-        setData(requestdata)
+        if (!error) {
+            setData(requestdata)
+        }
         setError(error)
     }, [serviceMethod, options])
 
@@ -42,7 +44,9 @@ export function useRequest<T>(
          console.log(res);
          setError(err)
          setLoading(false)
-         setData(data)
+         if (!err) {
+            setData(data)
+         }
          return res
     }, [serviceMethod])
 

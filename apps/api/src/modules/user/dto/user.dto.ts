@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber, IsBoolean, Min, Max } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsBoolean, Min, Max, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -30,11 +30,13 @@ export class UpdateProfileDto {
 export class RechargeDto {
   @ApiProperty({ description: '充值金额' })
   @IsNumber()
+  @Min(0.01)
   @Type(() => Number)
   balance: number;
 
   @ApiProperty({ description: '赠送金额' })
   @IsNumber()
+  @Min(0)
   @Type(() => Number)
   giveBalance: number;
 
@@ -50,6 +52,7 @@ export class ChangePasswordDto {
 
   @ApiProperty({ description: '新密码' })
   @IsString()
+  @MinLength(6)
   newPassword: string;
 }
 

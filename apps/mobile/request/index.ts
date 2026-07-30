@@ -9,15 +9,30 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 import { router } from 'expo-router';
+import type { ApiResponse, TokenPair } from '@orderfood/common';
 
-const refreshTokenUrl = '/api/auth/refresh-token';
+const refreshTokenUrl = '/api/user/refresh-token';
 
-export type Response<T> = Promise<[boolean, T, AxiosResponse<T>]>;
+export interface RequestError {
+  code: number;
+  message: string;
+  data: null;
+}
+
+export type Response<T> = Promise<
+  | [false, T, AxiosResponse<unknown>]
+  | [true, RequestError, AxiosResponse<unknown> | undefined]
+>;
+
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 class Request {
   private axiosInstance: AxiosInstance;
 
-  private refreshTokenFlag = false;
+  private refreshTokenPromise: Promise<string | null> | null = null;
+  private redirectingToLogin = false;
   private requestQueue: {
     resolve: any;
     config: any;
@@ -164,7 +179,21 @@ class Request {
     this.requestingCount = Math.max(0, this.requestingCount - 1);
 
     if (status === 401) {
-      this.toLoginPage();
+      const retryConfig = config as RetryableRequestConfig | undefined;
+      if (
+        retryConfig &&
+        retryConfig.url !== refreshTokenUrl &&
+        !retryConfig._retry
+      ) {
+        retryConfig._retry = true;
+        const token = await this.refreshAccessToken();
+        if (token) {
+          retryConfig.headers.Authorization = `Bearer ${token}`;
+          return this.axiosInstance.request(retryConfig);
+        }
+      }
+
+      await this.toLoginPage();
       return Promise.resolve([true, error?.response?.data, undefined]);
     } else {
       const errorMessage = error.response?.data?.message || error.message || '请求失败';
@@ -176,16 +205,54 @@ class Request {
 
   private reset() {
     this.requestQueue = [];
-    this.refreshTokenFlag = false;
+    this.refreshTokenPromise = null;
     this.requestingCount = 0;
   }
 
+  /** 使用刷新令牌换取新 Token，并合并并发的 401 刷新请求。 */
+  private async refreshAccessToken(): Promise<string | null> {
+    if (this.refreshTokenPromise) {
+      return this.refreshTokenPromise;
+    }
+
+    this.refreshTokenPromise = (async () => {
+      const refreshToken = await AsyncStorage.getItem('refreshToken');
+      if (!refreshToken) return null;
+
+      try {
+        const response = await axios.post<ApiResponse<TokenPair>>(
+          `${API_CONFIG.baseURL}${refreshTokenUrl}`,
+          { refreshToken },
+          { timeout: API_CONFIG.timeout },
+        );
+        const tokens = response.data.data;
+        await AsyncStorage.multiSet([
+          ['token', tokens.token],
+          ['refreshToken', tokens.refreshToken],
+        ]);
+        return tokens.token;
+      } catch (refreshError) {
+        console.warn('刷新 Token 失败:', refreshError);
+        return null;
+      } finally {
+        this.refreshTokenPromise = null;
+      }
+    })();
+
+    return this.refreshTokenPromise;
+  }
+
   private async toLoginPage() {
+    if (this.redirectingToLogin) return;
+    this.redirectingToLogin = true;
     this.reset();
 
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('refreshToken');
-    await AsyncStorage.removeItem('userId');
+    await AsyncStorage.multiRemove([
+      'token',
+      'refreshToken',
+      'userId',
+      'userInfo',
+    ]);
 
     console.warn('Token已失效，请重新登录');
 
@@ -193,15 +260,16 @@ class Request {
 
     setTimeout(() => {
       router.replace('/auth/login');
+      this.redirectingToLogin = false;
     }, 1500);
   }
 
   request<T, D = any>(config: AxiosRequestConfig<D>): Response<T> {
-    return this.axiosInstance(config);
+    return this.axiosInstance(config) as unknown as Response<T>;
   }
 
   get<T, D = any>(url: string, params?: any, config?: AxiosRequestConfig<D>): Response<T> {
-    return this.axiosInstance.get(url, { params, ...config });
+    return this.axiosInstance.get(url, { params, ...config }) as unknown as Response<T>;
   }
 
   post<T, D = any>(
@@ -209,7 +277,7 @@ class Request {
     data?: D,
     config?: AxiosRequestConfig<D>
   ): Response<T> {
-    return this.axiosInstance.post(url, data, config);
+    return this.axiosInstance.post(url, data, config) as unknown as Response<T>;
   }
 
   put<T, D = any>(
@@ -217,11 +285,11 @@ class Request {
     data?: D,
     config?: AxiosRequestConfig<D>
   ): Response<T> {
-    return this.axiosInstance.put(url, data, config);
+    return this.axiosInstance.put(url, data, config) as unknown as Response<T>;
   }
 
   delete<T, D = any>(url: string, config?: AxiosRequestConfig<D>): Response<T> {
-    return this.axiosInstance.delete(url, config);
+    return this.axiosInstance.delete(url, config) as unknown as Response<T>;
   }
 
   patch<T, D = any>(
@@ -229,7 +297,7 @@ class Request {
     data?: D,
     config?: AxiosRequestConfig<D>
   ): Response<T> {
-    return this.axiosInstance.patch(url, data, config);
+    return this.axiosInstance.patch(url, data, config) as unknown as Response<T>;
   }
 
   upload<T>(
@@ -245,7 +313,7 @@ class Request {
         'Content-Type': 'multipart/form-data',
       },
       ...config,
-    });
+    }) as unknown as Response<T>;
   }
 }
 

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, Min, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -26,7 +26,7 @@ export class CreatePayDto {
   totalAmount: number;
 
   @ApiPropertyOptional({ description: '支付方式：app（移动端）、page（网页/H5），默认 page' })
-  @IsString()
+  @IsIn(['app', 'page'])
   @IsOptional()
   payType?: 'app' | 'page';
 }

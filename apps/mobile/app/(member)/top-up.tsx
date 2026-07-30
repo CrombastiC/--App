@@ -63,12 +63,11 @@ export default function TopUpScreen() {
       }
 
       // 拦截器已解包，result 直接就是选项数组
-      const optionsData = result as any;
-      if (Array.isArray(optionsData)) {
-        setTopUpOptions(optionsData);
+      if (Array.isArray(result)) {
+        setTopUpOptions(result);
         // 默认选中第一个选项
-        if (optionsData.length > 0) {
-          setSelectedAmount(optionsData[0].moneyId);
+        if (result.length > 0) {
+          setSelectedAmount(result[0].moneyId);
         }
       }
     } catch (error) {
@@ -85,9 +84,8 @@ export default function TopUpScreen() {
       }
 
       // axios 拦截器已解包，result 直接就是用户数据
-      const data = result as any;
-      if (data && data.balance !== undefined) {
-        setBalance(data.balance);
+      if (result && result.balance !== undefined) {
+        setBalance(result.balance);
       }
     } catch (error) {
       console.error('Failed to load balance:', error);
@@ -98,8 +96,8 @@ export default function TopUpScreen() {
     setIsLoading(true);
     const [error, response] = await userService.getTopUpRecords();
 
-    if (!error && response && response.data) {
-      setRecords(response.data);
+    if (!error && response) {
+      setRecords(response);
     } else {
       console.error('获取充值记录失败:', error);
       setRecords([]);
