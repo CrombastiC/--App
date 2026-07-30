@@ -86,4 +86,3 @@ prisma/migrations/
 # Lock files - only use pnpm
 package-lock.json
 yarn.lock
-pnpm-lock.yaml
