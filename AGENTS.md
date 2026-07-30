@@ -122,7 +122,7 @@ ToastManager.show('成功', { position: 'top', containerStyle: { backgroundColor
 - `money` — 充值金额选项配置
 - `upload` — 图片上传
 - `queue` — 门店列表、排队取号、当前进度和取消排队
-- `support` — 移动端与管理后台在线客服会话
+- `support` — 移动端与管理后台在线客服会话、图片和文件附件
 
 ### 公共模块
 

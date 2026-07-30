@@ -5,9 +5,18 @@ import {
   Param,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { Roles } from "../../common/decorators/roles.decorator";
 import { AdminGuard } from "../../common/guards/admin.guard";
@@ -17,6 +26,7 @@ import {
   UpdateSupportStatusDto,
 } from "./dto/support.dto";
 import { SupportService } from "./support.service";
+import type { UploadedFile as UploadedFileType } from "../upload/upload.service";
 
 @ApiTags("管理后台-在线客服")
 @ApiBearerAuth("JWT-auth")
@@ -39,13 +49,34 @@ export class AdminSupportController {
   }
 
   @Post("conversations/:id/messages")
-  @ApiOperation({ summary: "客服回复消息" })
+  @ApiOperation({ summary: "客服回复文字消息" })
   sendMessage(
     @CurrentUser("id") adminId: string,
     @Param("id") id: string,
     @Body() dto: SendSupportMessageDto,
   ) {
     return this.supportService.sendAdminMessage(adminId, id, dto.content);
+  }
+
+  @Post("conversations/:id/attachments")
+  @ApiOperation({ summary: "客服发送图片或文件" })
+  @ApiConsumes("multipart/form-data")
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: { file: { type: "string", format: "binary" } },
+      required: ["file"],
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor("file", { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
+  sendAttachment(
+    @CurrentUser("id") adminId: string,
+    @Param("id") id: string,
+    @UploadedFile() file: UploadedFileType,
+  ) {
+    return this.supportService.sendAdminAttachment(adminId, id, file);
   }
 
   @Post("conversations/:id/status")

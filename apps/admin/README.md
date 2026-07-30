@@ -56,6 +56,7 @@ DELETE /api/admin/gift-cards/:id
 GET    /api/admin/support/conversations
 GET    /api/admin/support/conversations/:id/messages
 POST   /api/admin/support/conversations/:id/messages
+POST   /api/admin/support/conversations/:id/attachments
 POST   /api/admin/support/conversations/:id/status
 ```
 
@@ -75,6 +76,7 @@ const result = await api.get<PaginatedResult<AdminOrder>>('/admin/orders', {
 
 在线客服工作台每 4 秒刷新会话和当前消息。移动端发送消息后会话自动进入
 `open` 状态；管理员可结束会话，任意一方再次发送消息时会重新打开。
+客服可直接发送和预览图片，也可发送 PDF、Office、文本和 ZIP 文件；单个附件最大 10MB。
 
 ## 构建
 

@@ -56,8 +56,16 @@ export const api = {
     const response = await request.get<unknown, ApiResponse<T>>(url, config);
     return response.data;
   },
-  async post<T>(url: string, data?: unknown) {
-    const response = await request.post<unknown, ApiResponse<T>>(url, data);
+  async post<T>(
+    url: string,
+    data?: unknown,
+    config?: Parameters<typeof request.post>[2],
+  ) {
+    const response = await request.post<unknown, ApiResponse<T>>(
+      url,
+      data,
+      config,
+    );
     return response.data;
   },
   async put<T>(url: string, data?: unknown) {

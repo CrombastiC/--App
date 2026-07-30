@@ -3,7 +3,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as express from 'express';
-import { join } from 'path';
+import { resolve } from 'path';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -11,11 +11,14 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const configService = app.get(ConfigService);
 
   // 静态文件服务（上传文件）
-  const uploadPath = join(process.cwd(), 'uploads');
+  const uploadPath = resolve(
+    process.cwd(),
+    configService.get('UPLOAD_PATH', './uploads'),
+  );
   app.use('/uploads', express.static(uploadPath));
-  const configService = app.get(ConfigService);
 
   // 全局前缀
   const apiPrefix = configService.get('API_PREFIX', 'api');

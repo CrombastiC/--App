@@ -12,7 +12,8 @@ module.exports = {
       supportsTablet: true,
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "我们需要获取您的位置信息来显示附近的门店",
-        NSCameraUsageDescription: "我们需要使用您的相机来扫描二维码"
+        NSCameraUsageDescription: "我们需要使用您的相机来扫描二维码",
+        NSPhotoLibraryUsageDescription: "我们需要访问相册以便在客服会话中发送图片"
       },
       bundleIdentifier: "com.ar1se.restaurant"
     },
@@ -24,6 +25,7 @@ module.exports = {
         monochromeImage: "./assets/images/android-icon-monochrome.png"
       },
       edgeToEdgeEnabled: true,
+      softwareKeyboardLayoutMode: "resize",
       predictiveBackGestureEnabled: false,
       permissions: [
         "ACCESS_COARSE_LOCATION",
@@ -61,6 +63,12 @@ module.exports = {
         "expo-location",
         {
           locationAlwaysAndWhenInUsePermission: "我们需要获取您的位置信息来显示附近的门店"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          photosPermission: "我们需要访问相册以便在客服会话中发送图片"
         }
       ],
       [

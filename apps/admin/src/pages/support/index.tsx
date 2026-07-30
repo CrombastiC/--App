@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   Empty,
+  Image,
   Input,
   List,
   Select,
@@ -16,7 +17,10 @@ import {
 } from "antd";
 import {
   CheckCircleOutlined,
+  FileOutlined,
   MessageOutlined,
+  PaperClipOutlined,
+  PictureOutlined,
   ReloadOutlined,
   SearchOutlined,
   SendOutlined,
@@ -30,6 +34,14 @@ import type {
   SupportMessagesResult,
 } from "@/types/admin";
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+function formatFileSize(size: number | null) {
+  if (!size) return "";
+  if (size < 1024 * 1024) return `${Math.ceil(size / 1024)} KB`;
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export default function SupportPage() {
   const [conversations, setConversations] = useState<SupportConversation[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
@@ -41,7 +53,10 @@ export default function SupportPage() {
   const [listLoading, setListLoading] = useState(false);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchConversations = useCallback(
     async (silent = false) => {
@@ -142,6 +157,86 @@ export default function SupportPage() {
     } finally {
       setSending(false);
     }
+  };
+
+  const uploadAttachment = async (file: File) => {
+    if (!selectedId || uploading) return;
+    if (file.size > MAX_FILE_SIZE) {
+      notification.error("文件大小不能超过 10MB");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploading(true);
+    try {
+      const sent = await api.post<SupportMessage>(
+        `/admin/support/conversations/${selectedId}/attachments`,
+        formData,
+        { timeout: 30000 },
+      );
+      setMessages((current) => [...current, sent]);
+      setSelected((current) =>
+        current ? { ...current, status: "open" } : current,
+      );
+      await fetchConversations(true);
+      requestAnimationFrame(() =>
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }),
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const renderMessageContent = (item: SupportMessage, fromAdmin: boolean) => {
+    if (item.messageType === "image" && item.attachmentUrl) {
+      return (
+        <Image
+          src={item.attachmentUrl}
+          alt={item.attachmentName || "客服图片"}
+          width={220}
+          style={styles.messageImage}
+          preview={{ mask: "预览图片" }}
+        />
+      );
+    }
+    if (item.messageType === "file" && item.attachmentUrl) {
+      return (
+        <a
+          href={item.attachmentUrl}
+          target="_blank"
+          rel="noreferrer"
+          download={item.attachmentName || undefined}
+          style={{
+            ...styles.fileCard,
+            ...(fromAdmin ? styles.adminFileCard : {}),
+          }}
+        >
+          <span style={styles.fileIcon}>
+            <FileOutlined />
+          </span>
+          <span style={styles.fileInfo}>
+            <span
+              style={{ ...styles.fileName, color: fromAdmin ? "#fff" : "#333" }}
+            >
+              {item.attachmentName || item.content}
+            </span>
+            <span
+              style={{
+                ...styles.fileSize,
+                color: fromAdmin ? "rgba(255,255,255,.72)" : "#999",
+              }}
+            >
+              {formatFileSize(item.attachmentSize)} · 点击下载
+            </span>
+          </span>
+        </a>
+      );
+    }
+    return (
+      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        {item.content}
+      </div>
+    );
   };
 
   const toggleStatus = async () => {
@@ -366,14 +461,7 @@ export default function SupportPage() {
                                   : styles.userBubble),
                               }}
                             >
-                              <div
-                                style={{
-                                  whiteSpace: "pre-wrap",
-                                  wordBreak: "break-word",
-                                }}
-                              >
-                                {item.content}
-                              </div>
+                              {renderMessageContent(item, fromAdmin)}
                               <div
                                 style={{
                                   ...styles.messageTime,
@@ -413,14 +501,56 @@ export default function SupportPage() {
                     }}
                   />
                   <div style={styles.composerFooter}>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      {draft.length}/1000
-                    </Typography.Text>
+                    <Space>
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif"
+                        hidden
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) uploadAttachment(file);
+                          event.target.value = "";
+                        }}
+                      />
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
+                        hidden
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) uploadAttachment(file);
+                          event.target.value = "";
+                        }}
+                      />
+                      <Button
+                        icon={<PictureOutlined />}
+                        loading={uploading}
+                        disabled={sending || uploading}
+                        onClick={() => imageInputRef.current?.click()}
+                      >
+                        图片
+                      </Button>
+                      <Button
+                        icon={<PaperClipOutlined />}
+                        disabled={sending || uploading}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        文件
+                      </Button>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
+                        最大 10MB · {draft.length}/1000
+                      </Typography.Text>
+                    </Space>
                     <Button
                       type="primary"
                       icon={<SendOutlined />}
                       loading={sending}
-                      disabled={!draft.trim()}
+                      disabled={!draft.trim() || uploading}
                       onClick={sendMessage}
                       style={{ background: "#FF7214" }}
                     >
@@ -511,6 +641,42 @@ const styles: Record<string, React.CSSProperties> = {
   },
   userBubble: { background: "#fff", color: "#333", borderBottomLeftRadius: 3 },
   messageTime: { fontSize: 10, marginTop: 4, textAlign: "right" },
+  messageImage: {
+    display: "block",
+    maxHeight: 260,
+    objectFit: "cover",
+    borderRadius: 9,
+  },
+  fileCard: {
+    width: 260,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    color: "inherit",
+    textDecoration: "none",
+    padding: 4,
+  },
+  adminFileCard: { color: "#fff" },
+  fileIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 9,
+    display: "grid",
+    placeItems: "center",
+    background: "rgba(255,255,255,.9)",
+    color: "#FF7214",
+    fontSize: 23,
+    flexShrink: 0,
+  },
+  fileInfo: { minWidth: 0, display: "grid", gap: 5 },
+  fileName: {
+    maxWidth: 190,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    fontWeight: 600,
+  },
+  fileSize: { fontSize: 11 },
   composer: {
     padding: "12px 16px",
     background: "#fff",

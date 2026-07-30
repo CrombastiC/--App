@@ -76,7 +76,7 @@ ALIPAY_NOTIFY_URL="https://your-domain.example"
 - 每日签到、积分明细、单抽/十连抽、中奖播报
 - 优惠券列表和积分商城
 - 门店排队取号：按人数分组、实时前方桌数、预计等待时间和取消排队
-- 消息中心在线客服：查看未读消息并与管理后台客服持续会话
+- 消息中心在线客服：查看未读消息，发送文字、图片和常用文件，并与管理后台持续会话
 
 ### 管理后台
 
@@ -87,7 +87,7 @@ ALIPAY_NOTIFY_URL="https://your-domain.example"
 - 充值档位、积分商品和抽奖奖品管理
 - 优惠券创建、追加库存、启停和定向发放
 - 礼品卡生成、编辑、复制、过期与兑换状态管理
-- 在线客服工作台：会话检索、未读提醒、实时回复和结束/重开会话
+- 在线客服工作台：会话检索、未读提醒、文字/图片/文件回复和结束/重开会话
 
 管理后台详情见 [apps/admin/README.md](apps/admin/README.md)。
 
@@ -137,6 +137,10 @@ pnpm prisma:seed
 
 排队取号使用 `stores`、`store_queue_counters`、`queue_tickets`；在线客服使用
 `support_conversations`、`support_messages`。客服消息当前每 4 秒同步，排队进度每 15 秒刷新。
+
+客服附件最大 10MB。图片支持 JPEG、PNG、GIF、WebP、HEIC/HEIF；文件支持
+PDF、Word、Excel、PowerPoint、TXT、CSV 和 ZIP。附件保存在 `UPLOAD_PATH`
+配置的目录，默认是 API 进程工作目录下的 `uploads`。
 
 ## 校验与构建
 

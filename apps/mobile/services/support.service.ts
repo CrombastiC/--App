@@ -13,8 +13,19 @@ export interface SupportMessage {
   senderId: string;
   senderRole: "user" | "admin";
   content: string;
+  messageType: "text" | "image" | "file";
+  attachmentUrl: string | null;
+  attachmentName: string | null;
+  attachmentSize: number | null;
+  attachmentMime: string | null;
   readAt: string | null;
   createdAt: string;
+}
+
+export interface SupportUploadFile {
+  uri: string;
+  name: string;
+  type: string;
 }
 
 export interface SupportMessagesResult {
@@ -36,5 +47,11 @@ export const supportService = {
 
   sendMessage(content: string) {
     return request.post<SupportMessage>("/api/support/messages", { content });
+  },
+
+  uploadAttachment(file: SupportUploadFile) {
+    return request.upload<SupportMessage>("/api/support/attachments", file, {
+      timeout: 30000,
+    });
   },
 };

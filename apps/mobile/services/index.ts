@@ -43,6 +43,7 @@ export type {
   SupportConversationSummary,
   SupportMessage,
   SupportMessagesResult,
+  SupportUploadFile,
 } from './support.service';
 
 // ==================== 使用说明 ====================

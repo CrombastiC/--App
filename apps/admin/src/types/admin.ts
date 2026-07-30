@@ -124,6 +124,11 @@ export interface SupportMessage {
   senderId: string;
   senderRole: 'user' | 'admin';
   content: string;
+  messageType: 'text' | 'image' | 'file';
+  attachmentUrl: string | null;
+  attachmentName: string | null;
+  attachmentSize: number | null;
+  attachmentMime: string | null;
   readAt: string | null;
   createdAt: string;
 }

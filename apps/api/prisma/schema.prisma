@@ -367,6 +367,11 @@ model SupportMessage {
   senderId       String
   senderRole     String // user / admin
   content        String
+  messageType    String              @default("text") // text / image / file
+  attachmentUrl  String?
+  attachmentName String?
+  attachmentSize Int?
+  attachmentMime String?
   readAt         DateTime?
   createdAt      DateTime            @default(now())
 

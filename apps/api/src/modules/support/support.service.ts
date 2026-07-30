@@ -6,10 +6,30 @@ import {
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { SupportConversationsQueryDto } from "./dto/support.dto";
+import {
+  UploadService,
+  type UploadedFile,
+  type UploadedSupportAttachment,
+} from "../upload/upload.service";
+
+type MessageRole = "user" | "admin";
+type MessageType = "text" | "image" | "file";
+
+interface MessagePayload {
+  content: string;
+  messageType: MessageType;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentSize?: number;
+  attachmentMime?: string;
+}
 
 @Injectable()
 export class SupportService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   private normalizeContent(content: string) {
     const normalized = content.trim();
@@ -22,6 +42,54 @@ export class SupportService {
       where: { userId },
       create: { userId },
       update: {},
+    });
+  }
+
+  private createMessage(
+    conversationId: string,
+    senderId: string,
+    senderRole: MessageRole,
+    payload: MessagePayload,
+  ) {
+    const preview =
+      payload.messageType === "text"
+        ? payload.content
+        : payload.messageType === "image"
+          ? "[图片]"
+          : `[文件] ${payload.attachmentName || payload.content}`;
+
+    return this.prisma.$transaction(async (tx) => {
+      const message = await tx.supportMessage.create({
+        data: { conversationId, senderId, senderRole, ...payload },
+      });
+      await tx.supportConversation.update({
+        where: { id: conversationId },
+        data: {
+          status: "open",
+          lastMessagePreview: preview,
+          lastMessageAt: message.createdAt,
+          ...(senderRole === "user"
+            ? { adminUnreadCount: { increment: 1 } }
+            : { userUnreadCount: { increment: 1 } }),
+        },
+      });
+      return message;
+    });
+  }
+
+  private createAttachmentMessage(
+    conversationId: string,
+    senderId: string,
+    senderRole: MessageRole,
+    attachment: UploadedSupportAttachment,
+  ) {
+    return this.createMessage(conversationId, senderId, senderRole, {
+      content: attachment.messageType === "image" ? "[图片]" : attachment.name,
+      messageType: attachment.messageType,
+      attachmentUrl: attachment.url,
+      attachmentName: attachment.name,
+      attachmentSize: attachment.size,
+      attachmentMime: attachment.mimeType,
     });
   }
 
@@ -67,28 +135,22 @@ export class SupportService {
   }
 
   async sendUserMessage(userId: string, content: string) {
-    const normalized = this.normalizeContent(content);
     const conversation = await this.getOrCreateConversation(userId);
-    return this.prisma.$transaction(async (tx) => {
-      const message = await tx.supportMessage.create({
-        data: {
-          conversationId: conversation.id,
-          senderId: userId,
-          senderRole: "user",
-          content: normalized,
-        },
-      });
-      await tx.supportConversation.update({
-        where: { id: conversation.id },
-        data: {
-          status: "open",
-          lastMessagePreview: normalized,
-          lastMessageAt: message.createdAt,
-          adminUnreadCount: { increment: 1 },
-        },
-      });
-      return message;
+    return this.createMessage(conversation.id, userId, "user", {
+      content: this.normalizeContent(content),
+      messageType: "text",
     });
+  }
+
+  async sendUserAttachment(userId: string, file: UploadedFile) {
+    const conversation = await this.getOrCreateConversation(userId);
+    const attachment = this.uploadService.uploadSupportAttachment(file);
+    return this.createAttachmentMessage(
+      conversation.id,
+      userId,
+      "user",
+      attachment,
+    );
   }
 
   async getAdminConversations(query: SupportConversationsQueryDto) {
@@ -156,31 +218,32 @@ export class SupportService {
     conversationId: string,
     content: string,
   ) {
-    const normalized = this.normalizeContent(content);
     const conversation = await this.prisma.supportConversation.findUnique({
       where: { id: conversationId },
     });
     if (!conversation) throw new NotFoundException("客服会话不存在");
-    return this.prisma.$transaction(async (tx) => {
-      const message = await tx.supportMessage.create({
-        data: {
-          conversationId,
-          senderId: adminId,
-          senderRole: "admin",
-          content: normalized,
-        },
-      });
-      await tx.supportConversation.update({
-        where: { id: conversationId },
-        data: {
-          status: "open",
-          lastMessagePreview: normalized,
-          lastMessageAt: message.createdAt,
-          userUnreadCount: { increment: 1 },
-        },
-      });
-      return message;
+    return this.createMessage(conversationId, adminId, "admin", {
+      content: this.normalizeContent(content),
+      messageType: "text",
     });
+  }
+
+  async sendAdminAttachment(
+    adminId: string,
+    conversationId: string,
+    file: UploadedFile,
+  ) {
+    const conversation = await this.prisma.supportConversation.findUnique({
+      where: { id: conversationId },
+    });
+    if (!conversation) throw new NotFoundException("客服会话不存在");
+    const attachment = this.uploadService.uploadSupportAttachment(file);
+    return this.createAttachmentMessage(
+      conversationId,
+      adminId,
+      "admin",
+      attachment,
+    );
   }
 
   async updateConversationStatus(
