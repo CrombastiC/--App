@@ -1,5 +1,4 @@
 import { tokenManager, userService, type UserProfile } from "@/services";
-import Barcode from "@kichiyaki/react-native-barcode-generator";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -73,16 +72,9 @@ export default function MemberCodeScreen() {
         <View style={styles.cardContent}>
           {memberCode && (
             <>
+              {/* 会员码文字 */}
               <View style={styles.barcodeContainer}>
-                <Barcode 
-                  value={memberCode} 
-                  format="CODE128"
-                  width={2}
-                  height={60}
-                  text={memberCode}
-                  textStyle={styles.barcodeText}
-                  lineColor="#000"
-                />
+                <Text style={styles.memberCodeText}>{memberCode}</Text>
               </View>
 
               {/* 二维码区域 */}
@@ -143,10 +135,11 @@ const styles =StyleSheet.create({
     marginBottom: 20,
     alignItems: "center",
   },
-  barcodeText: {
-    fontSize: 12,
-    marginTop: 4,
+  memberCodeText: {
+    fontSize: 16,
+    fontWeight: "600",
     color: "#333",
+    letterSpacing: 2,
   },
   qrcodeContainer: {
     padding: 10,

@@ -15,6 +15,22 @@ const CouponsPage = lazy(() => import('@/pages/coupons'));
 const GiftCardsPage = lazy(() => import('@/pages/gift-cards'));
 const PrizesPage = lazy(() => import('@/pages/prizes'));
 
+// 预加载所有后台页面组件，避免首次切换菜单时懒加载闪烁
+const pageModules = [
+  import('@/pages/dashboard'),
+  import('@/pages/orders'),
+  import('@/pages/users'),
+  import('@/pages/menu'),
+  import('@/pages/money'),
+  import('@/pages/commodity'),
+  import('@/pages/prizes'),
+  import('@/pages/coupons'),
+  import('@/pages/gift-cards'),
+];
+function preloadPages() {
+  pageModules.forEach((mod) => mod.catch(() => {}));
+}
+
 /** 路由守卫：未登录跳转登录页 */
 function RequireAuth({ children }: { children: ReactNode }) {
   if (!isAuthenticated()) {
@@ -24,6 +40,11 @@ function RequireAuth({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
+  // 登录后预加载所有后台页面，消除首次切换菜单的懒加载闪烁
+  if (isAuthenticated()) {
+    preloadPages();
+  }
+
   return (
     <BrowserRouter>
       <Suspense fallback={<div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><Spin size="large" /></div>}>

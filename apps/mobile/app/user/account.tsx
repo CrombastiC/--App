@@ -22,7 +22,7 @@ import {
   TouchableWithoutFeedback,
   View
 } from "react-native";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AccountScreen() {
@@ -290,18 +290,22 @@ export default function AccountScreen() {
         <MenuList items={accountMenuItems}/>
 
         {/* 日期选择器 */}
-        <DateTimePickerModal
-          isVisible={show}
-          mode="date"
-          date={date || new Date()}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-          locale="zh_CN"
-          confirmTextIOS="确定"
-          cancelTextIOS="取消"
-          minimumDate={new Date(1950, 0, 1)}
-          maximumDate={new Date(2050, 11, 31)}
-        />
+        {show && (
+          <DateTimePicker
+            value={date || new Date()}
+            mode="date"
+            display="default"
+            minimumDate={new Date(1950, 0, 1)}
+            maximumDate={new Date(2050, 11, 31)}
+            onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+              if (event.type === 'set' && selectedDate) {
+                handleConfirm(selectedDate);
+              } else {
+                handleCancel();
+              }
+            }}
+          />
+        )}
       </View>
 
       <View style={styles.logoutContainer}>

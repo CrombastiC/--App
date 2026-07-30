@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Button, theme, Dropdown } from 'antd';
+import { Layout, Menu, Button, theme, Dropdown, Spin } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -119,7 +119,9 @@ export default function AdminLayout() {
           </Dropdown>
         </Header>
         <Content style={{ ...styles.content, background: colorBgContainer, borderRadius: borderRadiusLG }}>
-          <Outlet />
+          <Suspense fallback={<div style={styles.loading}><Spin /></div>}>
+            <Outlet />
+          </Suspense>
         </Content>
       </Layout>
     </Layout>
@@ -149,5 +151,11 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 24,
     padding: 24,
     overflow: 'auto',
+  },
+  loading: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 200,
   },
 };
